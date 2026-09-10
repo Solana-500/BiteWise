@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import type { Session } from '@supabase/supabase-js'
 
+import LandingScreen from './screens/LandingScreen'
 import LoginScreen from './screens/LoginScreen'
 import SignUpScreen from './screens/SignUpScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
@@ -105,8 +106,9 @@ export default function App() {
 >
         {!session ? (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="Landing" component={LandingScreen} options={{ title: 'BiteWise' }}/>
+            <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Log In' }}/>
+            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Create Account' }}/>
           </>
         ) : !hasProfile ? (
           <Stack.Screen
