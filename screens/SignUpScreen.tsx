@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { supabase } from '../services/supabase'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-type Props = {
-  navigation: any
-}
+import { supabase } from '../services/supabase'
+import type { RootStackParamList } from '../types/navigation'
+
+type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>
 
 export default function SignUpScreen({ navigation }: Props) {
   const [email, setEmail] = useState('')
@@ -22,14 +23,14 @@ export default function SignUpScreen({ navigation }: Props) {
 
   async function handleSignUp() {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Missing information', 'Complete all fields.')
+      Alert.alert('Missing information', 'Please complete all fields.')
       return
     }
 
     if (password.length < 6) {
       Alert.alert(
         'Password too short',
-        'Your password must contain at least 6 characters.'
+        'Use a password with at least 6 characters.'
       )
       return
     }
@@ -41,7 +42,7 @@ export default function SignUpScreen({ navigation }: Props) {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
     })
@@ -53,59 +54,70 @@ export default function SignUpScreen({ navigation }: Props) {
       return
     }
 
-    Alert.alert(
-      'Account created',
-      'Your account has been created. Check your email if confirmation is enabled.'
-    )
+    if (!data.session) {
+      Alert.alert(
+        'Account created',
+        'Check your email to confirm your account, then return and log in.'
+      )
+    } else {
+      Alert.alert('Account created', 'You are now logged in.')
+    }
 
     navigation.navigate('Login')
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create your BiteWise account</Text>
+      <Text style={styles.logo}>BiteWise</Text>
+      <Text style={styles.title}>Create an account</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
+        keyboardType="email-address"
+        onChangeText={setEmail}
+        placeholder="Email"
+        placeholderTextColor="#8B9B90"
+        style={styles.input}
+        value={email}
       />
 
       <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
         onChangeText={setPassword}
+        placeholder="Password"
+        placeholderTextColor="#8B9B90"
         secureTextEntry
+        style={styles.input}
+        value={password}
       />
 
       <TextInput
-        style={styles.input}
-        placeholder="Confirm password"
-        value={confirmPassword}
         onChangeText={setConfirmPassword}
+        placeholder="Confirm password"
+        placeholderTextColor="#8B9B90"
         secureTextEntry
+        style={styles.input}
+        value={confirmPassword}
       />
 
-      {/* Primary Action Button */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#1E5C35" />
-      ) : (
-        <TouchableOpacity style={styles.primaryButton} onPress={handleSignUp}>
-          <Text style={styles.primaryButtonText}>Create account</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Secondary Navigation Button */}
       <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate('Login')}
+        disabled={loading}
+        onPress={handleSignUp}
+        style={[styles.button, loading && styles.disabledButton]}
       >
-        <Text style={styles.secondaryButtonText}>Back to login</Text>
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Create Account</Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        disabled={loading}
+        onPress={() => navigation.navigate('Login')}
+        style={styles.linkButton}
+      >
+        <Text style={styles.linkText}>Already have an account? Log In</Text>
       </TouchableOpacity>
     </View>
   )
@@ -113,46 +125,60 @@ export default function SignUpScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#F5FAF6',
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#FFFFFF',
+  },
+  logo: {
+    color: '#1E5C35',
+    fontSize: 34,
+    fontWeight: '800',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   title: {
-    color: '#1E5C35',
-    fontSize: 26,
-    fontWeight: '800',
+    color: '#16281D',
+    fontSize: 22,
+    fontWeight: '700',
     marginBottom: 28,
     textAlign: 'center',
   },
   input: {
+    backgroundColor: '#FFFFFF',
     borderColor: '#C9DBD0',
     borderRadius: 10,
     borderWidth: 1,
+    color: '#16281D',
     fontSize: 16,
     marginBottom: 12,
     padding: 14,
   },
-  primaryButton: {
-    backgroundColor: '#1E5C35',
-    paddingVertical: 14,
-    borderRadius: 10,
+  button: {
     alignItems: 'center',
-    marginTop: 8,
+    backgroundColor: '#1E5C35',
+    borderRadius: 10,
+    marginTop: 6,
+    minHeight: 50,
+    justifyContent: 'center',
+    paddingVertical: 14,
   },
-  primaryButtonText: {
+  disabledButton: {
+    opacity: 0.65,
+  },
+  buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  secondaryButton: {
-    paddingVertical: 14,
+  linkButton: {
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 18,
+    padding: 8,
   },
-  secondaryButtonText: {
+  linkText: {
     color: '#1E5C35',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
   },
 })
