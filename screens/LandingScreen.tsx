@@ -268,6 +268,135 @@ export default function LandingScreen({ navigation }: Props) {
         />
       </View>
 
+
+       
+
+<Text style={styles.sectionTitle}>What Our Users Say</Text>
+
+<View style={styles.reviewCard}>
+  <Text style={styles.stars}>★★★★★</Text>
+
+  <Text style={styles.reviewText}>
+    “BiteWise helped me stay consistent with my calorie tracking. The meal
+    logging is straightforward and easy to use.”
+  </Text>
+
+  <Text style={styles.reviewName}>Demo User</Text>
+  <Text style={styles.reviewRole}>Prototype customer review</Text>
+</View>
+
+<View style={styles.reviewCard}>
+  <Text style={styles.stars}>★★★★★</Text>
+
+  <Text style={styles.reviewText}>
+    “The personalised calorie target and macro information make it easier to
+    plan meals around my fitness goal.”
+  </Text>
+
+  <Text style={styles.reviewName}>Demo User</Text>
+  <Text style={styles.reviewRole}>Prototype customer review</Text>
+</View>
+
+<View style={styles.reviewCard}>
+  <Text style={styles.stars}>★★★★☆</Text>
+
+  <Text style={styles.reviewText}>
+    “I like being able to view meals, hydration, and progress in one nutrition
+    tracking app.”
+  </Text>
+
+  <Text style={styles.reviewName}>Demo User</Text>
+  <Text style={styles.reviewRole}>Prototype customer review</Text>
+</View>
+
+<Text style={styles.sectionTitle}>Top-Rated Coaches</Text>
+
+<View style={styles.coachCard}>
+  <View style={styles.coachAvatar}>
+    <Text style={styles.coachInitials}>EW</Text>
+  </View>
+
+  <View style={styles.coachContent}>
+    <Text style={styles.coachName}>Emma Wilson</Text>
+    <Text style={styles.coachSpecialty}>Weight Management</Text>
+    <Text style={styles.coachRating}>★★★★★  4.9</Text>
+    <Text style={styles.coachReviews}>Demo coach profile · 120 reviews</Text>
+  </View>
+</View>
+
+<View style={styles.coachCard}>
+  <View style={styles.coachAvatar}>
+    <Text style={styles.coachInitials}>MC</Text>
+  </View>
+
+  <View style={styles.coachContent}>
+    <Text style={styles.coachName}>Marcus Chen</Text>
+    <Text style={styles.coachSpecialty}>Sports Nutrition</Text>
+    <Text style={styles.coachRating}>★★★★★  4.8</Text>
+    <Text style={styles.coachReviews}>Demo coach profile · 95 reviews</Text>
+  </View>
+</View>
+
+<View style={styles.coachCard}>
+  <View style={styles.coachAvatar}>
+    <Text style={styles.coachInitials}>SA</Text>
+  </View>
+
+  <View style={styles.coachContent}>
+    <Text style={styles.coachName}>Sophie Adams</Text>
+    <Text style={styles.coachSpecialty}>Plant-Based Diets</Text>
+    <Text style={styles.coachRating}>★★★★★  4.7</Text>
+    <Text style={styles.coachReviews}>Demo coach profile · 80 reviews</Text>
+  </View>
+</View>    
+
+ <Text style={styles.sectionTitle}>Subscription Plans</Text>
+
+<View style={styles.planCard}>
+  <Text style={styles.planName}>Free</Text>
+  <Text style={styles.planPrice}>$0</Text>
+  <Text style={styles.planPeriod}>Forever free</Text>
+
+  <Text style={styles.planFeature}>✓ Basic nutrition tracking</Text>
+  <Text style={styles.planFeature}>✓ Daily calorie goals</Text>
+  <Text style={styles.planFeature}>✓ Food diary</Text>
+  <Text style={styles.planFeature}>✓ Progress tracking</Text>
+
+  <TouchableOpacity
+    style={styles.planOutlineButton}
+    onPress={() => navigation.navigate('SignUp')}
+  >
+    <Text style={styles.planOutlineButtonText}>Get Started</Text>
+  </TouchableOpacity>
+</View>
+
+<View style={[styles.planCard, styles.premiumPlanCard]}>
+  <View style={styles.recommendedBadge}>
+    <Text style={styles.recommendedBadgeText}>RECOMMENDED</Text>
+  </View>
+
+  <Text style={styles.premiumPlanName}>Premium</Text>
+  <Text style={styles.premiumPlanPrice}>
+    $9.90
+    <Text style={styles.planMonth}> / month</Text>
+  </Text>
+
+  <Text style={styles.premiumPlanFeature}>✓ Everything in Free</Text>
+  <Text style={styles.premiumPlanFeature}>✓ Advanced macro tracking</Text>
+  <Text style={styles.premiumPlanFeature}>✓ Custom meal plans</Text>
+  <Text style={styles.premiumPlanFeature}>✓ Personalised recommendations</Text>
+  <Text style={styles.premiumPlanFeature}>✓ Health coach access</Text>
+
+  <TouchableOpacity
+    style={styles.premiumPlanButton}
+    onPress={() => navigation.navigate('SignUp')}
+  >
+    <Text style={styles.premiumPlanButtonText}>Start Premium</Text>
+  </TouchableOpacity>
+</View>
+
+
+
       <View style={styles.ctaCard}>
         <Text style={styles.ctaTitle}>
           Start your personalised nutrition journey today.
@@ -790,4 +919,212 @@ menuLoginText: {
     marginTop: 27,
     textAlign: 'center',
   },
+
+  planCard: {
+  backgroundColor: '#FFFFFF',
+  borderColor: '#DCE9E0',
+  borderRadius: 18,
+  borderWidth: 1,
+  marginHorizontal: 22,
+  marginTop: 12,
+  padding: 20,
+},
+
+premiumPlanCard: {
+  backgroundColor: '#1E5C35',
+  borderColor: '#1E5C35',
+  marginTop: 16,
+},
+
+planName: {
+  color: '#16281D',
+  fontSize: 20,
+  fontWeight: '900',
+},
+
+planPrice: {
+  color: '#1E5C35',
+  fontSize: 34,
+  fontWeight: '900',
+  marginTop: 10,
+},
+
+planPeriod: {
+  color: '#708277',
+  fontSize: 13,
+  marginBottom: 12,
+  marginTop: 2,
+},
+
+planFeature: {
+  color: '#4F6658',
+  fontSize: 14,
+  lineHeight: 24,
+},
+
+planOutlineButton: {
+  alignItems: 'center',
+  borderColor: '#1E5C35',
+  borderRadius: 10,
+  borderWidth: 1.5,
+  marginTop: 18,
+  paddingVertical: 13,
+},
+
+planOutlineButtonText: {
+  color: '#1E5C35',
+  fontSize: 15,
+  fontWeight: '800',
+},
+
+recommendedBadge: {
+  alignSelf: 'flex-start',
+  backgroundColor: '#F2B84B',
+  borderRadius: 12,
+  marginBottom: 12,
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+},
+
+recommendedBadgeText: {
+  color: '#4C3400',
+  fontSize: 10,
+  fontWeight: '900',
+  letterSpacing: 0.5,
+},
+
+premiumPlanName: {
+  color: '#FFFFFF',
+  fontSize: 20,
+  fontWeight: '900',
+},
+
+premiumPlanPrice: {
+  color: '#FFFFFF',
+  fontSize: 34,
+  fontWeight: '900',
+  marginTop: 10,
+},
+
+planMonth: {
+  color: '#D8EADF',
+  fontSize: 14,
+  fontWeight: '700',
+},
+
+premiumPlanFeature: {
+  color: '#E3F0E6',
+  fontSize: 14,
+  lineHeight: 24,
+},
+
+premiumPlanButton: {
+  alignItems: 'center',
+  backgroundColor: '#FFFFFF',
+  borderRadius: 10,
+  marginTop: 18,
+  paddingVertical: 13,
+},
+
+premiumPlanButtonText: {
+  color: '#1E5C35',
+  fontSize: 15,
+  fontWeight: '900',
+},
+
+reviewCard: {
+  backgroundColor: '#FFFFFF',
+  borderColor: '#DCE9E0',
+  borderRadius: 16,
+  borderWidth: 1,
+  marginHorizontal: 22,
+  marginTop: 12,
+  padding: 18,
+},
+
+stars: {
+  color: '#E8A317',
+  fontSize: 19,
+  letterSpacing: 1,
+},
+
+reviewText: {
+  color: '#33463A',
+  fontSize: 14,
+  fontStyle: 'italic',
+  lineHeight: 21,
+  marginTop: 11,
+},
+
+reviewName: {
+  color: '#16281D',
+  fontSize: 14,
+  fontWeight: '900',
+  marginTop: 16,
+},
+
+reviewRole: {
+  color: '#708277',
+  fontSize: 12,
+  marginTop: 3,
+},
+
+coachCard: {
+  alignItems: 'center',
+  backgroundColor: '#FFFFFF',
+  borderColor: '#DCE9E0',
+  borderRadius: 16,
+  borderWidth: 1,
+  flexDirection: 'row',
+  marginHorizontal: 22,
+  marginTop: 12,
+  padding: 16,
+},
+
+coachAvatar: {
+  alignItems: 'center',
+  backgroundColor: '#D9ECDF',
+  borderRadius: 28,
+  height: 56,
+  justifyContent: 'center',
+  marginRight: 14,
+  width: 56,
+},
+
+coachInitials: {
+  color: '#1E5C35',
+  fontSize: 17,
+  fontWeight: '900',
+},
+
+coachContent: {
+  flex: 1,
+},
+
+coachName: {
+  color: '#16281D',
+  fontSize: 16,
+  fontWeight: '900',
+},
+
+coachSpecialty: {
+  color: '#1E5C35',
+  fontSize: 13,
+  fontWeight: '700',
+  marginTop: 3,
+},
+
+coachRating: {
+  color: '#E8A317',
+  fontSize: 13,
+  fontWeight: '800',
+  marginTop: 7,
+},
+
+coachReviews: {
+  color: '#708277',
+  fontSize: 11,
+  marginTop: 4,
+},
+
 })
