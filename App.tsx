@@ -8,6 +8,9 @@ import LoginScreen from './screens/LoginScreen'
 import SignUpScreen from './screens/SignUpScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import HomeScreen from './screens/HomeScreen'
+import MealsScreen from './screens/MealsScreen'
+import WellnessScreen from './screens/WellnessScreen'
+import ReportsScreen from './screens/ReportsScreen'
 import { supabase } from './services/supabase'
 import type { RootStackParamList } from './types/navigation'
 
@@ -87,7 +90,19 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator
+        screenOptions={{
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#F5FAF6',
+          },
+          headerTintColor: '#1E5C35',
+          headerTitleStyle: {
+            fontWeight: '800',
+          },
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+>
         {!session ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -99,7 +114,12 @@ export default function App() {
             component={OnboardingScreen}
           />
         ) : (
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'BiteWise' }}/>
+            <Stack.Screen name="Meals" component={MealsScreen} options={{ title: 'Meal Management' }}/>
+            <Stack.Screen name="Wellness" component={WellnessScreen} options={{ title: 'Wellness' }}/>
+            <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reports' }}/>
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
