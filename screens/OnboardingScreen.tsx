@@ -10,7 +10,11 @@ import {
 } from 'react-native'
 import { supabase } from '../services/supabase'
 
-export default function OnboardingScreen() {
+type Props = {
+  onComplete: () => void
+}
+
+export default function OnboardingScreen({ onComplete }: Props) {
   const [fullName, setFullName] = useState('')
   const [age, setAge] = useState('')
   const [sex, setSex] = useState<'Male' | 'Female'>('Male')
@@ -106,6 +110,7 @@ export default function OnboardingScreen() {
         activity_level: activityLevel,
         fitness_goal: fitnessGoal,
         daily_calorie_target: dailyCalorieTarget,
+        tier: 'free',
         updated_at: new Date().toISOString(),
       })
 
@@ -116,10 +121,9 @@ export default function OnboardingScreen() {
       return
     }
 
-    Alert.alert(
-      'Profile saved',
-      `Your estimated daily calorie target is ${dailyCalorieTarget} kcal.`
-    )
+    // Tell App.tsx the profile now exists so it can switch
+    // the navigator into the Home/Meals/Wellness/Reports stack.
+    onComplete()
   }
 
   return (

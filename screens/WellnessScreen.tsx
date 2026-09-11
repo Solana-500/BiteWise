@@ -6,9 +6,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+
 import { supabase } from '../services/supabase'
+import type { MainTabParamList } from '../types/navigation'
+
+type WellnessNavigationProp = BottomTabNavigationProp<
+  MainTabParamList,
+  'Wellness'
+>
 
 export default function WellnessScreen() {
+  const navigation = useNavigation<WellnessNavigationProp>()
+
   const [waterToday, setWaterToday] = useState(0)
 
   async function addWater(amount: number) {
@@ -37,6 +48,13 @@ export default function WellnessScreen() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.backHomeButton}
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Text style={styles.backHomeText}>‹ Home</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Activity & Wellness</Text>
 
       <View style={styles.card}>
@@ -76,7 +94,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FAF6',
     flex: 1,
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 24,
+  },
+  backHomeButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    paddingRight: 14,
+    paddingVertical: 8,
+  },
+  backHomeText: {
+    color: '#1E5C35',
+    fontSize: 15,
+    fontWeight: '800',
   },
   title: {
     color: '#16281D',

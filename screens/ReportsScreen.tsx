@@ -5,13 +5,17 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native'
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
+import type { MainTabParamList } from '../types/navigation'
 import { useFocusEffect } from '@react-navigation/native'
-
 import { supabase } from '../services/supabase'
 
-export default function ReportsScreen() {
+type Props = BottomTabScreenProps<MainTabParamList, 'Reports'>
+
+export default function ReportsScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true)
   const [mealCount, setMealCount] = useState(0)
   const [calories, setCalories] = useState(0)
@@ -72,6 +76,12 @@ export default function ReportsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity
+        style={styles.backHomeButton}
+        onPress={() => navigation.navigate('Home')}
+    >
+  <Text style={styles.backHomeText}>‹ Home</Text>
+</TouchableOpacity>
       <Text style={styles.title}>Nutrition Report</Text>
       <Text style={styles.subtitle}>Last 7 days</Text>
 
@@ -139,4 +149,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 8,
   },
+  backHomeButton: {
+  alignSelf: 'flex-start',
+  paddingVertical: 8,
+  paddingRight: 14,
+  marginBottom: 8,
+},
+backHomeText: {
+  color: '#1E5C35',
+  fontSize: 15,
+  fontWeight: '800',
+},
 })

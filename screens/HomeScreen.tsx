@@ -10,17 +10,33 @@ import {
   View,
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
-import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
 
 import { supabase } from '../services/supabase'
-import type { RootStackParamList } from '../types/navigation'
+import type { MainTabParamList } from '../types/navigation'
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>
+type Props = BottomTabScreenProps<MainTabParamList, 'Home'>
 
 type DashboardData = {
   full_name: string | null
   daily_calorie_target: number | null
   fitness_goal: string | null
+  tier: string | null
+}
+
+type FeatureTile = {
+  key: string
+  icon: string
+  title: string
+  subtitle: string
+  onPress: () => void
+}
+
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
 }
 
 export default function HomeScreen({ navigation }: Props) {
@@ -50,7 +66,7 @@ export default function HomeScreen({ navigation }: Props) {
     const [profileResponse, mealsResponse] = await Promise.all([
       supabase
         .from('profiles')
-        .select('full_name, daily_calorie_target, fitness_goal')
+        .select('full_name, daily_calorie_target, fitness_goal, tier')
         .eq('id', user.id)
         .single(),
 
@@ -97,13 +113,6 @@ export default function HomeScreen({ navigation }: Props) {
     }, [loadDashboard])
   )
 
-  async function handleLogout() {
-    const { error } = await supabase.auth.signOut()
-
-    if (error) {
-      Alert.alert('Logout failed', error.message)
-    }
-  }
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -121,9 +130,54 @@ export default function HomeScreen({ navigation }: Props) {
 
   const calorieTarget = profile?.daily_calorie_target ?? 0
   const calorieProgress =
-    calorieTarget > 0
-      ? Math.min(calories / calorieTarget, 1)
-      : 0
+    calorieTarget > 0 ? Math.min(calories / calorieTarget, 1) : 0
+  const isPremium = profile?.tier === 'premium'
+  const firstName = profile?.full_name?.split(' ')[0] || 'there'
+
+  const featureTiles: FeatureTile[] = [
+    {
+      key: 'food-diary',
+      icon: '📖',
+      title: 'Food Diary',
+      subtitle: 'View your daily meals',
+      onPress: () => navigation.navigate('Meals'),
+    },
+    {
+      key: 'wellness',
+      icon: '💧',
+      title: 'Wellness',
+      subtitle: 'Water, exercise, sync',
+      onPress: () => navigation.navigate('Wellness'),
+    },
+    {
+      key: 'progress',
+      icon: '📈',
+      title: 'Progress Tracking',
+      subtitle: 'How much have you achieved?',
+      onPress: () => navigation.navigate('Reports'),
+    },
+    {
+      key: 'food-logging',
+      icon: '🍽️',
+      title: 'Food Logging',
+      subtitle: 'Log your meals',
+      onPress: () => navigation.navigate('Meals'),
+    },
+    {
+      key: 'favourites',
+      icon: '❤️',
+      title: 'Favourites',
+      subtitle: 'Saved meals & recipes',
+      onPress: () => navigation.navigate('Meals'),
+    },
+    {
+      key: 'review',
+      icon: '⭐',
+      title: 'Review',
+      subtitle: 'Lets us know what you think',
+      onPress: () => navigation.navigate('Reports'),
+    },
+  ]
 
   return (
     <ScrollView
@@ -136,22 +190,38 @@ export default function HomeScreen({ navigation }: Props) {
         />
       }
     >
-      <Text style={styles.logo}>BiteWise</Text>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <Text style={styles.topBarTitle}>Home</Text>
+        {!isPremium && (
+          <TouchableOpacity style={styles.goPremiumBtn}>
+            <Text style={styles.goPremiumText}>Go Premium ✦</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
-      <Text style={styles.greeting}>
-        Hello, {profile?.full_name || 'BiteWise user'}
-      </Text>
+      {/* Hero greeting card */}
+      <View style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <Text style={styles.heroGreeting}>{getGreeting()}</Text>
+          <View style={styles.tierBadge}>
+            <Text style={styles.tierBadgeText}>
+              {isPremium ? 'PREMIUM PLAN' : 'FREE PLAN'}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.heroHello}>Hello, {firstName} 👋</Text>
+        <Text style={styles.heroSub}>
+          Keep building healthy habits one day at a time.
+        </Text>
+      </View>
 
-      <Text style={styles.goal}>
-        Goal: {profile?.fitness_goal || 'Not selected'}
-      </Text>
-
+      {/* Calorie goal card */}
       <View style={styles.calorieCard}>
         <Text style={styles.cardLabel}>Daily Calorie Goal</Text>
         <Text style={styles.calorieValue}>
           {calories} / {calorieTarget || '—'} kcal
         </Text>
-
         <View style={styles.progressBackground}>
           <View
             style={[
@@ -162,54 +232,54 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </View>
 
+      {/* Macros */}
       <Text style={styles.sectionTitle}>Today&apos;s Macros</Text>
-
       <View style={styles.macroGrid}>
         <View style={styles.macroCard}>
           <Text style={styles.macroValue}>{protein} g</Text>
           <Text style={styles.macroLabel}>Protein</Text>
         </View>
-
         <View style={styles.macroCard}>
           <Text style={styles.macroValue}>{carbs} g</Text>
           <Text style={styles.macroLabel}>Carbohydrates</Text>
         </View>
-
         <View style={styles.macroCard}>
           <Text style={styles.macroValue}>{fat} g</Text>
           <Text style={styles.macroLabel}>Fat</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      {/* Feature grid */}
+      <Text style={styles.sectionTitle}>Your Features</Text>
+      <View style={styles.grid}>
+        {featureTiles.map((tile) => (
+          <TouchableOpacity
+            key={tile.key}
+            style={styles.tile}
+            onPress={tile.onPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.tileIcon}>{tile.icon}</Text>
+            <Text style={styles.tileTitle}>{tile.title}</Text>
+            <Text style={styles.tileSub}>{tile.subtitle}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={() => navigation.navigate('Meals')}
-      >
-        <Text style={styles.primaryButtonText}>Log a Meal</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate('Wellness')}
-      >
-        <Text style={styles.secondaryButtonText}>Track Wellness</Text>
-      </TouchableOpacity>
-
-       <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate('Reports')}
-      >
-        <Text style={styles.secondaryButtonText}>View Reports</Text>
-      </TouchableOpacity>       
-
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+      {/* Premium upsell */}
+      {!isPremium && (
+        <View style={styles.upsellCard}>
+          <Text style={styles.upsellTitle}>
+            Unlock everything for $9.90/month
+          </Text>
+          <Text style={styles.upsellSub}>
+            Personal coach access, custom meal plans, and full analytics.
+          </Text>
+          <View style={styles.upsellBtn}>
+            <Text style={styles.upsellBtnText}>See Premium Plans</Text>
+          </View>
+        </View>
+      )}
     </ScrollView>
   )
 }
@@ -224,64 +294,114 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#F5FAF6',
     flexGrow: 1,
-    padding: 24,
-    paddingTop: 60,
+    padding: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
-  logo: {
-    color: '#1E5C35',
-    fontSize: 32,
-    fontWeight: '800',
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
   },
-  greeting: {
-    color: '#16281D',
+  topBarTitle: {
     fontSize: 24,
     fontWeight: '800',
-    marginTop: 24,
+    color: '#16281D',
   },
-  goal: {
-    color: '#5C7267',
-    fontSize: 15,
-    marginTop: 5,
+  goPremiumBtn: {
+    backgroundColor: '#F2C14E',
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
-  calorieCard: {
+  goPremiumText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#4C3400',
+  },
+  heroCard: {
     backgroundColor: '#1E5C35',
     borderRadius: 18,
-    marginTop: 26,
-    padding: 20,
+    padding: 18,
+    marginBottom: 14,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  heroGreeting: {
+    fontSize: 13,
+    color: '#CFE4D6',
+  },
+  tierBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  tierBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  heroHello: {
+    fontSize: 21,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginTop: 6,
+  },
+  heroSub: {
+    fontSize: 13,
+    color: '#D8EADF',
+    marginTop: 4,
+  },
+  calorieCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DCE9E0',
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 20,
   },
   cardLabel: {
-    color: '#D8EADF',
+    color: '#5C7267',
     fontSize: 14,
     fontWeight: '700',
   },
   calorieValue: {
-    color: '#FFFFFF',
-    fontSize: 26,
+    color: '#16281D',
+    fontSize: 22,
     fontWeight: '800',
-    marginTop: 10,
+    marginTop: 6,
   },
   progressBackground: {
-    backgroundColor: '#5C856A',
+    backgroundColor: '#E2ECE6',
     borderRadius: 999,
     height: 9,
-    marginTop: 18,
+    marginTop: 14,
     overflow: 'hidden',
   },
   progressFill: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E5C35',
     borderRadius: 999,
     height: '100%',
   },
   sectionTitle: {
-    color: '#16281D',
-    fontSize: 19,
+    color: '#5C7267',
+    fontSize: 13,
     fontWeight: '800',
-    marginTop: 28,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 4,
     marginBottom: 12,
   },
   macroGrid: {
     flexDirection: 'row',
     gap: 9,
+    marginBottom: 20,
   },
   macroCard: {
     backgroundColor: '#FFFFFF',
@@ -301,39 +421,65 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 5,
   },
-  primaryButton: {
-    alignItems: 'center',
-    backgroundColor: '#1E5C35',
-    borderRadius: 10,
-    paddingVertical: 15,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+  tile: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+    padding: 14,
+    marginBottom: 12,
   },
-  secondaryButton: {
-    alignItems: 'center',
+  tileIcon: {
+    fontSize: 22,
+    marginBottom: 8,
+  },
+  tileTitle: {
+  color: '#16281D',
+  fontSize: 13,
+  fontWeight: '800',
+  marginBottom: 2,
+  },
+  tileSub: {
+  color: '#7C8F83',
+  fontSize: 11,
+  lineHeight: 15,
+  },
+  upsellCard: {
     backgroundColor: '#D9ECDF',
-    borderRadius: 10,
-    marginTop: 10,
-    paddingVertical: 15,
-  },
-  secondaryButtonText: {
-    color: '#1E5C35',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  logoutButton: {
+    borderRadius: 16,
+    padding: 18,
     alignItems: 'center',
-    backgroundColor: '#FDE3E3',
-    borderRadius: 10,
-    marginTop: 32,
-    paddingVertical: 13,
+    marginBottom: 20,
   },
-  logoutText: {
-    color: '#B3261E',
-    fontSize: 14,
+  upsellTitle: {
+    fontSize: 15,
     fontWeight: '800',
+    color: '#154526',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  upsellSub: {
+    fontSize: 12.5,
+    color: '#5C7267',
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  upsellBtn: {
+    backgroundColor: '#1E5C35',
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  upsellBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 })

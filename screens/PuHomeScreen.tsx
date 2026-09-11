@@ -1,0 +1,586 @@
+import React, { useEffect, useState } from 'react'
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
+import { supabase } from '../services/supabase'
+
+type Props = {
+  navigation: any
+}
+
+type UserProfile = {
+  full_name: string | null;
+  subscription_tier: string | null;
+}   
+
+type Meal = {
+  label: 'Breakfast' | 'Lunch' | 'Dinner'
+  description: string
+}
+
+type NutritionRowProps = {
+  label: string
+  value: number
+  goal: number
+}
+
+function NutritionRow({ label, value, goal }: NutritionRowProps) {
+  return (
+    <View style={styles.nutritionRow}>
+      <Text style={styles.nutritionLabel}>{label}</Text>
+      <Text style={styles.nutritionValue}>
+        {value} / {goal} g
+      </Text>
+    </View>
+  )
+}
+
+export default function PuHomeScreen({ navigation }: Props) {
+  const [loading, setLoading] = useState(true)
+  const [userName, setUserName] = useState('User')
+  const [coachName, setCoachName] = useState('Not assigned yet')
+  const [isPremium, setIsPremium] = useState(true)
+
+  const [calories, setCalories] = useState({ consumed: 0, goal: 0 })
+
+  const [meals] = useState<Meal[]>([
+    { label: 'Breakfast', description: 'Meal description' },
+    { label: 'Lunch', description: 'Meal description' },
+    { label: 'Dinner', description: 'Meal description' },
+  ])
+
+  const [nutrition, setNutrition] = useState({
+    protein: { value: 0, goal: 0 },
+    carb: { value: 0, goal: 0 },
+    fat: { value: 0, goal: 0 },
+    fiber: { value: 0, goal: 0 },
+  })
+
+  const [recommendation, setRecommendation] = useState({
+    name: 'Suggested meal name',
+    kcal: 0,
+  })
+
+  useEffect(() => {
+    void loadPuHome()
+  }, [])
+
+  async function loadPuHome() {
+    try {
+      setLoading(true)
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.error('Unable to retrieve authenticated user:', userError.message)
+        return
+      }
+
+      if (!user) {
+        console.error('No authenticated user found.')
+        return
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, subscription_tier')
+        .eq('id', user.id)
+        .maybeSingle<UserProfile>();
+
+        if (profileError) {
+        console.error(
+            'Unable to load premium user profile:',
+            profileError.message
+        );
+        return;
+        }
+
+        console.log('Premium user profile:', profile);
+
+        setUserName(profile?.full_name?.trim() || 'User');
+        setCoachName('Not assigned yet');
+        setIsPremium(profile?.subscription_tier === 'premium');
+
+      // Temporary values until food_logs / progress_logs are connected.
+      setCalories({ consumed: 0, goal: 0 })
+      setNutrition({
+        protein: { value: 0, goal: 0 },
+        carb: { value: 0, goal: 0 },
+        fat: { value: 0, goal: 0 },
+        fiber: { value: 0, goal: 0 },
+      })
+      setRecommendation({
+        name: 'Suggested meal name',
+        kcal: 0,
+      })
+    } catch (error) {
+      console.error('Unable to load premium user dashboard:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const firstName = userName.trim().split(/\s+/)[0] || 'User'
+
+  const caloriePercent =
+    calories.goal > 0
+      ? Math.min(100, Math.round((calories.consumed / calories.goal) * 100))
+      : 0
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#1E5C35" />
+      </SafeAreaView>
+    )
+  }
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.topBar}>
+        <Text style={styles.topBarTitle}>Dashboard</Text>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.headerRow}>
+          <Text style={styles.pageHeading}>Dashboard</Text>
+
+          <Pressable
+            style={styles.avatarButton}
+            onPress={() => navigation.navigate('PuProfile')}
+          >
+            <Text style={styles.avatarEmoji}>👤</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.heroCard}>
+          <View style={styles.heroTopRow}>
+            <Text style={styles.heroGreeting}>Hello, {firstName}</Text>
+
+            {isPremium ? (
+              <View style={styles.premiumChip}>
+                <Text style={styles.premiumChipText}>Premium</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.coachCard}>
+          <View style={styles.coachIconWrap}>
+            <Text style={styles.coachIconText}>👤</Text>
+          </View>
+
+          <View style={styles.coachTextBlock}>
+            <Text style={styles.coachName}>Coach {coachName}</Text>
+            <Text style={styles.coachSubtitle}>
+              Your assigned health coach
+            </Text>
+          </View>
+
+          <Pressable
+            style={styles.viewCoachButton}
+            onPress={() => navigation.navigate('PuCoach')}
+          >
+            <Text style={styles.viewCoachText}>View Coach</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.progressCard}>
+          <View style={styles.progressTopRow}>
+            <View style={styles.ringOuter}>
+              <View style={styles.ringInner}>
+                <Text style={styles.ringPercentText}>{caloriePercent}%</Text>
+              </View>
+            </View>
+
+            <View style={styles.calorieTextBlock}>
+              <Text style={styles.calorieLabel}>Calorie Progress</Text>
+              <Text style={styles.calorieValue}>
+                {calories.consumed} / {calories.goal} kcal
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.mealsHeaderRow}>
+            <Text style={styles.mealsHeading}>Today&apos;s Meals</Text>
+
+            <View style={styles.activePlanChip}>
+              <Text style={styles.activePlanChipText}>Active Meal Plan</Text>
+            </View>
+          </View>
+
+          {meals.map((meal) => (
+            <View key={meal.label} style={styles.mealRow}>
+              <Text style={styles.mealLabel}>{meal.label}</Text>
+
+              <Text style={styles.mealDescription} numberOfLines={1}>
+                {meal.description}
+              </Text>
+            </View>
+          ))}
+
+          <Pressable
+            style={styles.logMealButton}
+            onPress={() => navigation.navigate('PuLogMeal')}
+          >
+            <Text style={styles.logMealText}> Log Meal</Text>
+          </Pressable>
+        </View>
+
+        <Pressable
+          style={styles.summaryLinkCard}
+          onPress={() => navigation.navigate('PuNutrition')}
+        >
+          <View style={styles.summaryLinkHeaderRow}>
+            <Text style={styles.summaryLinkHeading}>Nutrition Summary</Text>
+            <Text style={styles.chevron}>›</Text>
+          </View>
+
+          <View style={styles.nutritionGrid}>
+            <NutritionRow
+              label="Protein"
+              value={nutrition.protein.value}
+              goal={nutrition.protein.goal}
+            />
+            <NutritionRow
+              label="Carb"
+              value={nutrition.carb.value}
+              goal={nutrition.carb.goal}
+            />
+            <NutritionRow
+              label="Fat"
+              value={nutrition.fat.value}
+              goal={nutrition.fat.goal}
+            />
+            <NutritionRow
+              label="Fiber"
+              value={nutrition.fiber.value}
+              goal={nutrition.fiber.goal}
+            />
+          </View>
+        </Pressable>
+
+        <Pressable
+          style={styles.summaryLinkCard}
+          onPress={() => navigation.navigate('PuRecommendation')}
+        >
+          <View style={styles.summaryLinkHeaderRow}>
+            <Text style={styles.summaryLinkHeading}>
+              Personalized Recommendation
+            </Text>
+            <Text style={styles.chevron}>›</Text>
+          </View>
+
+          <Text style={styles.recommendationText} numberOfLines={1}>
+            {recommendation.name} — {recommendation.kcal} kcal
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
+  loadingScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5FAF6',
+  },
+
+  topBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: '#F5FAF6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2ECE6',
+  },
+  topBarTitle: {
+    color: '#1E5C35',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 24,
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  pageHeading: {
+    color: '#16281D',
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  avatarButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#1E5C35',
+  },
+  avatarEmoji: {
+    fontSize: 18,
+  },
+
+  heroCard: {
+    marginBottom: 14,
+    padding: 18,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroGreeting: {
+    color: '#16281D',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  premiumChip: {
+    borderRadius: 999,
+    backgroundColor: '#8FD3A6',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  premiumChipText: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  coachCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+  coachIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EAF3EC',
+  },
+  coachIconText: {
+    fontSize: 18,
+  },
+  coachTextBlock: {
+    flex: 1,
+  },
+  coachName: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  coachSubtitle: {
+    marginTop: 2,
+    color: '#7C8F83',
+    fontSize: 12,
+  },
+  viewCoachButton: {
+    borderRadius: 999,
+    backgroundColor: '#1E5C35',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  viewCoachText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  progressCard: {
+    marginBottom: 18,
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+  progressTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  ringOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 8,
+    borderColor: '#DCEEE1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  ringInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 8,
+    borderColor: '#1E5C35',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5FAF6',
+  },
+  ringPercentText: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  calorieTextBlock: {
+    flex: 1,
+  },
+  calorieLabel: {
+    color: '#16281D',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  calorieValue: {
+    marginTop: 4,
+    color: '#7C8F83',
+    fontSize: 13,
+  },
+
+  mealsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  mealsHeading: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  activePlanChip: {
+    borderRadius: 999,
+    backgroundColor: '#8FD3A6',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  activePlanChipText: {
+    color: '#1E5C35',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  mealRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  mealLabel: {
+    width: 78,
+    color: '#16281D',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  mealDescription: {
+    flex: 1,
+    color: '#7C8F83',
+    fontSize: 13,
+  },
+
+  logMealButton: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    backgroundColor: '#1E5C35',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  logMealText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  summaryLinkCard: {
+    marginBottom: 14,
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+  summaryLinkHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  summaryLinkHeading: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  chevron: {
+    color: '#B7C6BC',
+    fontSize: 22,
+  },
+
+  nutritionGrid: {
+    gap: 8,
+  },
+  nutritionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  nutritionLabel: {
+    color: '#5C7267',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  nutritionValue: {
+    color: '#16281D',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  recommendationText: {
+    color: '#7C8F83',
+    fontSize: 13,
+  },
+})
