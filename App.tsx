@@ -20,6 +20,7 @@ import CoachContentScreen from './screens/CoachContentScreen'
 import CoachProfileScreen from './screens/CoachProfileScreen'
 import AdminHomeScreen from './screens/AdminHomeScreen'
 import AdminMoreScreen from './screens/AdminMoreScreen'
+import AdminUsersScreen from './screens/AdminUserListScreen'
 import PuHomeScreen from './screens/PuHomeScreen'
 import PuProfileScreen from './screens/PuProfileScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
@@ -33,6 +34,8 @@ import type {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 const Tab = createBottomTabNavigator<MainTabParamList>()
 const PremiumTab = createBottomTabNavigator<PremiumTabParamList>()
+const AdminTabNav = createBottomTabNavigator()
+const CoachTabNav = createBottomTabNavigator()
 
 function MainTabs() {
   return (
@@ -212,7 +215,35 @@ function PremiumTabs() {
   )
 }
 
+function AdminTabs() {
+  return (
+    <AdminTabNav.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { display: 'none' }, // Hides default React Navigation tab bar since custom UI is used
+      }}
+    >
+      <AdminTabNav.Screen name="AdminHome" component={AdminHomeScreen} />
+      <AdminTabNav.Screen name="AdminMore" component={AdminMoreScreen} />
+      <AdminTabNav.Screen name="AdminUsers" component={AdminUsersScreen} />
+    </AdminTabNav.Navigator>
+  )
+}
 
+function CoachTabs() {
+  return (
+    <CoachTabNav.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { display: 'none' }, 
+      }}
+    >
+      <CoachTabNav.Screen name="CoachHome" component={CoachHomeScreen} />
+      <CoachTabNav.Screen name="CoachContent" component={CoachContentScreen} />
+      <CoachTabNav.Screen name="CoachProfile" component={CoachProfileScreen} />
+    </CoachTabNav.Navigator>
+  )
+}
 
 
 export default function App() {
@@ -223,30 +254,30 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false)
 
   const checkProfile = useCallback(async (userId: string) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, app_role, subscription_tier')
-    .eq('id', userId)
-    .maybeSingle()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, app_role, subscription_tier')
+      .eq('id', userId)
+      .maybeSingle()
 
-  if (error) {
-    console.error('Profile check failed:', error.message)
-    setHasProfile(false)
-    setUserRole(null)
-    setIsPremium(false)
-    return
-  }
+    if (error) {
+      console.error('Profile check failed:', error.message)
+      setHasProfile(false)
+      setUserRole(null)
+      setIsPremium(false)
+      return
+    }
 
-  if (data) {
-    setHasProfile(true)
-    setUserRole((data.app_role ?? 'user') as 'user' | 'coach' | 'admin')
-    setIsPremium(data.subscription_tier === 'premium')
-  } else {
-    setHasProfile(false)
-    setUserRole(null)
-    setIsPremium(false)
-  }
-}, [])
+    if (data) {
+      setHasProfile(true)
+      setUserRole((data.app_role ?? 'user') as 'user' | 'coach' | 'admin')
+      setIsPremium(data.subscription_tier === 'premium')
+    } else {
+      setHasProfile(false)
+      setUserRole(null)
+      setIsPremium(false)
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -277,6 +308,8 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, updatedSession) => {
+      // 1. Keep loading active while fetching profile data on auth state updates
+      setLoading(true)
       setSession(updatedSession)
 
       if (updatedSession?.user) {
@@ -286,7 +319,10 @@ export default function App() {
         setUserRole(null)
       }
 
-      setLoading(false)
+      // 2. Only unblock UI after checkProfile has fully updated hasProfile and userRole
+      if (mounted) {
+        setLoading(false)
+      }
     })
 
     return () => {
@@ -359,44 +395,27 @@ export default function App() {
             )}
           </Stack.Screen>
         ) : userRole === 'admin' ? (
-          <>
-            <Stack.Screen
-              name="AdminHome"
-              component={AdminHomeScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="AdminMore"
-              component={AdminMoreScreen}
-              options={{ headerShown: false }}
-            />
-          </>
+          <Stack.Screen
+            name="AdminTabs"
+            component={AdminTabs}
+            options={{ headerShown: false }}
+          />
         ) : userRole === 'coach' ? (
           <>
             <Stack.Screen
-              name="CoachHome"
-              component={CoachHomeScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachContent"
-              component={CoachContentScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachProfile"
-              component={CoachProfileScreen}
+              name="CoachTabs"
+              component={CoachTabs}
               options={{ headerShown: false }}
             />
           </>
+
         ) : isPremium ? (
-  <>
+          <>
             <Stack.Screen
               name="PremiumTabs"
               component={PremiumTabs}
               options={{ headerShown: false }}
             />
-
             <Stack.Screen
               name="PuCoach"
               component={PuCoachScreen}

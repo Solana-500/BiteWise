@@ -16,6 +16,14 @@ export type PremiumTabParamList = {
   PuProfile: undefined
 }
 
+export type AdminTabParamList = {
+  AdminHome: undefined
+  AdminUsers: undefined
+  AdminCoaches: undefined
+  AdminReports: undefined
+  AdminMore: undefined
+}
+
 export type RootStackParamList = {
   Login: undefined
   SignUp: undefined
@@ -26,13 +34,17 @@ export type RootStackParamList = {
   PremiumTabs: NavigatorScreenParams<PremiumTabParamList>
 
   PuCoach: undefined
-  
   FoodLogging: undefined
 
+  CoachTabs: undefined
   CoachHome: undefined
   CoachContent: undefined
   CoachProfile: undefined
 
   AdminHome: undefined
   AdminMore: undefined
+  AdminTabs: NavigatorScreenParams<AdminTabParamList> | undefined
+  AdminUsers: undefined
+  AdminCoaches: undefined
+  AdminReports: undefined
 }

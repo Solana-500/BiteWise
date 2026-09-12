@@ -22,49 +22,48 @@ export default function SignUpScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleSignUp() {
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Missing information', 'Please complete all fields.')
-      return
-    }
-
-    if (password.length < 6) {
-      Alert.alert(
-        'Password too short',
-        'Use a password with at least 6 characters.'
-      )
-      return
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'The passwords do not match.')
-      return
-    }
-
-    setLoading(true)
-
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    })
-
-    setLoading(false)
-
-    if (error) {
-      Alert.alert('Registration failed', error.message)
-      return
-    }
-
-    if (!data.session) {
-      Alert.alert(
-        'Account created',
-        'Check your email to confirm your account, then return and log in.'
-      )
-    } else {
-      Alert.alert('Account created', 'You are now logged in.')
-    }
-
-    navigation.navigate('Login')
+  if (!email || !password || !confirmPassword) {
+    Alert.alert('Missing information', 'Please complete all fields.')
+    return
   }
+
+  if (password.length < 6) {
+    Alert.alert(
+      'Password too short',
+      'Use a password with at least 6 characters.'
+    )
+    return
+  }
+
+  if (password !== confirmPassword) {
+    Alert.alert('Password mismatch', 'The passwords do not match.')
+    return
+  }
+
+  setLoading(true)
+
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim(),
+    password,
+  })
+
+  setLoading(false)
+
+  if (error) {
+    Alert.alert('Registration failed', error.message)
+    return
+  }
+
+  if (!data.session) {
+    Alert.alert(
+      'Account created',
+      'Check your email to confirm your account, then return and log in.'
+    )
+    navigation.navigate('Login')
+  } else {
+    Alert.alert('Account created', 'You are now logged in.')
+  }
+}
 
   return (
     <View style={styles.container}>

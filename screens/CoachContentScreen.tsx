@@ -15,69 +15,68 @@ type Props = {
 
 export default function CoachContentScreen({ navigation }: Props) {
   return (
-    <SafeAreaView style={styles.screen}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <TouchableOpacity
-          style={styles.backHomeButton}
-          onPress={() => navigation.navigate('CoachHome')}
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
         >
-          <Text style={styles.backHomeText}>‹ Home</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.pageHeading}>Content Management</Text>
-
-        <View style={styles.grid}>
-          <Pressable
-            style={styles.gridCard}
-            onPress={() => navigation.navigate('CoachMealPlans')}
+          <TouchableOpacity
+            style={styles.backHomeButton}
+            onPress={() => navigation.navigate('CoachHome')}
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Meal Plans</Text>
-              <Text style={styles.chevron}>›</Text>
-            </View>
+            <Text style={styles.backHomeText}>‹ Home</Text>
+          </TouchableOpacity>
 
-            <View style={styles.iconWrap}>
-              <Text style={styles.emoji}>🥗</Text>
-            </View>
-          </Pressable>
+          <Text style={styles.pageHeading}>Content Management</Text>
 
-          <Pressable
-            style={styles.gridCard}
-            onPress={() => navigation.navigate('CoachWorkoutPlans')}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Workout Plans</Text>
-              <Text style={styles.chevron}>›</Text>
-            </View>
+          <View style={styles.grid}>
+            <Pressable
+              style={styles.gridCard}
+              onPress={() => navigation.navigate('CoachMealPlans')}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Meal Plans</Text>
+                <Text style={styles.chevron}>›</Text>
+              </View>
 
-            <View style={styles.iconWrap}>
-              <Text style={styles.emoji}>🏋️</Text>
-            </View>
-          </Pressable>
+              <View style={styles.iconWrap}>
+                <Text style={styles.emoji}>🥗</Text>
+              </View>
+            </Pressable>
 
-          <Pressable
-            style={[styles.gridCard, styles.wideCard]}
-            onPress={() => navigation.navigate('CoachRecipes')}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Recipes</Text>
-              <Text style={styles.chevron}>›</Text>
-            </View>
+            <Pressable
+              style={styles.gridCard}
+              onPress={() => navigation.navigate('CoachWorkoutPlans')}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Workout Plans</Text>
+                <Text style={styles.chevron}>›</Text>
+              </View>
 
-            <View style={styles.iconWrap}>
-              <Text style={styles.emoji}>🍲</Text>
-            </View>
-          </Pressable>
-        </View>
-      </ScrollView>
+              <View style={styles.iconWrap}>
+                <Text style={styles.emoji}>🏋️</Text>
+              </View>
+            </Pressable>
 
-      {/*
-        Tab bar values matched to MainTabs in App.tsx:
-        icon 19px, label 11px/700, bar height 68, active #1E5C35, inactive #7C8F83
-      */}
+            <Pressable
+              style={[styles.gridCard, styles.wideCard]}
+              onPress={() => navigation.navigate('CoachRecipes')}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Recipes</Text>
+                <Text style={styles.chevron}>›</Text>
+              </View>
+
+              <View style={styles.iconWrap}>
+                <Text style={styles.emoji}>🍲</Text>
+              </View>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Tab bar outside SafeAreaView to stretch flush to device bottom */}
       <View style={styles.bottomTabBar}>
         <CoachTab
           label="Home"
@@ -101,7 +100,7 @@ export default function CoachContentScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('CoachProfile')}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -125,6 +124,10 @@ function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
+  safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
@@ -196,9 +199,9 @@ const styles = StyleSheet.create({
   },
 
   bottomTabBar: {
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 8,
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',

@@ -51,6 +51,7 @@ export default function LoginScreen({ navigation }: Props) {
       return
     }
 
+    // Fetch profile to verify role alignment before letting App.tsx navigate
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('app_role, approval_status')
@@ -59,16 +60,15 @@ export default function LoginScreen({ navigation }: Props) {
 
     if (profileError) {
       await supabase.auth.signOut()
-
       Alert.alert('Role check failed', profileError.message)
       return
     }
 
     const actualRole = (profile?.app_role ?? 'user') as AppRole
 
+    // Reject if selected login tab doesn't match DB role
     if (actualRole !== selectedRole) {
       await supabase.auth.signOut()
-
       Alert.alert(
         'Incorrect account type',
         `This account is registered as a ${actualRole}. Please select the ${actualRole} login tab.`
@@ -76,30 +76,21 @@ export default function LoginScreen({ navigation }: Props) {
       return
     }
 
-    if (actualRole === 'coach') {
-      if (profile?.approval_status !== 'approved') {
-        await supabase.auth.signOut()
-
-        Alert.alert(
-          'Registration pending',
-          'Your Coach registration is pending administrator approval.'
-        )
-        return
-      }
-
-      navigation.replace('CoachHome')
+    // Block pending coaches
+    if (actualRole === 'coach' && profile?.approval_status !== 'approved') {
+      await supabase.auth.signOut()
+      Alert.alert(
+        'Registration pending',
+        'Your Coach registration is pending administrator approval.'
+      )
       return
     }
 
-    if (actualRole === 'admin') {
-      navigation.replace('AdminHome')
-      return
-    }
+    // DO NOT call navigation.replace() here!
+    // App.tsx's onAuthStateChange listener handles rendering CoachHome automatically.
 
-    navigation.replace('MainTabs', { screen: 'Home' })
   } catch (error: any) {
     console.error('Login error:', error)
-
     Alert.alert(
       'Login failed',
       error?.message || 'Unable to sign in. Please try again.'

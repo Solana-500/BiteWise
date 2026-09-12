@@ -84,156 +84,155 @@ export default function CoachHomeScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Dashboard</Text>
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <View style={styles.headerRow}>
-          <Text style={styles.pageHeading}>Dashboard</Text>
-
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>COACH</Text>
-          </View>
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Dashboard</Text>
         </View>
 
-        <View style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
-            <Text style={styles.heroGreeting}>Good afternoon</Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          <View style={styles.headerRow}>
+            <Text style={styles.pageHeading}>Dashboard</Text>
 
-            <View style={styles.planChip}>
-              <Text style={styles.planChipText}>
-                {specialty ? specialty.toUpperCase() : 'HEALTH COACH'}
-              </Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>COACH</Text>
             </View>
           </View>
 
-          <Text style={styles.heroName}>Hello, {firstName} 👋</Text>
+          <View style={styles.heroCard}>
+            <View style={styles.heroTopRow}>
+              <Text style={styles.heroGreeting}>Good afternoon</Text>
 
-          <Text style={styles.heroSubtext}>
-            Here&apos;s what&apos;s happening with your clients today.
-          </Text>
-        </View>
+              <View style={styles.planChip}>
+                <Text style={styles.planChipText}>
+                  {specialty ? specialty.toUpperCase() : 'HEALTH COACH'}
+                </Text>
+              </View>
+            </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Clients Assigned</Text>
+            <Text style={styles.heroName}>Hello, {firstName} 👋</Text>
 
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryNumber}>{stats.clients}</Text>
+            <Text style={styles.heroSubtext}>
+              Here&apos;s what&apos;s happening with your clients today.
+            </Text>
+          </View>
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>Clients Assigned</Text>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryNumber}>{stats.clients}</Text>
+
+              <Pressable
+                style={styles.viewUsersButton}
+                onPress={() => navigation.navigate('CoachClients')}
+              >
+                <Text style={styles.viewUsersText}>View User List</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: stats.clients > 0 ? '45%' : '0%' },
+                ]}
+              />
+            </View>
+          </View>
+
+          <Text style={styles.sectionTitle}>Your Coaching Tools</Text>
+
+          <View style={styles.featureGrid}>
+            <Pressable
+              style={styles.featureCard}
+              onPress={() => navigation.navigate('CoachContent')}
+            >
+              <Text style={styles.featureEmoji}>📝</Text>
+              <Text style={styles.featureTitle}>Content Status</Text>
+              <Text style={styles.featureSubtitle}>
+                {stats.pendingContent} pending · {stats.approvedContent} approved
+              </Text>
+            </Pressable>
 
             <Pressable
-              style={styles.viewUsersButton}
-              onPress={() => navigation.navigate('CoachClients')}
+              style={styles.featureCard}
+              onPress={() => navigation.navigate('CoachContent')}
             >
-              <Text style={styles.viewUsersText}>View User List</Text>
+              <Text style={styles.featureEmoji}>📋</Text>
+              <Text style={styles.featureTitle}>Content</Text>
+              <Text style={styles.featureSubtitle}>
+                Manage meal plans, workouts &amp; recipes
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.featureCard}
+              onPress={() => navigation.navigate('CoachMessages')}
+            >
+              <Text style={styles.featureEmoji}>💬</Text>
+              <Text style={styles.featureTitle}>Messages</Text>
+              <Text style={styles.featureSubtitle}>
+                {stats.unreadMessages} unread
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.featureCard}
+              onPress={() => navigation.navigate('CoachRatings')}
+            >
+              <Text style={styles.featureEmoji}>⭐</Text>
+              <Text style={styles.featureTitle}>Recent Ratings</Text>
+              <Text style={styles.featureSubtitle}>
+                {stats.recentRatings} new
+              </Text>
             </Pressable>
           </View>
 
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: stats.clients > 0 ? '45%' : '0%' },
-              ]}
-            />
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Your Coaching Tools</Text>
-
-        <View style={styles.featureGrid}>
-          <Pressable
-            style={styles.featureCard}
-            onPress={() => navigation.navigate('CoachContent')}
-          >
-            <Text style={styles.featureEmoji}>📝</Text>
-            <Text style={styles.featureTitle}>Content Status</Text>
-            <Text style={styles.featureSubtitle}>
-              {stats.pendingContent} pending · {stats.approvedContent} approved
-            </Text>
-          </Pressable>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
 
           <Pressable
-            style={styles.featureCard}
-            onPress={() => navigation.navigate('CoachContent')}
-          >
-            <Text style={styles.featureEmoji}>📋</Text>
-            <Text style={styles.featureTitle}>Content</Text>
-            <Text style={styles.featureSubtitle}>
-              Manage meal plans, workouts &amp; recipes
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.featureCard}
+            style={styles.activityCard}
             onPress={() => navigation.navigate('CoachMessages')}
           >
-            <Text style={styles.featureEmoji}>💬</Text>
-            <Text style={styles.featureTitle}>Messages</Text>
-            <Text style={styles.featureSubtitle}>
-              {stats.unreadMessages} unread
-            </Text>
+            <Text style={styles.activityEmoji}>💬</Text>
+
+            <View style={styles.activityTextBlock}>
+              <Text style={styles.activityTitle}>
+                {stats.unreadMessages} Unread Messages
+              </Text>
+              <Text style={styles.activitySubtitle} numberOfLines={1}>
+                From User: Coach, what&apos;s my meal plan for this week?
+              </Text>
+            </View>
+
+            <Text style={styles.chevron}>›</Text>
           </Pressable>
 
           <Pressable
-            style={styles.featureCard}
+            style={styles.activityCard}
             onPress={() => navigation.navigate('CoachRatings')}
           >
-            <Text style={styles.featureEmoji}>⭐</Text>
-            <Text style={styles.featureTitle}>Recent Ratings</Text>
-            <Text style={styles.featureSubtitle}>
-              {stats.recentRatings} new
-            </Text>
+            <Text style={styles.activityEmoji}>⭐</Text>
+
+            <View style={styles.activityTextBlock}>
+              <Text style={styles.activityTitle}>
+                {stats.recentRatings} Recent Ratings
+              </Text>
+              <Text style={styles.activitySubtitle} numberOfLines={1}>
+                User rated you 4 · Coach has been so supportive in my journey.
+              </Text>
+            </View>
+
+            <Text style={styles.chevron}>›</Text>
           </Pressable>
-        </View>
+        </ScrollView>
+      </SafeAreaView>
 
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-
-        <Pressable
-          style={styles.activityCard}
-          onPress={() => navigation.navigate('CoachMessages')}
-        >
-          <Text style={styles.activityEmoji}>💬</Text>
-
-          <View style={styles.activityTextBlock}>
-            <Text style={styles.activityTitle}>
-              {stats.unreadMessages} Unread Messages
-            </Text>
-            <Text style={styles.activitySubtitle} numberOfLines={1}>
-              From User: Coach, what&apos;s my meal plan for this week?
-            </Text>
-          </View>
-
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.activityCard}
-          onPress={() => navigation.navigate('CoachRatings')}
-        >
-          <Text style={styles.activityEmoji}>⭐</Text>
-
-          <View style={styles.activityTextBlock}>
-            <Text style={styles.activityTitle}>
-              {stats.recentRatings} Recent Ratings
-            </Text>
-            <Text style={styles.activitySubtitle} numberOfLines={1}>
-              User rated you 4 · Coach has been so supportive in my journey.
-            </Text>
-          </View>
-
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
-      </ScrollView>
-
-      {/*
-        Tab bar values matched to MainTabs in App.tsx:
-        icon 19px, label 11px/700, bar height 68, active #1E5C35, inactive #7C8F83
-      */}
+      {/* Tab bar outside SafeAreaView to stretch flush to device bottom */}
       <View style={styles.bottomTabBar}>
         <CoachTab label="Home" icon="🏠" active onPress={() => {}} />
         <CoachTab
@@ -257,7 +256,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('CoachProfile')}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -281,6 +280,10 @@ function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
+  safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
@@ -490,9 +493,9 @@ const styles = StyleSheet.create({
   },
 
   bottomTabBar: {
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 8,
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',

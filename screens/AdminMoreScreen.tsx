@@ -77,130 +77,132 @@ export default function AdminMoreScreen({ navigation }: Props) {
   });
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Audit & System Monitoring</Text>
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        {/* Filter Pills */}
-        <View style={styles.filterBar}>
-          {(['Audit', 'Auth.', 'Failures', 'Status'] as AuditFilter[]).map((filter) => {
-            const isActive = selectedFilter === filter;
-            return (
-              <TouchableOpacity
-                key={filter}
-                style={[styles.filterPill, isActive && styles.filterPillActive]}
-                onPress={() => setSelectedFilter(filter)}
-              >
-                <Text
-                  style={[
-                    styles.filterPillText,
-                    isActive && styles.filterPillTextActive,
-                  ]}
-                >
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+    <View style={styles.outerContainer}>
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Audit & System Monitoring</Text>
         </View>
 
-        {/* Search Bar + Filter Button */}
-        <View style={styles.searchRow}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Filter actor, action or status"
-            placeholderTextColor="#7C8F83"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <TouchableOpacity
-            style={styles.filterSubmitBtn}
-            onPress={() => Alert.alert('Filter Applied', `Filtering by: ${searchQuery || 'All'}`)}
-          >
-            <Text style={styles.filterSubmitText}>FILTER</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Audit Logs Section */}
-        <Text style={styles.sectionTitle}>AUDIT LOGS</Text>
-        <View style={styles.cardContainer}>
-          {filteredLogs.map((item, index) => (
-            <React.Fragment key={item.id}>
-              <View style={styles.logRow}>
-                <Text style={styles.logTime}>{item.time}</Text>
-                <Text style={styles.logAction}>{item.action}</Text>
-                <Text style={styles.logActor}>{item.actor}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    item.status === 'Failed' ? styles.statusFailed : styles.statusSuccess,
-                  ]}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          {/* Filter Pills */}
+          <View style={styles.filterBar}>
+            {(['Audit', 'Auth.', 'Failures', 'Status'] as AuditFilter[]).map((filter) => {
+              const isActive = selectedFilter === filter;
+              return (
+                <TouchableOpacity
+                  key={filter}
+                  style={[styles.filterPill, isActive && styles.filterPillActive]}
+                  onPress={() => setSelectedFilter(filter)}
                 >
                   <Text
                     style={[
-                      styles.statusBadgeText,
-                      item.status === 'Failed'
-                        ? styles.statusFailedText
-                        : styles.statusSuccessText,
+                      styles.filterPillText,
+                      isActive && styles.filterPillTextActive,
                     ]}
                   >
-                    {item.status}
+                    {filter}
                   </Text>
-                </View>
-              </View>
-              {index < filteredLogs.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-        {/* System Status Section */}
-        <Text style={styles.sectionTitle}>SYSTEM STATUS</Text>
-        <View style={styles.cardContainer}>
-          {systemServices.map((service, index) => (
-            <React.Fragment key={service.name}>
-              <View style={styles.serviceRow}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    service.status === 'Degraded'
-                      ? styles.statusDegraded
-                      : service.status === 'Offline'
-                      ? styles.statusFailed
-                      : styles.statusSuccess,
-                  ]}
-                >
-                  <Text
+          {/* Search Bar + Filter Button */}
+          <View style={styles.searchRow}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Filter actor, action or status"
+              placeholderTextColor="#7C8F83"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity
+              style={styles.filterSubmitBtn}
+              onPress={() => Alert.alert('Filter Applied', `Filtering by: ${searchQuery || 'All'}`)}
+            >
+              <Text style={styles.filterSubmitText}>FILTER</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Audit Logs Section */}
+          <Text style={styles.sectionTitle}>AUDIT LOGS</Text>
+          <View style={styles.cardContainer}>
+            {filteredLogs.map((item, index) => (
+              <React.Fragment key={item.id}>
+                <View style={styles.logRow}>
+                  <Text style={styles.logTime}>{item.time}</Text>
+                  <Text style={styles.logAction}>{item.action}</Text>
+                  <Text style={styles.logActor}>{item.actor}</Text>
+                  <View
                     style={[
-                      styles.statusBadgeText,
+                      styles.statusBadge,
+                      item.status === 'Failed' ? styles.statusFailed : styles.statusSuccess,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusBadgeText,
+                        item.status === 'Failed'
+                          ? styles.statusFailedText
+                          : styles.statusSuccessText,
+                      ]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
+                </View>
+                {index < filteredLogs.length - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))}
+          </View>
+
+          {/* System Status Section */}
+          <Text style={styles.sectionTitle}>SYSTEM STATUS</Text>
+          <View style={styles.cardContainer}>
+            {systemServices.map((service, index) => (
+              <React.Fragment key={service.name}>
+                <View style={styles.serviceRow}>
+                  <Text style={styles.serviceName}>{service.name}</Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
                       service.status === 'Degraded'
-                        ? styles.statusDegradedText
+                        ? styles.statusDegraded
                         : service.status === 'Offline'
-                        ? styles.statusFailedText
-                        : styles.statusSuccessText,
+                        ? styles.statusFailed
+                        : styles.statusSuccess,
                     ]}
                   >
-                    {service.status}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.statusBadgeText,
+                        service.status === 'Degraded'
+                          ? styles.statusDegradedText
+                          : service.status === 'Offline'
+                          ? styles.statusFailedText
+                          : styles.statusSuccessText,
+                      ]}
+                    >
+                      {service.status}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              {index < systemServices.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </View>
+                {index < systemServices.length - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))}
+          </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Logout Button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
 
-      {/* Bottom Navigation Bar */}
+      {/* Bottom Navigation Bar positioned flush at screen bottom */}
       <View style={styles.bottomTabBar}>
         <AdminTab
           label="Home"
@@ -214,7 +216,7 @@ export default function AdminMoreScreen({ navigation }: Props) {
         />
         <AdminTab
           label="Coach"
-          icon="🏋️"
+          icon="💪"
           onPress={() => navigation.navigate('AdminCoaches')}
         />
         <AdminTab
@@ -222,9 +224,9 @@ export default function AdminMoreScreen({ navigation }: Props) {
           icon="📊"
           onPress={() => navigation.navigate('AdminReports')}
         />
-        <AdminTab label="More" icon="⚙️" active onPress={() => {}} />
+        <AdminTab label="More" icon="≡" active onPress={() => {}} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -247,6 +249,10 @@ function AdminTab({ label, icon, active, onPress }: AdminTabProps) {
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
   screen: {
     flex: 1,
     backgroundColor: '#F5FAF6',
@@ -437,9 +443,9 @@ const styles = StyleSheet.create({
   },
 
   bottomTabBar: {
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 8,
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',

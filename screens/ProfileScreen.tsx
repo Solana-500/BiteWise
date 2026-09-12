@@ -144,8 +144,11 @@ export default function ProfileScreen({ navigation }: Props) {
       <Text style={styles.sectionTitle}>Personal Information</Text>
 
       <View style={styles.infoCard}>
-        <InfoRow label="Age" value={profile?.age ? `${profile.age} years` : 'Not set'} />
-        <InfoRow label="Sex" value={profile?.sex || 'Not set'} />
+        <InfoRow 
+            label="Age" 
+            value={profile?.age != null ? `${profile.age} years old` : 'Not set'} 
+          />
+          <InfoRow label="Sex" value={profile?.sex || 'Not set'} />
         <InfoRow
           label="Height"
           value={profile?.height_cm ? `${profile.height_cm} cm` : 'Not set'}

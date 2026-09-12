@@ -66,82 +66,85 @@ export default function CoachSignUpScreen() {
   }
 
   async function handleCoachSignUp() {
-    if (
-      !fullName.trim() ||
-      !email.trim() ||
-      !password ||
-      selectedSpecialties.length === 0
-    ) {
+  if (
+    !fullName.trim() ||
+    !email.trim() ||
+    !password ||
+    selectedSpecialties.length === 0
+  ) {
+    Alert.alert(
+      'Missing information',
+      'Complete your full name, email, password, and select at least one coaching specialty.'
+    )
+    return
+  }
+
+  if (password.length < 6) {
+    Alert.alert(
+      'Password too short',
+      'Password must have at least 6 characters.'
+    )
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    // 1. Create Auth user first
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+    })
+
+    if (error || !data.user) {
       Alert.alert(
-        'Missing information',
-        'Complete your full name, email, password, and select at least one coaching specialty.'
+        'Coach registration failed',
+        error?.message || 'Unable to create the coach account.'
       )
       return
     }
 
-    if (password.length < 6) {
-      Alert.alert(
-        'Password too short',
-        'Password must have at least 6 characters.'
-      )
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      // 1. Create Auth user first
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
+    // 2. Insert profile with coaching & personal details
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user.id,
+        full_name: fullName.trim(),
+        app_role: 'coach',
+        approval_status: 'pending',
+        coaching_specialty: selectedSpecialties.join(', '),
+        years_experience: experience.trim() || null,
+        age: age ? parseInt(age, 10) : null,
+        gender: gender || null,
+        height_cm: heightCm ? parseFloat(heightCm) : null,
+        weight_kg: weightKg ? parseFloat(weightKg) : null,
+        updated_at: new Date().toISOString(),
       })
 
-      if (error || !data.user) {
-        Alert.alert(
-          'Coach registration failed',
-          error?.message || 'Unable to create the coach account.'
-        )
-        return
-      }
-
-      // 2. Insert profile with coaching & personal details
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          full_name: fullName.trim(),
-          app_role: 'coach',
-          approval_status: 'pending',
-          coaching_specialty: selectedSpecialties.join(', '),
-          years_experience: experience.trim() || null,
-          age: age ? parseInt(age, 10) : null,
-          gender: gender || null,
-          height_cm: heightCm ? parseFloat(heightCm) : null,
-          weight_kg: weightKg ? parseFloat(weightKg) : null,
-          updated_at: new Date().toISOString(),
-        })
-
-      if (profileError) {
-        Alert.alert('Profile setup failed', profileError.message)
-        return
-      }
-
-      Alert.alert(
-        'Coach registration submitted',
-        'Your account was created and is waiting for a system administrator to approve it.',
-        [
-          {
-            text: 'Back to Login',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]
-      )
-    } catch (err: any) {
-      Alert.alert('Error', err?.message || 'An unexpected error occurred.')
-    } finally {
-      setLoading(false)
+    if (profileError) {
+      Alert.alert('Profile setup failed', profileError.message)
+      return
     }
+
+    // 3. IMPORTANT: Sign out immediately so pending coaches stay on the Auth stack
+    await supabase.auth.signOut()
+
+    Alert.alert(
+      'Coach registration submitted',
+      'Your account was created and is waiting for a system administrator to approve it.',
+      [
+        {
+          text: 'Back to Login',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]
+    )
+  } catch (err: any) {
+    Alert.alert('Error', err?.message || 'An unexpected error occurred.')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <ScrollView

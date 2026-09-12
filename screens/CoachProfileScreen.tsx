@@ -83,7 +83,6 @@ export default function CoachProfileScreen({ navigation }: Props) {
         style: 'destructive',
         onPress: async () => {
           await supabase.auth.signOut();
-          navigation.replace('Login');
         },
       },
     ]);
@@ -115,117 +114,116 @@ export default function CoachProfileScreen({ navigation }: Props) {
       ? 'PENDING APPROVAL'
       : 'COACH';
 
-  const ageText = profile?.age ? `${profile.age} years` : 'Not set';
+  const ageText = profile?.age ? `${profile.age} years old` : 'Not set';
   const sexText = profile?.gender ? String(profile.gender) : 'Not set';
   const heightText = profile?.height_cm ? `${profile.height_cm} cm` : 'Not set';
   const weightText = profile?.weight_kg ? `${profile.weight_kg} kg` : 'Not set';
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Profile</Text>
-      </View>
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Profile</Text>
+        </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <TouchableOpacity
-          style={styles.backHomeButton}
-          onPress={() => navigation.navigate('CoachHome')}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
         >
-          <Text style={styles.backHomeText}>‹ Home</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backHomeButton}
+            onPress={() => navigation.navigate('CoachHome')}
+          >
+            <Text style={styles.backHomeText}>‹ Home</Text>
+          </TouchableOpacity>
 
-        <View style={styles.heroCard}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initials}</Text>
+          <View style={styles.heroCard}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+
+            <Text style={styles.heroName}>{fullName}</Text>
+            <Text style={styles.heroEmail}>{profile?.email}</Text>
+
+            <View style={styles.planChip}>
+              <Text style={styles.planChipText}>{approvalLabel}</Text>
+            </View>
           </View>
 
-          <Text style={styles.heroName}>{fullName}</Text>
-          <Text style={styles.heroEmail}>{profile?.email}</Text>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
 
-          <View style={styles.planChip}>
-            <Text style={styles.planChipText}>{approvalLabel}</Text>
-          </View>
-        </View>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Age</Text>
+              <Text style={styles.infoValue}>{ageText}</Text>
+            </View>
 
-        <Text style={styles.sectionTitle}>Personal Information</Text>
+            <View style={styles.divider} />
 
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Age</Text>
-            <Text style={styles.infoValue}>{ageText}</Text>
-          </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Sex</Text>
+              <Text style={styles.infoValue}>{sexText}</Text>
+            </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Sex</Text>
-            <Text style={styles.infoValue}>{sexText}</Text>
-          </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Height</Text>
+              <Text style={styles.infoValue}>{heightText}</Text>
+            </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Height</Text>
-            <Text style={styles.infoValue}>{heightText}</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Weight</Text>
-            <Text style={styles.infoValue}>{weightText}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>Coaching Information</Text>
-
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Specialty</Text>
-            <Text style={styles.infoValue}>{specialty}</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Weight</Text>
+              <Text style={styles.infoValue}>{weightText}</Text>
+            </View>
           </View>
 
-          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Coaching Information</Text>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Years of experience</Text>
-            <Text style={styles.infoValue}>{experience}</Text>
-          </View>
-        </View>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Specialty</Text>
+              <Text style={styles.infoValue}>{specialty}</Text>
+            </View>
 
-        <Text style={styles.sectionTitle}>Account</Text>
+            <View style={styles.divider} />
 
-        <Pressable
-          style={styles.accountCard}
-          onPress={() =>
-            Alert.alert(
-              'Credentials',
-              'Certificate upload will be connected next.'
-            )
-          }
-        >
-          <View>
-            <Text style={styles.accountTitle}>Credentials</Text>
-            <Text style={styles.accountSubtitle}>
-              Manage your uploaded certificate
-            </Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Years of experience</Text>
+              <Text style={styles.infoValue}>{experience}</Text>
+            </View>
           </View>
 
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
+          <Text style={styles.sectionTitle}>Account</Text>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <Pressable
+            style={styles.accountCard}
+            onPress={() =>
+              Alert.alert(
+                'Credentials',
+                'Certificate upload will be connected next.'
+              )
+            }
+          >
+            <View>
+              <Text style={styles.accountTitle}>Credentials</Text>
+              <Text style={styles.accountSubtitle}>
+                Manage your uploaded certificate
+              </Text>
+            </View>
 
-      {/*
-        Tab bar values matched to MainTabs in App.tsx:
-        icon 19px, label 11px/700, bar height 68, active #1E5C35, inactive #7C8F83
-      */}
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Tab bar outside SafeAreaView to stretch flush to device bottom */}
       <View style={styles.bottomTabBar}>
         <CoachTab
           label="Home"
@@ -249,7 +247,7 @@ export default function CoachProfileScreen({ navigation }: Props) {
         />
         <CoachTab label="Profile" icon="👤" active onPress={() => {}} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -273,6 +271,10 @@ function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
+  safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
@@ -437,9 +439,9 @@ const styles = StyleSheet.create({
   },
 
   bottomTabBar: {
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 8,
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',

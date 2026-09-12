@@ -71,98 +71,100 @@ export default function AdminHomeScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Admin Dashboard</Text>
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        {/* Overview Section */}
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <View style={styles.gridContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>USERS</Text>
-            <Text style={styles.statValue}>
-              {stats.usersCount > 1000
-                ? `${(stats.usersCount / 1000).toFixed(1)}K`
-                : stats.usersCount}
-            </Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>COACHES</Text>
-            <Text style={styles.statValue}>{stats.coachesCount}</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>PENDING COACH APPS</Text>
-            <Text style={styles.statValue}>{stats.pendingAppsCount}</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>PENDING CONTENT</Text>
-            <Text style={styles.statValue}>{stats.pendingContentCount}</Text>
-          </View>
+    <View style={styles.outerContainer}>
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Admin Dashboard</Text>
         </View>
 
-        {/* Reported Reviews Section */}
-        <Text style={styles.sectionTitle}>Reported Reviews</Text>
-        <View style={styles.reportedCard}>
-          <Text style={styles.reportedText}>Reviews requiring moderation</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{stats.reportedReviewsCount}</Text>
-          </View>
-        </View>
-
-        {/* Recent Activity Section */}
-        <Text style={styles.sectionTitle}>Recent Admin Activity</Text>
-        <View style={styles.activityCard}>
-          {activities.map((item, index) => (
-            <React.Fragment key={item.id}>
-              <View style={styles.activityRow}>
-                <Text style={styles.activityTime}>{item.time}</Text>
-                <Text style={styles.activityDescription}>{item.description}</Text>
-              </View>
-              {index < activities.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </View>
-
-        {/* Action Buttons */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('AdminActivityLog')}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
         >
-          <Text style={styles.actionButtonText}>VIEW ALL RECENT ACTIVITY</Text>
-        </TouchableOpacity>
+          {/* Overview Section */}
+          <Text style={styles.sectionTitle}>Overview</Text>
+          <View style={styles.gridContainer}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>USERS</Text>
+              <Text style={styles.statValue}>
+                {stats.usersCount > 1000
+                  ? `${(stats.usersCount / 1000).toFixed(1)}K`
+                  : stats.usersCount}
+              </Text>
+            </View>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('AdminAuditLogs')}
-        >
-          <Text style={styles.actionButtonText}>OPEN AUDIT & SYSTEM MONITORING</Text>
-        </TouchableOpacity>
-      </ScrollView>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>COACHES</Text>
+              <Text style={styles.statValue}>{stats.coachesCount}</Text>
+            </View>
 
-      {/* Bottom Navigation Bar */}
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>PENDING COACH APPS</Text>
+              <Text style={styles.statValue}>{stats.pendingAppsCount}</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>PENDING CONTENT</Text>
+              <Text style={styles.statValue}>{stats.pendingContentCount}</Text>
+            </View>
+          </View>
+
+          {/* Reported Reviews Section */}
+          <Text style={styles.sectionTitle}>Reported Reviews</Text>
+          <View style={styles.reportedCard}>
+            <Text style={styles.reportedText}>Reviews requiring moderation</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{stats.reportedReviewsCount}</Text>
+            </View>
+          </View>
+
+          {/* Recent Activity Section */}
+          <Text style={styles.sectionTitle}>Recent Admin Activity</Text>
+          <View style={styles.activityCard}>
+            {activities.map((item, index) => (
+              <React.Fragment key={item.id}>
+                <View style={styles.activityRow}>
+                  <Text style={styles.activityTime}>{item.time}</Text>
+                  <Text style={styles.activityDescription}>{item.description}</Text>
+                </View>
+                {index < activities.length - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))}
+          </View>
+
+          {/* Action Buttons */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('AdminActivityLog')}
+          >
+            <Text style={styles.actionButtonText}>VIEW ALL RECENT ACTIVITY</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('AdminMore')}
+          >
+            <Text style={styles.actionButtonText}>OPEN AUDIT & SYSTEM MONITORING</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Bottom Navigation Bar positioned flush at screen bottom */}
       <View style={styles.bottomTabBar}>
-        <AdminTab label="Home" icon="⌂" active onPress={() => {}} />
+        <AdminTab label="Home" icon="🏠" active onPress={() => {}} />
         <AdminTab
           label="Users"
-          icon="▥"
+          icon="👥"
           onPress={() => navigation.navigate('AdminUsers')}
         />
         <AdminTab
           label="Coach"
-          icon="♟"
+          icon="💪"
           onPress={() => navigation.navigate('AdminCoaches')}
         />
         <AdminTab
           label="Reports"
-          icon="▤"
+          icon="📊"
           onPress={() => navigation.navigate('AdminReports')}
         />
         <AdminTab
@@ -171,7 +173,7 @@ export default function AdminHomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('AdminMore')}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -194,6 +196,10 @@ function AdminTab({ label, icon, active, onPress }: AdminTabProps) {
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
   screen: {
     flex: 1,
     backgroundColor: '#F5FAF6',
@@ -338,9 +344,9 @@ const styles = StyleSheet.create({
   },
 
   bottomTabBar: {
-    height: 68,
-    paddingTop: 7,
-    paddingBottom: 8,
+    height: 78,
+    paddingTop: 8,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
