@@ -24,6 +24,11 @@ import AdminUsersScreen from './screens/AdminUserListScreen'
 import PuHomeScreen from './screens/PuHomeScreen'
 import PuProfileScreen from './screens/PuProfileScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
+import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
+import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
+import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
+
+
 import { supabase } from './services/supabase'
 import type {
   MainTabParamList,
@@ -416,10 +421,29 @@ export default function App() {
               component={PremiumTabs}
               options={{ headerShown: false }}
             />
+
             <Stack.Screen
               name="PuCoach"
               component={PuCoachScreen}
               options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+              name="FoodLogging"
+              component={FoodLoggingScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+
+            <Stack.Screen
+              name="ExerciseLibrary"
+              component={ExerciseLibraryScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
             />
           </>
         ) : (
@@ -429,9 +453,43 @@ export default function App() {
               component={MainTabs}
               options={{ headerShown: false }}
             />
+
             <Stack.Screen
               name="FoodLogging"
               component={FoodLoggingScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+
+            <Stack.Screen
+              name="ExerciseLibrary"
+              component={ExerciseLibraryScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen
+              name="ExerciseEntry"
+              component={ExerciseEntryScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen
+              name="WorkoutRoutineBuilder"
+              component={WorkoutRoutineBuilderScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+            <Stack.Screen
+              name="RoutineExerciseSearch"
+              component={RoutineExerciseSearchScreen}
               options={{
                 headerShown: false,
                 presentation: 'card',

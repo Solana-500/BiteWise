@@ -2,8 +2,7 @@ import { useCallback, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -13,14 +12,20 @@ import {
   View,
 } from 'react-native'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import type { CompositeNavigationProp } from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import { supabase } from '../services/supabase'
-import type { MainTabParamList } from '../types/navigation'
-
-type WellnessNavigationProp = BottomTabNavigationProp<
+import type {
+  ExerciseCategory,
   MainTabParamList,
-  'Wellness'
+  RootStackParamList,
+} from '../types/navigation'
+
+type WellnessNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Wellness'>,
+  NativeStackNavigationProp<RootStackParamList>
 >
 
 type WaterLog = {
@@ -28,6 +33,12 @@ type WaterLog = {
   amount_ml: number | null
   logged_at: string
 }
+
+const EXERCISE_CATEGORIES: ExerciseCategory[] = [
+  'Cardio',
+  'Strength',
+  'Workout Routines',
+]
 
 const DAILY_WATER_TARGET = 2500
 const WATER_STEP = 500
@@ -71,6 +82,10 @@ export default function WellnessScreen() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+
+  const [exerciseCategory, setExerciseCategory] =
+    useState<ExerciseCategory | null>(null)
+  const [showExerciseMenu, setShowExerciseMenu] = useState(false)
 
   const loadWaterToday = useCallback(async () => {
     try {
@@ -281,28 +296,44 @@ export default function WellnessScreen() {
         }
 
         if (loggedAmount <= remainingToRemove) {
-          const { error: deleteError } = await supabase
+          const { data: deletedRows, error: deleteError } = await supabase
             .from('water_logs')
             .delete()
             .eq('id', log.id)
             .eq('user_id', user.id)
+            .select('id, amount_ml')
 
           if (deleteError) {
             throw deleteError
           }
 
+          if (!deletedRows || deletedRows.length === 0) {
+            throw new Error(
+              'No water record was deleted. Check the water_logs DELETE policy in Supabase.'
+            )
+          }
+
           remainingToRemove -= loggedAmount
         } else {
-          const { error: updateError } = await supabase
+          const newAmount = loggedAmount - remainingToRemove
+
+          const { data: updatedRows, error: updateError } = await supabase
             .from('water_logs')
             .update({
-              amount_ml: loggedAmount - remainingToRemove,
+              amount_ml: newAmount,
             })
             .eq('id', log.id)
             .eq('user_id', user.id)
+            .select('id, amount_ml')
 
           if (updateError) {
             throw updateError
+          }
+
+          if (!updatedRows || updatedRows.length === 0) {
+            throw new Error(
+              'No water record was updated. Check the water_logs UPDATE policy in Supabase.'
+            )
           }
 
           remainingToRemove = 0
@@ -320,6 +351,27 @@ export default function WellnessScreen() {
     } finally {
       setSaving(false)
     }
+  }
+
+  function chooseExerciseCategory(category: ExerciseCategory) {
+  setExerciseCategory(category)
+  setShowExerciseMenu(false)
+
+  if (category === 'Workout Routines') {
+    navigation.navigate('WorkoutRoutineBuilder')
+    return
+  }
+
+  navigation.navigate('ExerciseLibrary', {
+    category,
+  })
+}
+
+  function handleSyncDevice() {
+    Alert.alert(
+      'Sync from device',
+      'Device sync is not connected yet. You can add Apple Health, Google Fit, Fitbit, or Garmin integration later.'
+    )
   }
 
   async function handleRefresh() {
@@ -342,141 +394,222 @@ export default function WellnessScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor="#1E5C35"
-        />
-      }
-    >
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backHomeButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.backHomeText}>‹ Home</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.topBarTitle}>Wellness</Text>
-
-        <TouchableOpacity
-          style={[
-            styles.saveTopButton,
-            saving && styles.saveTopButtonDisabled,
-          ]}
-          disabled={saving}
-          onPress={() => void saveWater()}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.saveTopButtonText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.title}>Log Water Intake</Text>
-
-      <Text style={styles.screenSubtitle}>
-        Keep your hydration habits on track.
-      </Text>
-
-      <View style={styles.card}>
-        <View style={styles.waterIconCircle}>
-          <Text style={styles.waterIcon}>💧</Text>
-        </View>
-
-        <Text style={styles.cardTitle}>Today&apos;s Water</Text>
-
-        <Text style={styles.amount}>
-          {waterToday.toLocaleString()} ml
-        </Text>
-
-        <Text style={styles.subtitle}>
-          Daily target: {DAILY_WATER_TARGET.toLocaleString()} ml
-        </Text>
-
-        <View style={styles.progressBackground}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${waterProgress * 100}%` },
-            ]}
+    <>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#1E5C35"
           />
-        </View>
-
-        <Text style={styles.progressText}>
-          {Math.round(waterProgress * 100)}% of your daily goal
-        </Text>
-
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.amountInput}
-            value={amountInput}
-            onChangeText={setAmountInput}
-            keyboardType="number-pad"
-            placeholder="0"
-            placeholderTextColor="#97A89D"
-            returnKeyType="done"
-            maxLength={5}
-          />
-
-          <Text style={styles.unitText}>ml</Text>
-        </View>
-
-        <View style={styles.row}>
+        }
+      >
+        <View style={styles.topBar}>
           <TouchableOpacity
-            style={[
-              styles.waterButton,
-              styles.removeButton,
-              saving && styles.waterButtonDisabled,
-            ]}
-            disabled={saving}
-            onPress={() => void removeWaterInstantly()}
+            style={styles.backHomeButton}
+            onPress={() => navigation.navigate('Home')}
           >
-            {saving ? (
-              <ActivityIndicator size="small" color="#1E5C35" />
-            ) : (
-              <Text style={styles.removeButtonText}>−500 ml</Text>
-            )}
+            <Text style={styles.backHomeText}>‹ Home</Text>
           </TouchableOpacity>
 
+          <Text style={styles.topBarTitle}>Wellness</Text>
+
           <TouchableOpacity
             style={[
-              styles.waterButton,
-              styles.addButton,
-              saving && styles.waterButtonDisabled,
+              styles.saveTopButton,
+              saving && styles.saveTopButtonDisabled,
             ]}
             disabled={saving}
-            onPress={() => void addWaterInstantly()}
+            onPress={() => void saveWater()}
           >
             {saving ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.addButtonText}>+500 ml</Text>
+              <Text style={styles.saveTopButtonText}>Save</Text>
             )}
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.inputHint}>
-          Enter an amount or use the buttons, then tap Save.
+        <Text style={styles.title}>Log Water Intake</Text>
+
+        <Text style={styles.screenSubtitle}>
+          Keep your hydration habits on track.
         </Text>
-      </View>
 
-      <View style={styles.exerciseCard}>
-        <Text style={styles.exerciseIcon}>🏃</Text>
+        <View style={styles.card}>
+          <View style={styles.waterIconCircle}>
+            <Text style={styles.waterIcon}>💧</Text>
+          </View>
 
-        <Text style={styles.cardTitle}>Log Exercise</Text>
+          <Text style={styles.cardTitle}>Today&apos;s Water</Text>
 
-        <Text style={styles.subtitle}>
-          Exercise logging will be added after the core nutrition tracker.
-        </Text>
-      </View>
-    </ScrollView>
+          <Text style={styles.amount}>
+            {waterToday.toLocaleString()} ml
+          </Text>
+
+          <Text style={styles.subtitle}>
+            Daily target: {DAILY_WATER_TARGET.toLocaleString()} ml
+          </Text>
+
+          <View style={styles.progressBackground}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${waterProgress * 100}%` },
+              ]}
+            />
+          </View>
+
+          <Text style={styles.progressText}>
+            {Math.round(waterProgress * 100)}% of your daily goal
+          </Text>
+
+          <View style={styles.inputRow}>
+            <TextInput
+              style={styles.amountInput}
+              value={amountInput}
+              onChangeText={setAmountInput}
+              keyboardType="number-pad"
+              placeholder="0"
+              placeholderTextColor="#97A89D"
+              returnKeyType="done"
+              maxLength={5}
+            />
+
+            <Text style={styles.unitText}>ml</Text>
+          </View>
+
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[
+                styles.waterButton,
+                styles.removeButton,
+                saving && styles.waterButtonDisabled,
+              ]}
+              disabled={saving}
+              onPress={() => void removeWaterInstantly()}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#1E5C35" />
+              ) : (
+                <Text style={styles.removeButtonText}>−500 ml</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.waterButton,
+                styles.addButton,
+                saving && styles.waterButtonDisabled,
+              ]}
+              disabled={saving}
+              onPress={() => void addWaterInstantly()}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.addButtonText}>+500 ml</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.inputHint}>
+            Enter an amount or use the buttons, then tap Save.
+          </Text>
+        </View>
+
+        <Text style={styles.wellnessSectionTitle}>Log Exercise</Text>
+
+        <View style={styles.exerciseCard}>
+          <Text style={styles.exerciseHeading}>
+            Choose an exercise category
+          </Text>
+
+          <TouchableOpacity
+            style={styles.exerciseDropdown}
+            onPress={() => setShowExerciseMenu(true)}
+          >
+            <Text
+              style={[
+                styles.exerciseDropdownText,
+                !exerciseCategory && styles.exerciseDropdownPlaceholder,
+              ]}
+            >
+              {exerciseCategory || 'Select exercise category...'}
+            </Text>
+
+            <Text style={styles.exerciseDropdownArrow}>⌄</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.exerciseHelperText}>
+            Choose Cardio, Strength, or Workout Routines to continue.
+          </Text>
+        </View>
+
+        <Text style={styles.wellnessSectionTitle}>Sync From Device</Text>
+
+        <View style={styles.syncCard}>
+          <View style={styles.syncTopRow}>
+            <View style={styles.deviceIconCircle}>
+              <Text style={styles.deviceIcon}>⌚</Text>
+            </View>
+
+            <View style={styles.syncTextArea}>
+              <Text style={styles.syncCardTitle}>Connected Device</Text>
+
+              <Text style={styles.syncCardSubtitle}>
+                No activity device synced yet.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.syncButton}
+            onPress={handleSyncDevice}
+          >
+            <Text style={styles.syncButtonText}>Connect a Device</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={showExerciseMenu}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowExerciseMenu(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.exerciseMenu}>
+            <View style={styles.exerciseMenuHeader}>
+              <Text style={styles.exerciseMenuTitle}>Add Exercise</Text>
+
+              <TouchableOpacity
+                style={styles.closeMenuButton}
+                onPress={() => setShowExerciseMenu(false)}
+              >
+                <Text style={styles.closeMenuText}>×</Text>
+              </TouchableOpacity>
+            </View>
+
+            {EXERCISE_CATEGORIES.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={styles.exerciseCategoryOption}
+                onPress={() => chooseExerciseCategory(category)}
+              >
+                <Text style={styles.exerciseCategoryOptionText}>
+                  {category}
+                </Text>
+
+                <Text style={styles.exerciseCategoryArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+    </>
   )
 }
 
@@ -700,17 +833,195 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  wellnessSectionTitle: {
+    color: '#5C7267',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+    marginTop: 24,
+    textTransform: 'uppercase',
+  },
+
   exerciseCard: {
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderColor: '#DCE9E0',
     borderRadius: 16,
     borderWidth: 1,
-    marginTop: 18,
     padding: 20,
   },
 
-  exerciseIcon: {
-    fontSize: 34,
+  exerciseHeading: {
+    color: '#16281D',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 16,
+  },
+
+  exerciseDropdown: {
+    alignItems: 'center',
+    backgroundColor: '#F8FBF9',
+    borderColor: '#C9DBD0',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 52,
+    paddingHorizontal: 14,
+  },
+
+  exerciseDropdownText: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  exerciseDropdownPlaceholder: {
+    color: '#97A89D',
+    fontWeight: '400',
+  },
+
+  exerciseDropdownArrow: {
+    color: '#1E5C35',
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 22,
+    marginTop: -4,
+  },
+
+  exerciseHelperText: {
+    color: '#708277',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 12,
+  },
+
+  syncCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DCE9E0',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    padding: 20,
+  },
+
+  syncTopRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+
+  deviceIconCircle: {
+    alignItems: 'center',
+    backgroundColor: '#D9ECDF',
+    borderRadius: 24,
+    height: 48,
+    justifyContent: 'center',
+    marginRight: 12,
+    width: 48,
+  },
+
+  deviceIcon: {
+    fontSize: 25,
+  },
+
+  syncTextArea: {
+    flex: 1,
+  },
+
+  syncCardTitle: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  syncCardSubtitle: {
+    color: '#708277',
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  syncButton: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#1E5C35',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    marginTop: 18,
+    minHeight: 48,
+  },
+
+  syncButtonText: {
+    color: '#1E5C35',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  modalBackdrop: {
+    backgroundColor: 'rgba(22, 40, 29, 0.45)',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+
+  exerciseMenu: {
+    backgroundColor: '#F5FAF6',
+    borderColor: '#C9DBD0',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+  },
+
+  exerciseMenuHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+
+  exerciseMenuTitle: {
+    color: '#16281D',
+    fontSize: 21,
+    fontWeight: '800',
+  },
+
+  closeMenuButton: {
+    alignItems: 'center',
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+
+  closeMenuText: {
+    color: '#1E5C35',
+    fontSize: 30,
+    fontWeight: '300',
+    lineHeight: 34,
+  },
+
+  exerciseCategoryOption: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DCE9E0',
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    minHeight: 60,
+    paddingHorizontal: 22,
+  },
+
+  exerciseCategoryOptionText: {
+    color: '#16281D',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+
+  exerciseCategoryArrow: {
+    color: '#1E5C35',
+    fontSize: 30,
+    fontWeight: '300',
+    lineHeight: 32,
   },
 })

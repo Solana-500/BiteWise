@@ -24,6 +24,19 @@ export type AdminTabParamList = {
   AdminMore: undefined
 }
 
+export type ExerciseCategory =
+  | 'Cardio'
+  | 'Strength'
+  | 'Workout Routines'
+
+  export type RoutineExerciseDraft = {
+  id: string
+  name: string
+  exerciseType: string
+  muscle: string
+  equipment: string
+}
+
 export type RootStackParamList = {
   Login: undefined
   SignUp: undefined
@@ -36,6 +49,22 @@ export type RootStackParamList = {
   PuCoach: undefined
   FoodLogging: undefined
 
+  ExerciseLibrary: {
+    category: ExerciseCategory
+  }
+
+  ExerciseEntry: {
+    exerciseName: string
+    exerciseType: string
+  }
+
+  WorkoutRoutineBuilder: {
+    addedExercise?: RoutineExerciseDraft
+  } | undefined
+
+  RoutineExerciseSearch: {
+    existingExercises: RoutineExerciseDraft[]
+  }
   CoachTabs: undefined
   CoachHome: undefined
   CoachContent: undefined
