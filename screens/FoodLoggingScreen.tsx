@@ -1,9 +1,11 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -14,12 +16,17 @@ import {
 } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { useNavigation } from '@react-navigation/native'
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import { supabase } from '../services/supabase'
-import type { MainTabParamList } from '../types/navigation'
+import type { RootStackParamList } from '../types/navigation'
 
-type NavigationProp = BottomTabNavigationProp<MainTabParamList, 'Meals'>
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'FoodLogging'
+>
+
+type MealType = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
 
 type FoodResult = {
   name: string
@@ -30,43 +37,56 @@ type FoodResult = {
   serving: string
 }
 
-const SAMPLE_FOODS: FoodResult[] = [
-  {
-    name: 'White Rice, Cooked',
-    calories: 204,
-    protein: 4.3,
-    carbs: 44.5,
-    fat: 0.4,
-    serving: '1 cup',
-  },
-  {
-    name: 'Chicken Breast, Cooked',
-    calories: 284,
-    protein: 53,
-    carbs: 0,
-    fat: 6.2,
-    serving: '1 breast',
-  },
-  {
-    name: 'Banana',
-    calories: 105,
-    protein: 1.3,
-    carbs: 27,
-    fat: 0.4,
-    serving: '1 medium',
-  },
-  {
-    name: 'Greek Yogurt, Plain',
-    calories: 130,
-    protein: 17,
-    carbs: 9,
-    fat: 0.7,
-    serving: '1 container',
-  },
+type FoodLog = {
+  id: string
+  food_name: string
+  calories: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  meal_type: string
+  created_at: string
+}
+
+type ManageMode = 'edit' | 'delete' | null
+
+type UsdaNutrient = {
+  nutrientName?: string
+  value?: number
+  unitName?: string
+}
+
+type UsdaFood = {
+  fdcId: number
+  description: string
+  brandOwner?: string
+  servingSize?: number
+  servingSizeUnit?: string
+  foodNutrients?: UsdaNutrient[]
+}
+
+const MEAL_TYPES: MealType[] = [
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+  'Snack',
 ]
+
+function getNutrientValue(
+  nutrients: UsdaNutrient[] | undefined,
+  nutrientName: string
+) {
+  const nutrient = nutrients?.find(
+    (item) =>
+      item.nutrientName?.toLowerCase() === nutrientName.toLowerCase()
+  )
+
+  return Number(nutrient?.value ?? 0)
+}
 
 export default function FoodLoggingScreen() {
   const navigation = useNavigation<NavigationProp>()
+
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
   const [showScanner, setShowScanner] = useState(false)
@@ -74,50 +94,166 @@ export default function FoodLoggingScreen() {
   const [saving, setSaving] = useState(false)
   const [permission, requestPermission] = useCameraPermissions()
 
-  const filteredFoods = SAMPLE_FOODS.filter((food) =>
-    food.name.toLowerCase().includes(searchText.toLowerCase().trim())
+  const [selectedMeal, setSelectedMeal] = useState<MealType>('Breakfast')
+  const [showMealMenu, setShowMealMenu] = useState(false)
+
+  const [foodResults, setFoodResults] = useState<FoodResult[]>([])
+  const [searchingFoods, setSearchingFoods] = useState(false)
+  const [searchError, setSearchError] = useState('')
+
+  const searchFoods = useCallback(async (query: string) => {
+    const cleanedQuery = query.trim()
+
+    if (cleanedQuery.length < 2) {
+      setFoodResults([])
+      setSearchError('')
+      setSearchingFoods(false)
+      return
+    }
+
+    const apiKey = process.env.EXPO_PUBLIC_USDA_API_KEY
+
+    if (!apiKey) {
+      setSearchError(
+        'USDA API key is missing. Check your .env file and restart Expo.'
+      )
+      setFoodResults([])
+      setSearchingFoods(false)
+      return
+    }
+
+    try {
+      setSearchingFoods(true)
+      setSearchError('')
+
+      const url =
+        'https://api.nal.usda.gov/fdc/v1/foods/search?' +
+        `api_key=${encodeURIComponent(apiKey)}` +
+        `&query=${encodeURIComponent(cleanedQuery)}` +
+        '&pageSize=10'
+
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(
+          `Food search failed. USDA returned status ${response.status}.`
+        )
+      }
+
+      const data = await response.json()
+
+      const mappedFoods: FoodResult[] = (data.foods ?? []).map(
+        (food: UsdaFood) => {
+          const nutrients = food.foodNutrients ?? []
+
+          const serving =
+            food.servingSize && food.servingSizeUnit
+              ? `${food.servingSize} ${food.servingSizeUnit}`
+              : food.brandOwner
+                ? `${food.brandOwner} product`
+                : '100 g'
+
+          return {
+            name: food.description || 'Unnamed food',
+            calories: Math.round(getNutrientValue(nutrients, 'Energy')),
+            protein: Number(
+              getNutrientValue(nutrients, 'Protein').toFixed(1)
+            ),
+            carbs: Number(
+              getNutrientValue(
+                nutrients,
+                'Carbohydrate, by difference'
+              ).toFixed(1)
+            ),
+            fat: Number(
+              getNutrientValue(
+                nutrients,
+                'Total lipid (fat)'
+              ).toFixed(1)
+            ),
+            serving,
+          }
+        }
+      )
+
+      setFoodResults(mappedFoods)
+    } catch (error: any) {
+      console.error('USDA food search error:', error)
+
+      setSearchError(
+        error?.message || 'Unable to search foods. Please try again.'
+      )
+      setFoodResults([])
+    } finally {
+      setSearchingFoods(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void searchFoods(searchText)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchText, searchFoods])
+
+  const saveFood = useCallback(
+    async (food: FoodResult) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        Alert.alert('Login required', 'Please log in again.')
+        return
+      }
+
+      try {
+        setSaving(true)
+
+        const { error } = await supabase.from('food_logs').insert({
+          user_id: user.id,
+          food_name: food.name,
+          calories: food.calories,
+          protein_g: food.protein,
+          carbs_g: food.carbs,
+          fat_g: food.fat,
+          meal_type: selectedMeal.toLowerCase(),
+        })
+
+        if (error) {
+          Alert.alert('Could not save food', error.message)
+          return
+        }
+
+        Alert.alert(
+          'Food logged',
+          `${food.name} was added to your ${selectedMeal.toLowerCase()}.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        )
+      } catch (error: any) {
+        console.error('Food logging error:', error)
+
+        Alert.alert(
+          'Could not save food',
+          error?.message || 'Unable to save food. Please try again.'
+        )
+      } finally {
+        setSaving(false)
+      }
+    },
+    [navigation, selectedMeal]
   )
-
-  const saveFood = useCallback(async (food: FoodResult) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      Alert.alert('Login required', 'Please log in again.')
-      return
-    }
-
-    setSaving(true)
-
-    const { error } = await supabase.from('food_logs').insert({
-      user_id: user.id,
-      food_name: food.name,
-      calories: food.calories,
-      protein_g: food.protein,
-      carbs_g: food.carbs,
-      fat_g: food.fat,
-      meal_type: 'Meal',
-    })
-
-    setSaving(false)
-
-    if (error) {
-      Alert.alert('Could not save food', error.message)
-      return
-    }
-
-    Alert.alert('Food logged', `${food.name} was added to your diary.`, [
-      {
-        text: 'OK',
-        onPress: () => navigation.navigate('Meals'),
-      },
-    ])
-  }, [navigation])
 
   async function openScanner() {
     if (!permission?.granted) {
       const result = await requestPermission()
+
       if (!result.granted) {
         Alert.alert(
           'Camera permission needed',
@@ -136,7 +272,7 @@ export default function FoodLoggingScreen() {
 
     setScanned(true)
 
-    // Demo barcode result. Replace this lookup with a food database API later.
+    // Demo result. Replace with Open Food Facts barcode lookup later.
     const demoFood: FoodResult = {
       name: 'Scanned Chicken Breast',
       calories: 284,
@@ -148,174 +284,302 @@ export default function FoodLoggingScreen() {
 
     setShowScanner(false)
     setSelectedFood(demoFood)
+
     Alert.alert('Barcode detected', `Code: ${data}`)
   }
 
- if (showScanner) {
-  return (
-    <View style={styles.scannerScreen}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        barcodeScannerSettings={{
-          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128'],
-        }}
-        onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-      />
+  function chooseMeal(meal: MealType) {
+    setSelectedMeal(meal)
+    setShowMealMenu(false)
+  }
 
-      {/* This is outside CameraView, so it appears above the preview */}
-      <View style={styles.scannerControls} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.cameraBackButton}
-          onPress={() => {
-            setShowScanner(false)
-            setScanned(false)
-            navigation.navigate('Meals')
+  function handleClose() {
+    if (selectedFood) {
+      setSelectedFood(null)
+      return
+    }
+
+    navigation.goBack()
+  }
+
+  if (showScanner) {
+    return (
+      <View style={styles.scannerScreen}>
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{
+            barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128'],
           }}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.cameraBackArrow}>‹</Text>
-          <Text style={styles.cameraBackText}>Food Diary</Text>
-        </TouchableOpacity>
+          onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+        />
 
-        <View style={styles.scannerCenter} pointerEvents="none">
-          <View style={styles.scanFrame} />
-          <Text style={styles.scannerTitle}>Scan a food barcode</Text>
-          <Text style={styles.scannerHint}>
-            Place the barcode inside the frame
-          </Text>
+        <View style={styles.scannerControls} pointerEvents="box-none">
+          <TouchableOpacity
+            style={styles.cameraBackButton}
+            onPress={() => {
+              setShowScanner(false)
+              setScanned(false)
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cameraBackArrow}>‹</Text>
+            <Text style={styles.cameraBackText}>Food Diary</Text>
+          </TouchableOpacity>
+
+          <View style={styles.scannerCenter} pointerEvents="none">
+            <View style={styles.scanFrame} />
+
+            <Text style={styles.scannerTitle}>Scan a food barcode</Text>
+
+            <Text style={styles.scannerHint}>
+              Place the barcode inside the frame
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
-  )
-}
+    )
+  }
 
   return (
-  <SafeAreaView style={styles.screen}>
-    <KeyboardAvoidingView
-      style={styles.keyboardScreen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={styles.screen}>
+      <KeyboardAvoidingView
+        style={styles.keyboardScreen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.closeText}>×</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.pageTitle}>Log Food</Text>
-          <View style={styles.topSpacer} />
-        </View>
-
-        <View style={styles.mealSelector}>
-          <Text style={styles.mealSelectorText}>Breakfast</Text>
-          <Text style={styles.downArrow}>⌄</Text>
-        </View>
-
-        <View style={styles.searchRow}>
-          <Text style={styles.searchIcon}>⌕</Text>
-          <TextInput
-            style={styles.searchInput}
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Search foods, brands, flavors..."
-            placeholderTextColor="#8D8A9A"
-            returnKeyType="search"
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText('')}>
-              <Text style={styles.clearText}>×</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.tabsRow}>
-          <Text style={styles.activeTab}>All</Text>
-          <Text style={styles.inactiveTab}>My Meals</Text>
-          <Text style={styles.inactiveTab}>My Recipes</Text>
-          <Text style={styles.inactiveTab}>My Foods</Text>
-        </View>
-
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={openScanner}
-          >
-            <Text style={styles.actionIcon}>▣</Text>
-            <Text style={styles.actionText}>Barcode scan</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => setSelectedFood(null)}
-          >
-            <Text style={styles.actionIcon}>⊕</Text>
-            <Text style={styles.actionText}>Quick add</Text>
-          </TouchableOpacity>
-        </View>
-
-        {selectedFood ? (
-          <View style={styles.selectedCard}>
-            <Text style={styles.selectedLabel}>Selected food</Text>
-            <Text style={styles.selectedName}>{selectedFood.name}</Text>
-            <Text style={styles.selectedDetails}>
-              {selectedFood.calories} cal · {selectedFood.serving}
-            </Text>
-            <Text style={styles.selectedMacros}>
-              P {selectedFood.protein}g · C {selectedFood.carbs}g · F {selectedFood.fat}g
-            </Text>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
             <TouchableOpacity
-              style={styles.addButton}
-              disabled={saving}
-              onPress={() => saveFood(selectedFood)}
+              style={styles.closeButton}
+              onPress={handleClose}
             >
-              <Text style={styles.addButtonText}>
-                {saving ? 'Adding...' : 'Add to Diary'}
-              </Text>
+              <Text style={styles.closeText}>×</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.pageTitle}>Log Food</Text>
+
+            <View style={styles.topSpacer} />
+          </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.mealDropdownButton,
+              pressed && styles.mealDropdownPressed,
+            ]}
+            onPress={() => setShowMealMenu(true)}
+          >
+            <Text style={styles.mealDropdownText}>{selectedMeal}</Text>
+
+            <View style={styles.arrowCircle}>
+              <Text style={styles.dropdownArrow}>⌄</Text>
+            </View>
+          </Pressable>
+
+          <View style={styles.searchRow}>
+            <Text style={styles.searchIcon}>⌕</Text>
+
+            <TextInput
+              style={styles.searchInput}
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Search foods, brands, flavors..."
+              placeholderTextColor="#8D8A9A"
+              returnKeyType="search"
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+
+            {searchText.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchText('')
+                  setFoodResults([])
+                  setSearchError('')
+                }}
+              >
+                <Text style={styles.clearText}>×</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <View style={styles.tabsRow}>
+            <Text style={styles.activeTab}>All</Text>
+            <Text style={styles.inactiveTab}>My Meals</Text>
+            <Text style={styles.inactiveTab}>My Recipes</Text>
+            <Text style={styles.inactiveTab}>My Foods</Text>
+          </View>
+
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={openScanner}
+            >
+              <Text style={styles.actionIcon}>▣</Text>
+              <Text style={styles.actionText}>Barcode scan</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => setSelectedFood(null)}
+            >
+              <Text style={styles.actionIcon}>⊕</Text>
+              <Text style={styles.actionText}>Quick add</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>Search results</Text>
-            {filteredFoods.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No matching foods found.</Text>
-              </View>
-            ) : (
-              filteredFoods.map((food) => (
-                <TouchableOpacity
-                  key={food.name}
-                  style={styles.foodCard}
-                  onPress={() => setSelectedFood(food)}
+
+          {selectedFood ? (
+            <View style={styles.selectedCard}>
+              <Text style={styles.selectedLabel}>
+                Selected food · {selectedMeal}
+              </Text>
+
+              <Text style={styles.selectedName}>{selectedFood.name}</Text>
+
+              <Text style={styles.selectedDetails}>
+                {selectedFood.calories} cal · {selectedFood.serving}
+              </Text>
+
+              <Text style={styles.selectedMacros}>
+                P {selectedFood.protein}g · C {selectedFood.carbs}g · F{' '}
+                {selectedFood.fat}g
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  saving && styles.disabledAddButton,
+                ]}
+                disabled={saving}
+                onPress={() => saveFood(selectedFood)}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.addButtonText}>
+                    Add to {selectedMeal}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionTitle}>Search results</Text>
+
+              {searchingFoods ? (
+                <View style={styles.loadingResults}>
+                  <ActivityIndicator size="small" color="#1E5C35" />
+                  <Text style={styles.loadingResultsText}>
+                    Searching foods...
+                  </Text>
+                </View>
+              ) : searchError ? (
+                <View style={styles.emptyCard}>
+                  <Text style={styles.emptyText}>{searchError}</Text>
+                </View>
+              ) : searchText.trim().length < 2 ? (
+                <View style={styles.emptyCard}>
+                  <Text style={styles.emptyText}>
+                    Type at least 2 letters to search foods.
+                  </Text>
+                </View>
+              ) : foodResults.length === 0 ? (
+                <View style={styles.emptyCard}>
+                  <Text style={styles.emptyText}>
+                    No matching foods found.
+                  </Text>
+                </View>
+              ) : (
+                foodResults.map((food, index) => (
+                  <TouchableOpacity
+                    key={`${food.name}-${food.serving}-${index}`}
+                    style={styles.foodCard}
+                    onPress={() => setSelectedFood(food)}
+                  >
+                    <View style={styles.foodInfo}>
+                      <Text style={styles.foodName}>{food.name}</Text>
+
+                      <Text style={styles.foodDetails}>
+                        {food.calories} cal, {food.serving}
+                      </Text>
+                    </View>
+
+                    <View style={styles.plusButton}>
+                      <Text style={styles.plusButtonText}>+</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+            </>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <Modal
+        visible={showMealMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMealMenu(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setShowMealMenu(false)}
+        >
+          <Pressable
+            style={styles.mealMenu}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <Text style={styles.mealMenuTitle}>Select meal</Text>
+
+            {MEAL_TYPES.map((meal) => {
+              const isSelected = meal === selectedMeal
+
+              return (
+                <Pressable
+                  key={meal}
+                  style={({ pressed }) => [
+                    styles.mealOption,
+                    isSelected && styles.mealOptionSelected,
+                    pressed && styles.mealOptionPressed,
+                  ]}
+                  onPress={() => chooseMeal(meal)}
                 >
-                  <View style={styles.foodInfo}>
-                    <Text style={styles.foodName}>{food.name}</Text>
-                    <Text style={styles.foodDetails}>
-                      {food.calories} cal, {food.serving}
-                    </Text>
-                  </View>
-                  <Text style={styles.plusButton}>＋</Text>
-                </TouchableOpacity>
-              ))
-            )}
-          </>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+                  <Text
+                    style={[
+                      styles.mealOptionText,
+                      isSelected && styles.mealOptionTextSelected,
+                    ]}
+                  >
+                    {meal}
+                  </Text>
+
+                  {isSelected ? (
+                    <Text style={styles.selectedCheck}>✓</Text>
+                  ) : null}
+                </Pressable>
+              )
+            })}
+
+            <Pressable
+              style={styles.cancelMealButton}
+              onPress={() => setShowMealMenu(false)}
+            >
+              <Text style={styles.cancelMealText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-
-keyboardScreen: {
-  flex: 1,
-},
+  keyboardScreen: {
+    flex: 1,
+  },
 
   screen: {
     backgroundColor: '#F5FAF6',
@@ -365,23 +629,47 @@ keyboardScreen: {
     width: 54,
   },
 
-  mealSelector: {
+  mealDropdownButton: {
+    alignSelf: 'center',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 18,
+    minWidth: 210,
+    marginTop: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 999,
+    backgroundColor: '#EAF3EC',
+    borderWidth: 1,
+    borderColor: '#C9DBD0',
   },
 
-  mealSelectorText: {
+  mealDropdownPressed: {
+    opacity: 0.78,
+  },
+
+  mealDropdownText: {
     color: '#1E5C35',
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '800',
   },
 
-  downArrow: {
+  arrowCircle: {
+    width: 26,
+    height: 26,
+    marginLeft: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#D8EADF',
+  },
+
+  dropdownArrow: {
     color: '#1E5C35',
-    fontSize: 24,
-    marginLeft: 8,
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 22,
+    marginTop: -4,
   },
 
   searchRow: {
@@ -500,16 +788,23 @@ keyboardScreen: {
   },
 
   plusButton: {
+    width: 64,
+    height: 64,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 32,
     backgroundColor: '#D9ECDF',
-    borderRadius: 26,
+  },
+
+  plusButtonText: {
     color: '#1E5C35',
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '700',
-    height: 52,
-    lineHeight: 48,
+    lineHeight: 30,
     textAlign: 'center',
-    width: 52,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    transform: [{ translateY: 1 }],
   },
 
   selectedCard: {
@@ -553,8 +848,14 @@ keyboardScreen: {
     alignItems: 'center',
     backgroundColor: '#1E5C35',
     borderRadius: 12,
+    justifyContent: 'center',
     marginTop: 16,
+    minHeight: 50,
     paddingVertical: 14,
+  },
+
+  disabledAddButton: {
+    opacity: 0.7,
   },
 
   addButtonText: {
@@ -576,6 +877,23 @@ keyboardScreen: {
     fontSize: 14,
   },
 
+  loadingResults: {
+    minHeight: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+
+  loadingResultsText: {
+    marginTop: 10,
+    color: '#5C7267',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
   scannerScreen: {
     backgroundColor: '#000000',
     flex: 1,
@@ -583,22 +901,23 @@ keyboardScreen: {
   },
 
   camera: {
-  bottom: 0,
-  left: 0,
-  position: 'absolute',
-  right: 0,
-  top: 0,
-},
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
 
-scannerControls: {
-  bottom: 0,
-  elevation: 20,
-  left: 0,
-  position: 'absolute',
-  right: 0,
-  top: 0,
-  zIndex: 20,
-},
+  scannerControls: {
+    bottom: 0,
+    elevation: 20,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 20,
+  },
+
   cameraBackButton: {
     alignItems: 'center',
     backgroundColor: 'rgba(30, 92, 53, 0.95)',
@@ -654,5 +973,84 @@ scannerControls: {
     color: '#E2ECE6',
     fontSize: 14,
     marginTop: 8,
+  },
+
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(22, 40, 29, 0.42)',
+  },
+
+  mealMenu: {
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    backgroundColor: '#F5FAF6',
+  },
+
+  mealMenuTitle: {
+    marginBottom: 14,
+    color: '#16281D',
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+
+  mealOption: {
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 9,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2ECE6',
+  },
+
+  mealOptionSelected: {
+    backgroundColor: '#EAF3EC',
+    borderColor: '#1E5C35',
+  },
+
+  mealOptionPressed: {
+    opacity: 0.75,
+  },
+
+  mealOptionText: {
+    color: '#16281D',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  mealOptionTextSelected: {
+    color: '#1E5C35',
+    fontWeight: '800',
+  },
+
+  selectedCheck: {
+    color: '#1E5C35',
+    fontSize: 21,
+    fontWeight: '900',
+  },
+
+  cancelMealButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+    marginTop: 4,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#C9DBD0',
+  },
+
+  cancelMealText: {
+    color: '#1E5C35',
+    fontSize: 15,
+    fontWeight: '800',
   },
 })

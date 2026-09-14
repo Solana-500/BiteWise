@@ -34,9 +34,31 @@ type FeatureTile = {
 
 function getGreeting() {
   const hour = new Date().getHours()
+
   if (hour < 12) return 'Good morning'
   if (hour < 18) return 'Good afternoon'
+
   return 'Good evening'
+}
+
+function formatMacro(value: number | null | undefined) {
+  const numberValue = Number(value ?? 0)
+
+  if (!Number.isFinite(numberValue)) {
+    return '0.0'
+  }
+
+  return numberValue.toFixed(1)
+}
+
+function formatCalories(value: number | null | undefined) {
+  const numberValue = Number(value ?? 0)
+
+  if (!Number.isFinite(numberValue)) {
+    return '0'
+  }
+
+  return Math.round(numberValue).toString()
 }
 
 export default function HomeScreen({ navigation }: Props) {
@@ -49,70 +71,94 @@ export default function HomeScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false)
 
   const loadDashboard = useCallback(async () => {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    if (userError || !user) {
-      Alert.alert('Login required', 'Please log in again.')
+      if (userError) {
+        throw userError
+      }
+
+      if (!user) {
+        Alert.alert('Login required', 'Please log in again.')
+        return
+      }
+
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const [profileResponse, mealsResponse] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('full_name, daily_calorie_target, fitness_goal, tier')
+          .eq('id', user.id)
+          .single(),
+
+        supabase
+          .from('food_logs')
+          .select('calories, protein_g, carbs_g, fat_g')
+          .eq('user_id', user.id)
+          .gte('logged_at', startOfDay.toISOString()),
+      ])
+
+      if (profileResponse.error) {
+        throw profileResponse.error
+      }
+
+      if (mealsResponse.error) {
+        throw mealsResponse.error
+      }
+
+      const meals = mealsResponse.data ?? []
+
+      setProfile(profileResponse.data)
+
+      setCalories(
+        meals.reduce(
+          (total, item) => total + Number(item.calories ?? 0),
+          0
+        )
+      )
+
+      setProtein(
+        meals.reduce(
+          (total, item) => total + Number(item.protein_g ?? 0),
+          0
+        )
+      )
+
+      setCarbs(
+        meals.reduce(
+          (total, item) => total + Number(item.carbs_g ?? 0),
+          0
+        )
+      )
+
+      setFat(
+        meals.reduce(
+          (total, item) => total + Number(item.fat_g ?? 0),
+          0
+        )
+      )
+    } catch (error: any) {
+      console.error('Dashboard loading error:', error)
+
+      Alert.alert(
+        'Dashboard error',
+        error?.message || 'Unable to load your dashboard. Please try again.'
+      )
+    } finally {
       setLoading(false)
-      return
     }
-
-    const startOfDay = new Date()
-    startOfDay.setHours(0, 0, 0, 0)
-
-    const [profileResponse, mealsResponse] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('full_name, daily_calorie_target, fitness_goal, tier')
-        .eq('id', user.id)
-        .single(),
-
-      supabase
-        .from('food_logs')
-        .select('calories, protein_g, carbs_g, fat_g')
-        .eq('user_id', user.id)
-        .gte('logged_at', startOfDay.toISOString()),
-    ])
-
-    if (profileResponse.error) {
-      Alert.alert('Profile error', profileResponse.error.message)
-      setLoading(false)
-      return
-    }
-
-    if (mealsResponse.error) {
-      Alert.alert('Meal error', mealsResponse.error.message)
-      setLoading(false)
-      return
-    }
-
-    const meals = mealsResponse.data ?? []
-
-    setProfile(profileResponse.data)
-    setCalories(
-      meals.reduce((total, item) => total + Number(item.calories), 0)
-    )
-    setProtein(
-      meals.reduce((total, item) => total + Number(item.protein_g), 0)
-    )
-    setCarbs(
-      meals.reduce((total, item) => total + Number(item.carbs_g), 0)
-    )
-    setFat(
-      meals.reduce((total, item) => total + Number(item.fat_g), 0)
-    )
-    setLoading(false)
   }, [])
 
   useFocusEffect(
     useCallback(() => {
-      loadDashboard()
+      void loadDashboard()
     }, [loadDashboard])
   )
-
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -129,9 +175,12 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   const calorieTarget = profile?.daily_calorie_target ?? 0
+
   const calorieProgress =
     calorieTarget > 0 ? Math.min(calories / calorieTarget, 1) : 0
+
   const isPremium = profile?.tier === 'premium'
+
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
 
   const featureTiles: FeatureTile[] = [
@@ -190,38 +239,42 @@ export default function HomeScreen({ navigation }: Props) {
         />
       }
     >
-      {/* Top bar */}
       <View style={styles.topBar}>
         <Text style={styles.topBarTitle}>Home</Text>
-        {!isPremium && (
+
+        {!isPremium ? (
           <TouchableOpacity style={styles.goPremiumBtn}>
             <Text style={styles.goPremiumText}>Go Premium ✦</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
-      {/* Hero greeting card */}
       <View style={styles.heroCard}>
         <View style={styles.heroTopRow}>
           <Text style={styles.heroGreeting}>{getGreeting()}</Text>
+
           <View style={styles.tierBadge}>
             <Text style={styles.tierBadgeText}>
               {isPremium ? 'PREMIUM PLAN' : 'FREE PLAN'}
             </Text>
           </View>
         </View>
+
         <Text style={styles.heroHello}>Hello, {firstName} 👋</Text>
+
         <Text style={styles.heroSub}>
           Keep building healthy habits one day at a time.
         </Text>
       </View>
 
-      {/* Calorie goal card */}
       <View style={styles.calorieCard}>
         <Text style={styles.cardLabel}>Daily Calorie Goal</Text>
+
         <Text style={styles.calorieValue}>
-          {calories} / {calorieTarget || '—'} kcal
+          {formatCalories(calories)} /{' '}
+          {calorieTarget > 0 ? formatCalories(calorieTarget) : '—'} kcal
         </Text>
+
         <View style={styles.progressBackground}>
           <View
             style={[
@@ -232,25 +285,48 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </View>
 
-      {/* Macros */}
       <Text style={styles.sectionTitle}>Today&apos;s Macros</Text>
+
       <View style={styles.macroGrid}>
         <View style={styles.macroCard}>
-          <Text style={styles.macroValue}>{protein} g</Text>
+          <Text
+            style={styles.macroValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {formatMacro(protein)} g
+          </Text>
+
           <Text style={styles.macroLabel}>Protein</Text>
         </View>
+
         <View style={styles.macroCard}>
-          <Text style={styles.macroValue}>{carbs} g</Text>
+          <Text
+            style={styles.macroValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {formatMacro(carbs)} g
+          </Text>
+
           <Text style={styles.macroLabel}>Carbohydrates</Text>
         </View>
+
         <View style={styles.macroCard}>
-          <Text style={styles.macroValue}>{fat} g</Text>
+          <Text
+            style={styles.macroValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {formatMacro(fat)} g
+          </Text>
+
           <Text style={styles.macroLabel}>Fat</Text>
         </View>
       </View>
 
-      {/* Feature grid */}
       <Text style={styles.sectionTitle}>Your Features</Text>
+
       <View style={styles.grid}>
         {featureTiles.map((tile) => (
           <TouchableOpacity
@@ -266,20 +342,21 @@ export default function HomeScreen({ navigation }: Props) {
         ))}
       </View>
 
-      {/* Premium upsell */}
-      {!isPremium && (
+      {!isPremium ? (
         <View style={styles.upsellCard}>
           <Text style={styles.upsellTitle}>
             Unlock everything for $9.90/month
           </Text>
+
           <Text style={styles.upsellSub}>
             Personal coach access, custom meal plans, and full analytics.
           </Text>
-          <View style={styles.upsellBtn}>
+
+          <TouchableOpacity style={styles.upsellBtn}>
             <Text style={styles.upsellBtnText}>See Premium Plans</Text>
-          </View>
+          </TouchableOpacity>
         </View>
-      )}
+      ) : null}
     </ScrollView>
   )
 }
@@ -291,92 +368,108 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
+
   container: {
     backgroundColor: '#F5FAF6',
     flexGrow: 1,
     padding: 20,
-    paddingTop: 24,
     paddingBottom: 40,
+    paddingTop: 24,
   },
+
   topBar: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 14,
   },
+
   topBarTitle: {
+    color: '#16281D',
     fontSize: 24,
     fontWeight: '800',
-    color: '#16281D',
   },
+
   goPremiumBtn: {
     backgroundColor: '#F2C14E',
     borderRadius: 999,
-    paddingVertical: 8,
     paddingHorizontal: 14,
+    paddingVertical: 8,
   },
+
   goPremiumText: {
+    color: '#4C3400',
     fontSize: 12.5,
     fontWeight: '800',
-    color: '#4C3400',
   },
+
   heroCard: {
     backgroundColor: '#1E5C35',
     borderRadius: 18,
-    padding: 18,
     marginBottom: 14,
+    padding: 18,
   },
+
   heroTopRow: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
+
   heroGreeting: {
-    fontSize: 13,
     color: '#CFE4D6',
+    fontSize: 13,
   },
+
   tierBadge: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 999,
-    paddingVertical: 4,
     paddingHorizontal: 10,
+    paddingVertical: 4,
   },
+
   tierBadgeText: {
+    color: '#FFFFFF',
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
+
   heroHello: {
+    color: '#FFFFFF',
     fontSize: 21,
     fontWeight: '800',
-    color: '#FFFFFF',
     marginTop: 6,
   },
+
   heroSub: {
-    fontSize: 13,
     color: '#D8EADF',
+    fontSize: 13,
     marginTop: 4,
   },
+
   calorieCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#DCE9E0',
-    borderWidth: 1,
     borderRadius: 16,
-    padding: 18,
+    borderWidth: 1,
     marginBottom: 20,
+    padding: 18,
   },
+
   cardLabel: {
     color: '#5C7267',
     fontSize: 14,
     fontWeight: '700',
   },
+
   calorieValue: {
     color: '#16281D',
     fontSize: 22,
     fontWeight: '800',
     marginTop: 6,
   },
+
   progressBackground: {
     backgroundColor: '#E2ECE6',
     borderRadius: 999,
@@ -384,102 +477,120 @@ const styles = StyleSheet.create({
     marginTop: 14,
     overflow: 'hidden',
   },
+
   progressFill: {
     backgroundColor: '#1E5C35',
     borderRadius: 999,
     height: '100%',
   },
+
   sectionTitle: {
     color: '#5C7267',
     fontSize: 13,
     fontWeight: '800',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 4,
     marginBottom: 12,
+    marginTop: 4,
+    textTransform: 'uppercase',
   },
+
   macroGrid: {
     flexDirection: 'row',
     gap: 9,
     marginBottom: 20,
   },
+
   macroCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#DCE9E0',
     borderRadius: 14,
     borderWidth: 1,
     flex: 1,
+    minWidth: 0,
     padding: 13,
   },
+
   macroValue: {
     color: '#1E5C35',
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: '800',
   },
+
   macroLabel: {
     color: '#708277',
     fontSize: 11,
     marginTop: 5,
   },
+
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
+
   tile: {
-    width: '48%',
     backgroundColor: '#FFFFFF',
+    borderColor: '#E2ECE6',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2ECE6',
-    padding: 14,
     marginBottom: 12,
+    padding: 14,
+    width: '48%',
   },
+
   tileIcon: {
     fontSize: 22,
     marginBottom: 8,
   },
+
   tileTitle: {
-  color: '#16281D',
-  fontSize: 13,
-  fontWeight: '800',
-  marginBottom: 2,
+    color: '#16281D',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 2,
   },
+
   tileSub: {
-  color: '#7C8F83',
-  fontSize: 11,
-  lineHeight: 15,
+    color: '#7C8F83',
+    fontSize: 11,
+    lineHeight: 15,
   },
+
   upsellCard: {
+    alignItems: 'center',
     backgroundColor: '#D9ECDF',
     borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
     marginBottom: 20,
+    padding: 18,
   },
+
   upsellTitle: {
+    color: '#154526',
     fontSize: 15,
     fontWeight: '800',
-    color: '#154526',
-    textAlign: 'center',
     marginBottom: 6,
-  },
-  upsellSub: {
-    fontSize: 12.5,
-    color: '#5C7267',
     textAlign: 'center',
-    marginBottom: 14,
   },
+
+  upsellSub: {
+    color: '#5C7267',
+    fontSize: 12.5,
+    marginBottom: 14,
+    textAlign: 'center',
+  },
+
   upsellBtn: {
     backgroundColor: '#1E5C35',
     borderRadius: 999,
-    paddingVertical: 10,
     paddingHorizontal: 20,
+    paddingVertical: 10,
   },
+
   upsellBtnText: {
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
   },
 })
