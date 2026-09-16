@@ -27,11 +27,12 @@ import PuCoachScreen from './screens/PuCoachScreen'
 import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
-
+import FavoriteListScreen from './screens/FavoriteListScreen'
 
 
 import { supabase } from './services/supabase'
 import type {
+  HomeStackParamList,
   MainTabParamList,
   PremiumTabParamList,
   RootStackParamList,
@@ -43,19 +44,36 @@ const Tab = createBottomTabNavigator<MainTabParamList>()
 const PremiumTab = createBottomTabNavigator<PremiumTabParamList>()
 const AdminTabNav = createBottomTabNavigator()
 const CoachTabNav = createBottomTabNavigator()
+const HomeStack = createNativeStackNavigator<HomeStackParamList>()
+
+function HomeStackNavigator() {
+  return (
+    <HomeStack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <HomeStack.Screen
+        name="HomeMain"
+        component={HomeScreen}
+      />
+
+      <HomeStack.Screen
+        name="FavoriteList"
+        component={FavoriteListScreen}
+        options={{
+          animation: 'none',
+        }}
+      />
+    </HomeStack.Navigator>
+  )
+}
 
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#F5FAF6',
-        },
-        headerTintColor: '#1E5C35',
-        headerTitleStyle: {
-          fontWeight: '800',
-        },
+        headerShown: false,
         tabBarActiveTintColor: '#1E5C35',
         tabBarInactiveTintColor: '#7C8F83',
         tabBarLabelStyle: {
@@ -63,64 +81,69 @@ function MainTabs() {
           fontWeight: '700',
         },
         tabBarItemStyle: {
-          flex: 1,
           alignItems: 'center',
+          flex: 1,
           justifyContent: 'center',
         },
         tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E2ECE6',
           height: 68,
           paddingBottom: 8,
           paddingTop: 7,
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E2ECE6',
         },
       }}
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStackNavigator}
         options={{
-          title: 'Home',
+          headerShown: false,
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>🏠</Text>
           ),
         }}
       />
+
       <Tab.Screen
         name="Meals"
         component={MealsScreen}
         options={{
-          title: 'Meals',
+          tabBarLabel: 'Meals',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>🍽️</Text>
           ),
         }}
       />
+
       <Tab.Screen
         name="Wellness"
         component={WellnessScreen}
         options={{
-          title: 'Wellness',
+          tabBarLabel: 'Wellness',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>💧</Text>
           ),
         }}
       />
+
       <Tab.Screen
         name="Progress"
         component={ProgressScreen}
         options={{
-          title: 'Progress',
+          tabBarLabel: 'Progress',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>📈</Text>
           ),
         }}
       />
+
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profile',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>👤</Text>
           ),
@@ -460,11 +483,10 @@ export default function App() {
               name="FoodLogging"
               component={FoodLoggingScreen}
               options={{
+                animation: 'none',
                 headerShown: false,
-                presentation: 'card',
               }}
             />
-
             <Stack.Screen
               name="ExerciseLibrary"
               component={ExerciseLibraryScreen}

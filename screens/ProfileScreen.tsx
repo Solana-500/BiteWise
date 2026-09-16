@@ -117,12 +117,19 @@ export default function ProfileScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity
-  style={styles.backHomeButton}
-  onPress={() => navigation.navigate('Home')}
->
-  <Text style={styles.backHomeText}>‹ Home</Text>
-</TouchableOpacity>
+       <TouchableOpacity
+        style={styles.backHomeButton}
+        onPress={() =>
+          navigation.navigate('Home', {
+            screen: 'HomeMain',
+          })
+        }
+        accessibilityRole="button"
+        accessibilityLabel="Go to Home"
+      >
+        <Text style={styles.backHomeText}>‹ Home</Text>
+      </TouchableOpacity>
+
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>
@@ -224,7 +231,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#F5FAF6',
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 44,
   },
   profileHeader: {
     alignItems: 'center',

@@ -1,7 +1,12 @@
 import type { NavigatorScreenParams } from '@react-navigation/native'
 
+export type HomeStackParamList = {
+  HomeMain: undefined
+  FavoriteList: undefined
+}
+
 export type MainTabParamList = {
-  Home: undefined
+  Home: NavigatorScreenParams<HomeStackParamList>
   Meals: undefined
   Wellness: undefined
   Progress: undefined
@@ -48,6 +53,7 @@ export type RootStackParamList = {
 
   PuCoach: undefined
   FoodLogging: undefined
+  FavoriteList: undefined
 
   ExerciseLibrary: {
     category: ExerciseCategory

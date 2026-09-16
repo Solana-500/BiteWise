@@ -18,6 +18,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { supabase } from '../services/supabase'
 import type {
@@ -43,6 +44,11 @@ type Meal = {
   fat_g: number | null
   meal_type: string | null
   logged_at: string
+}
+
+type FavoriteMeal = {
+  id: string
+  food_log_id: string
 }
 
 const MEAL_TYPES: MealType[] = [
@@ -85,6 +91,11 @@ export default function MealsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const [favoriteMealIds, setFavoriteMealIds] = useState<string[]>([])
+  const [updatingFavoriteId, setUpdatingFavoriteId] = useState<string | null>(
+    null
+  )
+
   const [manageMode, setManageMode] = useState<ManageMode>(null)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
 
@@ -97,47 +108,64 @@ export default function MealsScreen() {
     useState<MealType>('Breakfast')
 
   const loadMeals = useCallback(async () => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-      if (userError) {
-        throw userError
-      }
+    if (userError) {
+      throw userError
+    }
 
-      if (!user) {
-        setMeals([])
-        Alert.alert('Login required', 'Please log in again.')
-        return
-      }
+    if (!user) {
+      setMeals([])
+      setFavoriteMealIds([])
+      Alert.alert('Login required', 'Please log in again.')
+      return
+    }
 
-      const { data, error } = await supabase
+    const [mealsResult, favoritesResult] = await Promise.all([
+      supabase
         .from('food_logs')
         .select(
           'id, food_name, calories, protein_g, carbs_g, fat_g, meal_type, logged_at'
         )
         .eq('user_id', user.id)
-        .order('logged_at', { ascending: false })
+        .order('logged_at', { ascending: false }),
 
-      if (error) {
-        throw error
-      }
+      supabase
+        .from('favorite_meals')
+        .select('id, food_log_id')
+        .eq('user_id', user.id),
+    ])
 
-      setMeals((data ?? []) as Meal[])
-    } catch (error: any) {
-      console.error('Load meals error:', error)
-
-      Alert.alert(
-        'Meal error',
-        error?.message || 'Unable to load logged meals. Please try again.'
-      )
-    } finally {
-      setLoading(false)
+    if (mealsResult.error) {
+      throw mealsResult.error
     }
-  }, [])
 
+    if (favoritesResult.error) {
+      throw favoritesResult.error
+    }
+
+    setMeals((mealsResult.data ?? []) as Meal[])
+
+    setFavoriteMealIds(
+      ((favoritesResult.data ?? []) as FavoriteMeal[]).map(
+        (favorite) => favorite.food_log_id
+      )
+    )
+  } catch (error: any) {
+    console.error('Load meals error:', error)
+
+    Alert.alert(
+      'Meal error',
+      error?.message || 'Unable to load logged meals. Please try again.'
+    )
+  } finally {
+    setLoading(false)
+  }
+}, [])
   useFocusEffect(
     useCallback(() => {
       void loadMeals()
@@ -299,6 +327,66 @@ export default function MealsScreen() {
     }
   }
 
+    async function toggleFavoriteMeal(meal: Meal) {
+  const isFavorite = favoriteMealIds.includes(meal.id)
+
+  try {
+    setUpdatingFavoriteId(meal.id)
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError) {
+      throw userError
+    }
+
+    if (!user) {
+      Alert.alert('Login required', 'Please log in again.')
+      return
+    }
+
+    if (isFavorite) {
+      const { error } = await supabase
+        .from('favorite_meals')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('food_log_id', meal.id)
+
+      if (error) {
+        throw error
+      }
+
+      setFavoriteMealIds((currentIds) =>
+        currentIds.filter((mealId) => mealId !== meal.id)
+      )
+    } else {
+      const { error } = await supabase
+        .from('favorite_meals')
+        .insert({
+          user_id: user.id,
+          food_log_id: meal.id,
+        })
+
+      if (error) {
+        throw error
+      }
+
+      setFavoriteMealIds((currentIds) => [...currentIds, meal.id])
+    }
+  } catch (error: any) {
+    console.error('Toggle favourite meal error:', error)
+
+    Alert.alert(
+      'Could not update favourite',
+      error?.message || 'Please try again.'
+    )
+  } finally {
+    setUpdatingFavoriteId(null)
+  }
+}
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -320,7 +408,7 @@ export default function MealsScreen() {
   const hasMoreMeals = mealHistory.length > 4
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -332,18 +420,28 @@ export default function MealsScreen() {
           />
         }
       >
-        <TouchableOpacity
-          style={styles.backHomeButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.backHomeText}>‹ Home</Text>
-        </TouchableOpacity>
+        <View style={styles.topBar}>
+  <TouchableOpacity
+    style={styles.backHomeButton}
+    onPress={() =>
+      navigation.navigate('Home', {
+        screen: 'HomeMain',
+      })
+    }
+    accessibilityRole="button"
+    accessibilityLabel="Go to Home"
+  >
+    <Text style={styles.backHomeText}>‹ Home</Text>
+  </TouchableOpacity>
 
-        <Text style={styles.title}>Food Diary</Text>
+  <Text style={styles.topBarTitle}>Meals</Text>
 
-        <Text style={styles.subtitle}>
-          Track and manage your logged meals.
-        </Text>
+  <View style={styles.topBarSpacer} />
+</View>
+
+<Text style={styles.subtitle}>
+  Track and manage your logged meals.
+</Text>
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Today&apos;s logged meals</Text>
@@ -373,28 +471,62 @@ export default function MealsScreen() {
   </View>
 ) : (
   <>
-    {displayedMeals.map((meal) => (
-      <View key={meal.id} style={styles.mealCard}>
-        <View style={styles.mealMain}>
-          <Text style={styles.mealName}>{meal.food_name}</Text>
+        {displayedMeals.map((meal) => {
+      const isFavorite = favoriteMealIds.includes(meal.id)
 
-          <Text style={styles.mealMeta}>
-            {Number(meal.calories ?? 0)} kcal •{' '}
-            {formatMealType(meal.meal_type)}
-          </Text>
+      return (
+        <View key={meal.id} style={styles.mealCard}>
+          <View style={styles.mealCardHeader}>
+            <View style={styles.mealMain}>
+              <Text style={styles.mealName}>{meal.food_name}</Text>
 
-          <Text style={styles.macroSummary}>
-            P {Number(meal.protein_g ?? 0)}g · C{' '}
-            {Number(meal.carbs_g ?? 0)}g · F{' '}
-            {Number(meal.fat_g ?? 0)}g
-          </Text>
+              <Text style={styles.mealMeta}>
+                {Number(meal.calories ?? 0)} kcal ·{' '}
+                {formatMealType(meal.meal_type)}
+              </Text>
 
-          <Text style={styles.mealDate}>
-            Logged {formatLoggedDate(meal.logged_at)}
-          </Text>
+              <Text style={styles.macroSummary}>
+                P {Number(meal.protein_g ?? 0)}g · C{' '}
+                {Number(meal.carbs_g ?? 0)}g · F{' '}
+                {Number(meal.fat_g ?? 0)}g
+              </Text>
+
+              <Text style={styles.mealDate}>
+                Logged {formatLoggedDate(meal.logged_at)}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.favoriteButton,
+                isFavorite && styles.favoriteButtonActive,
+              ]}
+              disabled={updatingFavoriteId === meal.id}
+              onPress={() => void toggleFavoriteMeal(meal)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isFavorite
+                  ? `Remove ${meal.food_name} from favourites`
+                  : `Add ${meal.food_name} to favourites`
+              }
+            >
+              {updatingFavoriteId === meal.id ? (
+                <ActivityIndicator size="small" color="#1E5C35" />
+              ) : (
+                <Text
+                  style={[
+                    styles.favoriteHeart,
+                    isFavorite && styles.favoriteHeartActive,
+                  ]}
+                >
+                  {isFavorite ? '♥' : '♡'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    ))}
+      )
+    })}
 
     {hasMoreMeals ? (
       <Text style={styles.historyLimitText}>
@@ -677,7 +809,7 @@ export default function MealsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </>
+      </SafeAreaView>
   )
 }
 
@@ -689,48 +821,60 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+    safeArea: {
+    backgroundColor: '#F5FAF6',
+    flex: 1,
+  },
   container: {
     backgroundColor: '#F5FAF6',
     flexGrow: 1,
     padding: 20,
     paddingBottom: 40,
+    paddingTop: 8,
   },
-
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: 40,
+    justifyContent: 'space-between',
+  },
   backHomeButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 4,
-    paddingRight: 14,
-    paddingVertical: 8,
+    alignItems: 'flex-start',
+    height: 40,
+    justifyContent: 'center',
+    width: 72,
   },
-
   backHomeText: {
     color: '#1E5C35',
     fontSize: 15,
     fontWeight: '800',
+    lineHeight: 20,
   },
-
-  title: {
+  topBarTitle: {
     color: '#16281D',
-    fontSize: 26,
+    fontSize: 18,
     fontWeight: '800',
-    textAlign: 'center',
   },
-
+  topBarSpacer: {
+    height: 40,
+    width: 72,
+  },
   subtitle: {
     color: '#5C7267',
-    fontSize: 14,
-    marginTop: 5,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10,
     textAlign: 'center',
   },
 
   summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2ECE6',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 22,
-    padding: 18,
-  },
+  backgroundColor: '#FFFFFF',
+  borderColor: '#E2ECE6',
+  borderRadius: 16,
+  borderWidth: 1,
+  marginTop: 18,
+  padding: 18,
+},
 
   summaryTitle: {
     color: '#16281D',
@@ -796,9 +940,34 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 15,
   },
-
+  mealCardHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+  },
+  favoriteButton: {
+    alignItems: 'center',
+    borderRadius: 18,
+    height: 38,
+    justifyContent: 'center',
+    marginLeft: 10,
+    marginTop: -2,
+    width: 38,
+  },
+  favoriteButtonActive: {
+    backgroundColor: '#FDECEC',
+  },
+  favoriteHeart: {
+    color: '#1E5C35',
+    fontSize: 30,
+    fontWeight: '700',
+    lineHeight: 34,
+  },
+  favoriteHeartActive: {
+    color: '#B3261E',
+  },
   mealMain: {
     flex: 1,
+    minWidth: 0,
   },
 
   mealName: {

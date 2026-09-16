@@ -10,12 +10,12 @@ import {
   View,
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
-
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
-import type { MainTabParamList } from '../types/navigation'
+import type { HomeStackParamList } from '../types/navigation'
 
-type Props = BottomTabScreenProps<MainTabParamList, 'Home'>
+type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>
 
 type DashboardData = {
   full_name: string | null
@@ -189,46 +189,50 @@ export default function HomeScreen({ navigation }: Props) {
       icon: '📖',
       title: 'Food Diary',
       subtitle: 'View your daily meals',
-      onPress: () => navigation.navigate('Meals'),
+      onPress: () => navigation.getParent()?.navigate('Meals'),
     },
     {
       key: 'wellness',
       icon: '💧',
       title: 'Wellness',
       subtitle: 'Water, exercise, sync',
-      onPress: () => navigation.navigate('Wellness'),
+      onPress: () => navigation.getParent()?.navigate('Wellness')
     },
     {
       key: 'progress',
       icon: '📈',
       title: 'Progress Tracking',
       subtitle: 'How much have you achieved?',
-      onPress: () => navigation.navigate('Reports'),
+      onPress: () => navigation.getParent()?.navigate('Progress')
     },
     {
       key: 'food-logging',
       icon: '🍽️',
       title: 'Food Logging',
       subtitle: 'Log your meals',
-      onPress: () => navigation.navigate('Meals'),
+      onPress: () => navigation.getParent()?.navigate('Meals')
     },
     {
       key: 'favourites',
-      icon: '❤️',
+      icon: '♡',
       title: 'Favourites',
-      subtitle: 'Saved meals & recipes',
-      onPress: () => navigation.navigate('Meals'),
+      subtitle: 'Saved meals and recipes',
+      onPress: () =>
+        navigation.getParent()?.navigate('Home', {
+          screen: 'FavoriteList',
+        }),
     },
     {
       key: 'review',
       icon: '⭐',
       title: 'Review',
       subtitle: 'Lets us know what you think',
-      onPress: () => navigation.navigate('Reports'),
+      onPress: () => navigation.getParent()?.navigate('Progress')
     },
   ]
 
   return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView
       contentContainerStyle={styles.container}
       refreshControl={
@@ -358,6 +362,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       ) : null}
     </ScrollView>
+    </SafeAreaView>
   )
 }
 
@@ -368,14 +373,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-
-  container: {
+  safeArea: {
     backgroundColor: '#F5FAF6',
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 40,
-    paddingTop: 24,
+    flex: 1,
   },
+  container: {
+  backgroundColor: '#F5FAF6',
+  flexGrow: 1,
+  padding: 20,
+  paddingBottom: 40,
+},
 
   topBar: {
     alignItems: 'center',

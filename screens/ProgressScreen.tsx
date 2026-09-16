@@ -314,23 +314,28 @@ export default function ProgressScreen() {
         />
       }
     >
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.title}>Your Progress</Text>
-          <Text style={styles.subtitle}>
-            A simple overview of your wellness this week.
-          </Text>
-        </View>
+      <View style={styles.topBar}>
+  <TouchableOpacity
+    style={styles.backHomeButton}
+    onPress={() =>
+      navigation.navigate('Home', {
+        screen: 'HomeMain',
+      })
+    }
+    accessibilityRole="button"
+    accessibilityLabel="Go to Home"
+  >
+    <Text style={styles.backHomeText}>‹ Home</Text>
+  </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={() => void handleRefresh()}
-          accessibilityRole="button"
-          accessibilityLabel="Refresh progress data"
-        >
-          <Text style={styles.refreshButtonText}>↻</Text>
-        </TouchableOpacity>
-      </View>
+  <Text style={styles.topBarTitle}>Progress</Text>
+
+  <View style={styles.topBarSpacer} />
+</View>
+
+<Text style={styles.screenSubtitle}>
+  A simple overview of your wellness this week.
+</Text>
 
       <View style={styles.freePlanBadge}>
         <Text style={styles.freePlanBadgeText}>FREE PLAN</Text>
@@ -611,51 +616,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FAF6',
   },
   container: {
-    backgroundColor: '#F5FAF6',
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 42,
-    paddingTop: 28,
-  },
+  backgroundColor: '#F5FAF6',
+  flexGrow: 1,
+  padding: 20,
+  paddingBottom: 40,
+  paddingTop: 52,
+},
   loadingContainer: {
     alignItems: 'center',
     backgroundColor: '#F5FAF6',
     flex: 1,
     justifyContent: 'center',
   },
-  headerRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  title: {
-    color: '#16281D',
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: '#5C7267',
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 5,
-    maxWidth: 275,
-  },
-  refreshButton: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#DCE9E0',
-    borderRadius: 18,
-    borderWidth: 1,
-    height: 42,
-    justifyContent: 'center',
-    width: 42,
-  },
-  refreshButtonText: {
-    color: '#1E5C35',
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 24,
-  },
+
   freePlanBadge: {
     alignItems: 'center',
     backgroundColor: '#EAF3EC',
@@ -1078,5 +1051,39 @@ goPremiumButtonText: {
   fontSize: 15,
   fontWeight: '900',
   letterSpacing: 0.2,
+},
+topBar: {
+  alignItems: 'center',
+  flexDirection: 'row',
+  height: 70,
+  justifyContent: 'space-between',
+},
+backHomeButton: {
+  alignItems: 'flex-start',
+  height: 40,
+  justifyContent: 'center',
+  width: 72,
+},
+backHomeText: {
+  color: '#1E5C35',
+  fontSize: 15,
+  fontWeight: '800',
+  lineHeight: 20,
+},
+topBarTitle: {
+  color: '#16281D',
+  fontSize: 18,
+  fontWeight: '800',
+},
+topBarSpacer: {
+  height: 40,
+  width: 72,
+},
+screenSubtitle: {
+  color: '#5C7267',
+  fontSize: 13,
+  lineHeight: 18,
+  marginTop: 10,
+  textAlign: 'center',
 },
 })

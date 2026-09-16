@@ -20,7 +20,7 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
-
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
 import type {
   ExerciseCategory,
@@ -473,7 +473,7 @@ export default function WellnessScreen() {
   }
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
@@ -489,7 +489,13 @@ export default function WellnessScreen() {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backHomeButton}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() =>
+              navigation.navigate('Home', {
+                screen: 'HomeMain',
+              })
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Go to Home"
           >
             <Text style={styles.backHomeText}>‹ Home</Text>
           </TouchableOpacity>
@@ -931,7 +937,7 @@ export default function WellnessScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </>
+    </SafeAreaView>
   )
 }
 
@@ -942,28 +948,38 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  container: {
-    backgroundColor: '#F5FAF6',
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 40,
-    paddingTop: 24,
+  safeArea: {
+  backgroundColor: '#F5FAF6',
+  flex: 1,
   },
+  screen: {
+    backgroundColor: '#F5FAF6',
+    flex: 1,
+  },
+  container: {
+  backgroundColor: '#F5FAF6',
+  flexGrow: 1,
+  padding: 20,
+  paddingBottom: 40,
+  paddingTop: 8,
+},
   topBar: {
     alignItems: 'center',
     flexDirection: 'row',
+    height: 40,
     justifyContent: 'space-between',
   },
   backHomeButton: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    height: 40,
     justifyContent: 'center',
-    minWidth: 72,
-    paddingVertical: 8,
+    width: 72,
   },
   backHomeText: {
     color: '#1E5C35',
     fontSize: 15,
     fontWeight: '800',
+    lineHeight: 20,
   },
   topBarTitle: {
     color: '#16281D',
