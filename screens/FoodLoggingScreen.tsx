@@ -17,7 +17,6 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-
 import { supabase } from '../services/supabase'
 import type { RootStackParamList } from '../types/navigation'
 
@@ -293,15 +292,6 @@ export default function FoodLoggingScreen() {
     setShowMealMenu(false)
   }
 
-  function handleClose() {
-    if (selectedFood) {
-      setSelectedFood(null)
-      return
-    }
-
-    navigation.goBack()
-  }
-
   if (showScanner) {
     return (
       <View style={styles.scannerScreen}>
@@ -353,17 +343,19 @@ export default function FoodLoggingScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleClose}
-            >
-              <Text style={styles.closeText}>×</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backHomeButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back to Meals"
+          >
+            <Text style={styles.backHomeText}>‹ Meals</Text>
+          </TouchableOpacity>
 
-            <Text style={styles.pageTitle}>Log Food</Text>
+          <Text style={styles.pageTitle}>Log Food</Text>
 
-            <View style={styles.topSpacer} />
-          </View>
+          <View style={styles.topBarSpacer} />
+        </View>
 
           <Pressable
             style={({ pressed }) => [
@@ -593,42 +585,33 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  topBar: {
+    topBar: {
     alignItems: 'center',
     flexDirection: 'row',
+    height: 40,
     justifyContent: 'space-between',
-    paddingTop: 8,
   },
-
-  closeButton: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#C9DBD0',
-    borderRadius: 27,
-    borderWidth: 1,
-    height: 54,
+  backHomeButton: {
+    alignItems: 'flex-start',
+    height: 40,
     justifyContent: 'center',
-    width: 54,
+    width: 72,
   },
-
-  closeText: {
+  backHomeText: {
     color: '#1E5C35',
-    fontSize: 34,
-    fontWeight: '300',
-    lineHeight: 40,
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 20,
   },
-
   pageTitle: {
     color: '#16281D',
     fontSize: 22,
     fontWeight: '800',
   },
-
-  topSpacer: {
-    height: 54,
-    width: 54,
-  },
-
+  topBarSpacer: {
+  height: 40,
+  width: 72,
+},
   mealDropdownButton: {
     alignSelf: 'center',
     alignItems: 'center',
