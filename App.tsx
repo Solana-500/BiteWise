@@ -11,7 +11,7 @@ import OnboardingScreen from './screens/OnboardingScreen'
 import HomeScreen from './screens/HomeScreen'
 import MealsScreen from './screens/MealsScreen'
 import WellnessScreen from './screens/WellnessScreen'
-import ReportsScreen from './screens/ReportsScreen'
+import ProgressScreen from './screens/ProgressScreen'
 import ProfileScreen from './screens/ProfileScreen'
 import FoodLoggingScreen from './screens/FoodLoggingScreen'
 import CoachSignUpScreen from './screens/CoachSignUpScreen'
@@ -29,12 +29,14 @@ import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
 
 
+
 import { supabase } from './services/supabase'
 import type {
   MainTabParamList,
   PremiumTabParamList,
   RootStackParamList,
 } from './types/navigation'
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 const Tab = createBottomTabNavigator<MainTabParamList>()
@@ -105,12 +107,12 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Reports"
-        component={ReportsScreen}
+        name="Progress"
+        component={ProgressScreen}
         options={{
-          title: 'Reports',
+          title: 'Progress',
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 19 }}>📊</Text>
+            <Text style={{ color, fontSize: 19 }}>📈</Text>
           ),
         }}
       />
@@ -195,10 +197,10 @@ function PremiumTabs() {
       />
 
       <PremiumTab.Screen
-        name="Reports"
-        component={ReportsScreen}
+        name="Progress"
+        component={ProgressScreen}
         options={{
-          title: 'Reports',
+          title: 'Progress',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>📊</Text>
           ),
@@ -482,14 +484,6 @@ export default function App() {
             <Stack.Screen
               name="WorkoutRoutineBuilder"
               component={WorkoutRoutineBuilderScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-            <Stack.Screen
-              name="RoutineExerciseSearch"
-              component={RoutineExerciseSearchScreen}
               options={{
                 headerShown: false,
                 presentation: 'card',

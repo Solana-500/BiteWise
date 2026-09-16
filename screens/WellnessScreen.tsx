@@ -1,8 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,10 +13,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import type { CompositeNavigationProp } from '@react-navigation/native'
+import {
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { CompositeNavigationProp } from '@react-navigation/native'
 
 import { supabase } from '../services/supabase'
 import type {
@@ -34,6 +39,32 @@ type WaterLog = {
   logged_at: string
 }
 
+type ExerciseLog = {
+  id: string
+  exercise_type: string
+  activity_name: string | null
+  duration_minutes: number | null
+  duration_seconds: number | null
+  distance_km: number | null
+  pace_seconds_per_km: number | null
+  sets: number | null
+  repetitions_per_set: number | null
+  weight_kg: number | null
+  calories_burned: number | null
+  logged_at: string
+}
+
+type SavedRoutine = {
+  id: string
+  routine_name: string
+  created_at: string
+  workout_routine_exercises: Array<{
+    id: string
+    exercise_name: string
+    exercise_order: number
+  }>
+}
+
 const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   'Cardio',
   'Strength',
@@ -45,29 +76,50 @@ const WATER_STEP = 500
 
 function getSafeAmount(value: string) {
   const parsedValue = Number(value)
-
-  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
-    return 0
-  }
-
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) return 0
   return Math.round(parsedValue)
+}
+
+function getSafeInteger(value: string) {
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed < 0) return 0
+  return parsed
+}
+
+function getSafeDecimal(value: string) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0) return 0
+  return parsed
+}
+
+function formatNumber(value: number | null) {
+  const num = Number(value ?? 0)
+  if (!Number.isFinite(num)) return '0'
+  return Number.isInteger(num) ? String(num) : num.toFixed(1)
+}
+
+function formatExerciseDate(dateString: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(dateString))
+}
+
+function formatPace(secondsPerKm: number | null) {
+  if (!secondsPerKm || secondsPerKm <= 0) return '—'
+  const min = Math.floor(secondsPerKm / 60)
+  const sec = Math.round(secondsPerKm % 60)
+  return `${min}:${String(sec).padStart(2, '0')} min/km`
 }
 
 function getTodayRange() {
   const now = new Date()
-
-  const startOfDay = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  )
-
-  const startOfTomorrow = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1
-  )
-
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
   return {
     startOfDay: startOfDay.toISOString(),
     startOfTomorrow: startOfTomorrow.toISOString(),
@@ -77,122 +129,147 @@ function getTodayRange() {
 export default function WellnessScreen() {
   const navigation = useNavigation<WellnessNavigationProp>()
 
+  // Water State
   const [waterToday, setWaterToday] = useState(0)
   const [amountInput, setAmountInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
-  const [exerciseCategory, setExerciseCategory] =
-    useState<ExerciseCategory | null>(null)
+  // Exercise Category Menu State
+  const [exerciseCategory, setExerciseCategory] = useState<ExerciseCategory | null>(null)
   const [showExerciseMenu, setShowExerciseMenu] = useState(false)
 
-  const loadWaterToday = useCallback(async () => {
+  // Combined History States
+  const [selectedHistoryTab, setSelectedHistoryTab] = useState<ExerciseCategory>('Strength')
+  const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([])
+  const [savedRoutines, setSavedRoutines] = useState<SavedRoutine[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  // Edit Single Log Modal State
+  const [editingLog, setEditingLog] = useState<ExerciseLog | null>(null)
+  const [editActivityName, setEditActivityName] = useState('')
+  const [editSets, setEditSets] = useState('')
+  const [editRepetitions, setEditRepetitions] = useState('')
+  const [editWeightKg, setEditWeightKg] = useState('')
+  const [editDistanceKm, setEditDistanceKm] = useState('')
+  const [editDurationMinutes, setEditDurationMinutes] = useState('')
+  const [editCaloriesBurned, setEditCaloriesBurned] = useState('')
+  const [updatingLog, setUpdatingLog] = useState(false)
+
+  // --- DATA LOADING ---
+  const loadWellnessData = useCallback(async () => {
     try {
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser()
 
-      if (userError) {
-        throw userError
-      }
-
-      if (!user) {
+      if (userError || !user) {
         setWaterToday(0)
-        Alert.alert('Login required', 'Please log in again.')
+        setExerciseLogs([])
+        setSavedRoutines([])
         return
       }
 
       const { startOfDay, startOfTomorrow } = getTodayRange()
 
-      const { data, error } = await supabase
-        .from('water_logs')
-        .select('id, amount_ml, logged_at')
-        .eq('user_id', user.id)
-        .gte('logged_at', startOfDay)
-        .lt('logged_at', startOfTomorrow)
-        .order('logged_at', { ascending: false })
+      setLoadingHistory(true)
 
-      if (error) {
-        throw error
-      }
+      const [waterRes, exerciseRes, routineRes] = await Promise.all([
+        supabase
+          .from('water_logs')
+          .select('id, amount_ml, logged_at')
+          .eq('user_id', user.id)
+          .gte('logged_at', startOfDay)
+          .lt('logged_at', startOfTomorrow)
+          .order('logged_at', { ascending: false }),
 
-      const totalWater = (data ?? []).reduce(
+        supabase
+          .from('exercise_logs')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('logged_at', { ascending: false })
+          .limit(30),
+
+        supabase
+          .from('workout_routines')
+          .select(`
+            id,
+            routine_name,
+            created_at,
+            workout_routine_exercises (
+              id,
+              exercise_name,
+              exercise_order
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+      ])
+
+      // 1. Water
+      const totalWater = (waterRes.data ?? []).reduce(
         (total, log) => total + Number(log.amount_ml ?? 0),
         0
       )
-
       setWaterToday(Math.max(totalWater, 0))
-    } catch (error: any) {
-      console.error('Load water error:', error)
 
-      Alert.alert(
-        'Water error',
-        error?.message || 'Unable to load today’s water intake.'
-      )
+      // 2. Exercises
+      setExerciseLogs((exerciseRes.data ?? []) as ExerciseLog[])
+
+      // 3. Routines
+      const formattedRoutines = (routineRes.data ?? []).map((routine) => ({
+        ...routine,
+        workout_routine_exercises: (routine.workout_routine_exercises ?? []).sort(
+          (a, b) => a.exercise_order - b.exercise_order
+        ),
+      }))
+      setSavedRoutines(formattedRoutines as SavedRoutine[])
+    } catch (error: any) {
+      console.error('Load wellness error:', error)
     } finally {
       setLoading(false)
+      setLoadingHistory(false)
     }
   }, [])
 
   useFocusEffect(
     useCallback(() => {
-      void loadWaterToday()
-    }, [loadWaterToday])
+      void loadWellnessData()
+    }, [loadWellnessData])
   )
 
+  async function handleRefresh() {
+    setRefreshing(true)
+    await loadWellnessData()
+    setRefreshing(false)
+  }
+
+  // --- WATER HANDLERS ---
   async function saveWater() {
     const amount = getSafeAmount(amountInput)
-
     if (amount <= 0) {
-      Alert.alert(
-        'Enter an amount',
-        'Enter a water amount greater than 0 ml before saving.'
-      )
+      Alert.alert('Enter an amount', 'Enter a water amount greater than 0 ml before saving.')
       return
     }
 
     try {
       setSaving(true)
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        throw userError
-      }
-
-      if (!user) {
-        Alert.alert('Login required', 'Please log in again.')
-        return
-      }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
       const { error } = await supabase.from('water_logs').insert({
         user_id: user.id,
         amount_ml: amount,
       })
-
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
       setAmountInput('')
-      await loadWaterToday()
-
-      Alert.alert(
-        'Water logged',
-        `${amount.toLocaleString()} ml was added to today’s water intake.`
-      )
+      await loadWellnessData()
+      Alert.alert('Water logged', `${amount.toLocaleString()} ml was added.`)
     } catch (error: any) {
-      console.error('Save water error:', error)
-
-      Alert.alert(
-        'Could not save water',
-        error?.message || 'Unable to save your water intake.'
-      )
+      Alert.alert('Could not save water', error?.message)
     } finally {
       setSaving(false)
     }
@@ -201,38 +278,17 @@ export default function WellnessScreen() {
   async function addWaterInstantly() {
     try {
       setSaving(true)
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        throw userError
-      }
-
-      if (!user) {
-        Alert.alert('Login required', 'Please log in again.')
-        return
-      }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
       const { error } = await supabase.from('water_logs').insert({
         user_id: user.id,
         amount_ml: WATER_STEP,
       })
-
-      if (error) {
-        throw error
-      }
-
-      await loadWaterToday()
+      if (error) throw error
+      await loadWellnessData()
     } catch (error: any) {
-      console.error('Instant add water error:', error)
-
-      Alert.alert(
-        'Could not add water',
-        error?.message || 'Unable to add water intake.'
-      )
+      Alert.alert('Could not add water', error?.message)
     } finally {
       setSaving(false)
     }
@@ -246,144 +302,167 @@ export default function WellnessScreen() {
 
     try {
       setSaving(true)
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        throw userError
-      }
-
-      if (!user) {
-        Alert.alert('Login required', 'Please log in again.')
-        return
-      }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
       const { startOfDay, startOfTomorrow } = getTodayRange()
-
-      const { data, error: loadError } = await supabase
+      const { data: todayLogs } = await supabase
         .from('water_logs')
-        .select('id, amount_ml, logged_at')
+        .select('id, amount_ml')
         .eq('user_id', user.id)
         .gte('logged_at', startOfDay)
         .lt('logged_at', startOfTomorrow)
         .order('logged_at', { ascending: false })
 
-      if (loadError) {
-        throw loadError
-      }
+      if (!todayLogs || todayLogs.length === 0) return
 
-      const todayLogs = (data ?? []) as WaterLog[]
-
-      if (todayLogs.length === 0) {
-        setWaterToday(0)
-        return
-      }
-
-      let remainingToRemove = Math.min(WATER_STEP, waterToday)
-
+      let remaining = Math.min(WATER_STEP, waterToday)
       for (const log of todayLogs) {
-        if (remainingToRemove <= 0) {
-          break
-        }
+        if (remaining <= 0) break
+        const amt = Number(log.amount_ml ?? 0)
+        if (amt <= 0) continue
 
-        const loggedAmount = Number(log.amount_ml ?? 0)
-
-        if (!Number.isFinite(loggedAmount) || loggedAmount <= 0) {
-          continue
-        }
-
-        if (loggedAmount <= remainingToRemove) {
-          const { data: deletedRows, error: deleteError } = await supabase
-            .from('water_logs')
-            .delete()
-            .eq('id', log.id)
-            .eq('user_id', user.id)
-            .select('id, amount_ml')
-
-          if (deleteError) {
-            throw deleteError
-          }
-
-          if (!deletedRows || deletedRows.length === 0) {
-            throw new Error(
-              'No water record was deleted. Check the water_logs DELETE policy in Supabase.'
-            )
-          }
-
-          remainingToRemove -= loggedAmount
+        if (amt <= remaining) {
+          await supabase.from('water_logs').delete().eq('id', log.id).eq('user_id', user.id)
+          remaining -= amt
         } else {
-          const newAmount = loggedAmount - remainingToRemove
-
-          const { data: updatedRows, error: updateError } = await supabase
+          await supabase
             .from('water_logs')
-            .update({
-              amount_ml: newAmount,
-            })
+            .update({ amount_ml: amt - remaining })
             .eq('id', log.id)
             .eq('user_id', user.id)
-            .select('id, amount_ml')
-
-          if (updateError) {
-            throw updateError
-          }
-
-          if (!updatedRows || updatedRows.length === 0) {
-            throw new Error(
-              'No water record was updated. Check the water_logs UPDATE policy in Supabase.'
-            )
-          }
-
-          remainingToRemove = 0
+          remaining = 0
         }
       }
-
-      await loadWaterToday()
+      await loadWellnessData()
     } catch (error: any) {
-      console.error('Instant remove water error:', error)
-
-      Alert.alert(
-        'Could not remove water',
-        error?.message || 'Unable to remove water intake.'
-      )
+      Alert.alert('Could not remove water', error?.message)
     } finally {
       setSaving(false)
     }
   }
 
-  function chooseExerciseCategory(category: ExerciseCategory) {
-  setExerciseCategory(category)
-  setShowExerciseMenu(false)
+  // --- EXERCISE ACTIONS ---
+  function chooseExerciseCategory(cat: ExerciseCategory) {
+    setExerciseCategory(cat)
+    setShowExerciseMenu(false)
 
-  if (category === 'Workout Routines') {
-    navigation.navigate('WorkoutRoutineBuilder')
-    return
+    if (cat === 'Workout Routines') {
+      navigation.navigate('WorkoutRoutineBuilder')
+      return
+    }
+
+    navigation.navigate('ExerciseLibrary', { category: cat })
   }
 
-  navigation.navigate('ExerciseLibrary', {
-    category,
-  })
-}
+  // Edit / Delete single Exercise Log
+  function openEditExercise(log: ExerciseLog) {
+    setEditingLog(log)
+    setEditActivityName(log.activity_name || log.exercise_type || '')
+    setEditSets(log.sets ? String(log.sets) : '')
+    setEditRepetitions(log.repetitions_per_set ? String(log.repetitions_per_set) : '')
+    setEditWeightKg(log.weight_kg ? String(log.weight_kg) : '')
+    setEditDistanceKm(log.distance_km ? String(log.distance_km) : '')
+    setEditDurationMinutes(log.duration_minutes ? String(log.duration_minutes) : '')
+    setEditCaloriesBurned(log.calories_burned ? String(log.calories_burned) : '')
+  }
 
-  function handleSyncDevice() {
+  async function updateExerciseLog() {
+    if (!editingLog) return
+
+    try {
+      setUpdatingLog(true)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const isCardio = editingLog.distance_km !== null || editingLog.pace_seconds_per_km !== null
+
+      let paceSeconds = editingLog.pace_seconds_per_km
+      const dist = editDistanceKm.trim() ? getSafeDecimal(editDistanceKm) : null
+      const durMin = editDurationMinutes.trim() ? getSafeInteger(editDurationMinutes) : null
+
+      if (isCardio && dist && durMin && dist > 0 && durMin > 0) {
+        paceSeconds = Math.round((durMin * 60) / dist)
+      }
+
+      const { error } = await supabase
+        .from('exercise_logs')
+        .update({
+          activity_name: editActivityName.trim() || editingLog.exercise_type,
+          sets: editSets.trim() ? getSafeInteger(editSets) : null,
+          repetitions_per_set: editRepetitions.trim() ? getSafeInteger(editRepetitions) : null,
+          weight_kg: editWeightKg.trim() ? getSafeDecimal(editWeightKg) : null,
+          distance_km: dist,
+          duration_minutes: durMin,
+          pace_seconds_per_km: paceSeconds,
+          calories_burned: editCaloriesBurned.trim() ? getSafeDecimal(editCaloriesBurned) : null,
+        })
+        .eq('id', editingLog.id)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setEditingLog(null)
+      await loadWellnessData()
+      Alert.alert('Updated', 'Your exercise record has been updated.')
+    } catch (error: any) {
+      Alert.alert('Could not update', error?.message)
+    } finally {
+      setUpdatingLog(false)
+    }
+  }
+
+  function confirmDeleteExercise(log: ExerciseLog) {
     Alert.alert(
-      'Sync from device',
-      'Device sync is not connected yet. You can add Apple Health, Google Fit, Fitbit, or Garmin integration later.'
+      'Delete Exercise Record?',
+      `Remove "${log.activity_name || log.exercise_type}" from your history?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+            await supabase.from('exercise_logs').delete().eq('id', log.id).eq('user_id', user.id)
+            await loadWellnessData()
+          },
+        },
+      ]
     )
   }
 
-  async function handleRefresh() {
-    setRefreshing(true)
-    await loadWaterToday()
-    setRefreshing(false)
+  // Delete saved routine
+  function confirmDeleteRoutine(routine: SavedRoutine) {
+    Alert.alert(
+      'Delete Routine?',
+      `Remove "${routine.routine_name}" and its exercises?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+            await supabase.from('workout_routines').delete().eq('id', routine.id).eq('user_id', user.id)
+            await loadWellnessData()
+          },
+        },
+      ]
+    )
   }
 
-  const waterProgress = Math.min(
-    waterToday / DAILY_WATER_TARGET,
-    1
-  )
+  // Filter lists by category
+  const strengthHistory = useMemo(() => {
+    return exerciseLogs.filter((log) => log.sets !== null || log.weight_kg !== null)
+  }, [exerciseLogs])
+
+  const cardioHistory = useMemo(() => {
+    return exerciseLogs.filter((log) => log.distance_km !== null || log.pace_seconds_per_km !== null)
+  }, [exerciseLogs])
+
+  const waterProgress = Math.min(waterToday / DAILY_WATER_TARGET, 1)
 
   if (loading) {
     return (
@@ -406,6 +485,7 @@ export default function WellnessScreen() {
           />
         }
       >
+        {/* Top bar */}
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backHomeButton}
@@ -417,10 +497,7 @@ export default function WellnessScreen() {
           <Text style={styles.topBarTitle}>Wellness</Text>
 
           <TouchableOpacity
-            style={[
-              styles.saveTopButton,
-              saving && styles.saveTopButtonDisabled,
-            ]}
+            style={[styles.saveTopButton, saving && styles.saveTopButtonDisabled]}
             disabled={saving}
             onPress={() => void saveWater()}
           >
@@ -433,35 +510,22 @@ export default function WellnessScreen() {
         </View>
 
         <Text style={styles.title}>Log Water Intake</Text>
+        <Text style={styles.screenSubtitle}>Keep your hydration habits on track.</Text>
 
-        <Text style={styles.screenSubtitle}>
-          Keep your hydration habits on track.
-        </Text>
-
+        {/* Water Card */}
         <View style={styles.card}>
           <View style={styles.waterIconCircle}>
             <Text style={styles.waterIcon}>💧</Text>
           </View>
-
           <Text style={styles.cardTitle}>Today&apos;s Water</Text>
-
-          <Text style={styles.amount}>
-            {waterToday.toLocaleString()} ml
-          </Text>
-
+          <Text style={styles.amount}>{waterToday.toLocaleString()} ml</Text>
           <Text style={styles.subtitle}>
             Daily target: {DAILY_WATER_TARGET.toLocaleString()} ml
           </Text>
 
           <View style={styles.progressBackground}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${waterProgress * 100}%` },
-              ]}
-            />
+            <View style={[styles.progressFill, { width: `${waterProgress * 100}%` }]} />
           </View>
-
           <Text style={styles.progressText}>
             {Math.round(waterProgress * 100)}% of your daily goal
           </Text>
@@ -477,17 +541,12 @@ export default function WellnessScreen() {
               returnKeyType="done"
               maxLength={5}
             />
-
             <Text style={styles.unitText}>ml</Text>
           </View>
 
           <View style={styles.row}>
             <TouchableOpacity
-              style={[
-                styles.waterButton,
-                styles.removeButton,
-                saving && styles.waterButtonDisabled,
-              ]}
+              style={[styles.waterButton, styles.removeButton, saving && styles.waterButtonDisabled]}
               disabled={saving}
               onPress={() => void removeWaterInstantly()}
             >
@@ -499,11 +558,7 @@ export default function WellnessScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.waterButton,
-                styles.addButton,
-                saving && styles.waterButtonDisabled,
-              ]}
+              style={[styles.waterButton, styles.addButton, saving && styles.waterButtonDisabled]}
               disabled={saving}
               onPress={() => void addWaterInstantly()}
             >
@@ -514,66 +569,212 @@ export default function WellnessScreen() {
               )}
             </TouchableOpacity>
           </View>
-
-          <Text style={styles.inputHint}>
-            Enter an amount or use the buttons, then tap Save.
-          </Text>
         </View>
 
+        {/* Log Exercise Launcher */}
         <Text style={styles.wellnessSectionTitle}>Log Exercise</Text>
-
         <View style={styles.exerciseCard}>
-          <Text style={styles.exerciseHeading}>
-            Choose an exercise category
-          </Text>
-
+          <Text style={styles.exerciseHeading}>Choose an exercise category</Text>
           <TouchableOpacity
             style={styles.exerciseDropdown}
             onPress={() => setShowExerciseMenu(true)}
           >
-            <Text
-              style={[
-                styles.exerciseDropdownText,
-                !exerciseCategory && styles.exerciseDropdownPlaceholder,
-              ]}
-            >
+            <Text style={[styles.exerciseDropdownText, !exerciseCategory && styles.exerciseDropdownPlaceholder]}>
               {exerciseCategory || 'Select exercise category...'}
             </Text>
-
             <Text style={styles.exerciseDropdownArrow}>⌄</Text>
           </TouchableOpacity>
-
           <Text style={styles.exerciseHelperText}>
-            Choose Cardio, Strength, or Workout Routines to continue.
+            Choose Cardio, Strength, or Workout Routines to log new activity.
           </Text>
         </View>
 
-        <Text style={styles.wellnessSectionTitle}>Sync From Device</Text>
+        {/* --- 3-CATEGORY EXERCISE HISTORY SECTION --- */}
+        <Text style={styles.wellnessSectionTitle}>Activity & Exercise History</Text>
+        
+        {/* Category Pill Tabs */}
+        <View style={styles.historyTabsRow}>
+          {EXERCISE_CATEGORIES.map((categoryTab) => {
+            const isActive = selectedHistoryTab === categoryTab
+            return (
+              <TouchableOpacity
+                key={categoryTab}
+                style={[styles.historyTabPill, isActive && styles.historyTabPillActive]}
+                onPress={() => setSelectedHistoryTab(categoryTab)}
+              >
+                <Text style={[styles.historyTabPillText, isActive && styles.historyTabPillTextActive]}>
+                  {categoryTab}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
 
+        {/* History Content */}
+        {loadingHistory ? (
+          <View style={styles.historyStateCard}>
+            <ActivityIndicator size="small" color="#1E5C35" />
+            <Text style={styles.historyStateText}>Loading activity history...</Text>
+          </View>
+        ) : selectedHistoryTab === 'Strength' ? (
+          strengthHistory.length === 0 ? (
+            <View style={styles.historyStateCard}>
+              <Text style={styles.emptyText}>No strength workouts logged yet.</Text>
+            </View>
+          ) : (
+            <View style={styles.historyCardContainer}>
+              {strengthHistory.map((log) => (
+                <View key={log.id} style={styles.historyRow}>
+                  <View style={styles.historyInfo}>
+                    <Text style={styles.historyName}>{log.activity_name || log.exercise_type}</Text>
+                    <Text style={styles.historyMeta}>
+                      {log.sets ? `${log.sets} sets` : ''}
+                      {log.repetitions_per_set ? ` × ${log.repetitions_per_set} reps` : ''}
+                      {log.weight_kg ? ` · ${formatNumber(log.weight_kg)} kg` : ''}
+                    </Text>
+                    <Text style={styles.historyDate}>Logged {formatExerciseDate(log.logged_at)}</Text>
+                  </View>
+                  <View style={styles.historyActions}>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => openEditExercise(log)}>
+                      <Text style={styles.editBtnText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDeleteExercise(log)}>
+                      <Text style={styles.deleteBtnText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )
+        ) : selectedHistoryTab === 'Cardio' ? (
+          cardioHistory.length === 0 ? (
+            <View style={styles.historyStateCard}>
+              <Text style={styles.emptyText}>No cardio activities logged yet.</Text>
+            </View>
+          ) : (
+            <View style={styles.historyCardContainer}>
+              {cardioHistory.map((log) => (
+                <View key={log.id} style={styles.historyRow}>
+                  <View style={styles.historyInfo}>
+                    <Text style={styles.historyName}>{log.activity_name || log.exercise_type}</Text>
+                    <Text style={styles.historyMeta}>
+                      {log.distance_km ? `${formatNumber(log.distance_km)} km` : ''}
+                      {log.duration_minutes ? ` · ${log.duration_minutes} min` : ''}
+                      {log.pace_seconds_per_km ? ` · Pace: ${formatPace(log.pace_seconds_per_km)}` : ''}
+                    </Text>
+                    <Text style={styles.historyDate}>Logged {formatExerciseDate(log.logged_at)}</Text>
+                  </View>
+                  <View style={styles.historyActions}>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => openEditExercise(log)}>
+                      <Text style={styles.editBtnText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDeleteExercise(log)}>
+                      <Text style={styles.deleteBtnText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )
+        ) : (
+          /* Workout Routines History */
+          savedRoutines.length === 0 ? (
+            <View style={styles.historyStateCard}>
+              <Text style={styles.emptyText}>No workout routines created yet.</Text>
+            </View>
+          ) : (
+            <View style={styles.historyCardContainer}>
+              {savedRoutines.map((routine) => (
+                <View key={routine.id} style={styles.historyRow}>
+                  <View style={styles.historyInfo}>
+                    <Text style={styles.historyName}>{routine.routine_name}</Text>
+                    <Text style={styles.historyMeta}>
+                      {routine.workout_routine_exercises.length}{' '}
+                      {routine.workout_routine_exercises.length === 1 ? 'exercise' : 'exercises'}
+                    </Text>
+                    <Text style={styles.historySubDetail}>
+                      {routine.workout_routine_exercises.map((e) => e.exercise_name).join(' → ')}
+                    </Text>
+                    <Text style={styles.historyDate}>Created {formatExerciseDate(routine.created_at)}</Text>
+                  </View>
+                  <View style={styles.historyActions}>
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => navigation.navigate('WorkoutRoutineBuilder')}
+                    >
+                      <Text style={styles.editBtnText}>Open</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDeleteRoutine(routine)}>
+                      <Text style={styles.deleteBtnText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )
+        )}
+
+        {/* Sync Device Card */}
+        <Text style={styles.wellnessSectionTitle}>Sync From Device</Text>
         <View style={styles.syncCard}>
           <View style={styles.syncTopRow}>
             <View style={styles.deviceIconCircle}>
               <Text style={styles.deviceIcon}>⌚</Text>
             </View>
-
             <View style={styles.syncTextArea}>
               <Text style={styles.syncCardTitle}>Connected Device</Text>
-
-              <Text style={styles.syncCardSubtitle}>
-                No activity device synced yet.
-              </Text>
+              <Text style={styles.syncCardSubtitle}>No activity device synced yet.</Text>
             </View>
           </View>
-
           <TouchableOpacity
             style={styles.syncButton}
-            onPress={handleSyncDevice}
+            onPress={() =>
+              Alert.alert(
+                'Sync from device',
+                'Device sync is not connected yet. You can add Apple Health, Google Fit, Fitbit, or Garmin integration later.'
+              )
+            }
           >
             <Text style={styles.syncButtonText}>Connect a Device</Text>
           </TouchableOpacity>
         </View>
+            
+        <View style={styles.premiumCard}>
+          <View style={styles.premiumIconCircle}>
+            <Text style={styles.premiumIcon}>✦</Text>
+          </View>
+
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumTitle}>
+              More wellness insights later
+            </Text>
+
+            <Text style={styles.premiumText}>
+              Premium can unlock advanced exercise trends, detailed wellness
+              analysis, personalised guidance, and connected-device insights.
+            </Text>
+          </View>
+        </View>
+
+        {/* Go Premium button */}
+        <TouchableOpacity
+          style={styles.goPremiumButton}
+          onPress={() =>
+            Alert.alert(
+              'BiteWise Premium',
+              'Premium features are coming soon. Upgrade later for advanced wellness trends, detailed exercise analysis, personalised guidance, and connected-device insights.'
+            )
+          }
+          accessibilityRole="button"
+          accessibilityLabel="Go Premium"
+          accessibilityHint="Learn about upcoming BiteWise Premium features"
+        >
+          <Text style={styles.goPremiumStar}>✦</Text>
+          <Text style={styles.goPremiumButtonText}>Go Premium</Text>
+        </TouchableOpacity>
       </ScrollView>
 
+      {/* --- CATEGORY PICKER MODAL --- */}
       <Modal
         visible={showExerciseMenu}
         transparent
@@ -584,7 +785,6 @@ export default function WellnessScreen() {
           <View style={styles.exerciseMenu}>
             <View style={styles.exerciseMenuHeader}>
               <Text style={styles.exerciseMenuTitle}>Add Exercise</Text>
-
               <TouchableOpacity
                 style={styles.closeMenuButton}
                 onPress={() => setShowExerciseMenu(false)}
@@ -599,15 +799,137 @@ export default function WellnessScreen() {
                 style={styles.exerciseCategoryOption}
                 onPress={() => chooseExerciseCategory(category)}
               >
-                <Text style={styles.exerciseCategoryOptionText}>
-                  {category}
-                </Text>
-
+                <Text style={styles.exerciseCategoryOptionText}>{category}</Text>
                 <Text style={styles.exerciseCategoryArrow}>›</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
+      </Modal>
+
+      {/* --- EDIT EXERCISE MODAL --- */}
+      <Modal
+        visible={editingLog !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!updatingLog) setEditingLog(null)
+        }}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalKeyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.editModal}>
+              <View style={styles.editModalHeader}>
+                <Text style={styles.editModalTitle}>Edit Logged Exercise</Text>
+                <TouchableOpacity
+                  disabled={updatingLog}
+                  onPress={() => setEditingLog(null)}
+                >
+                  <Text style={styles.closeMenuText}>×</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                <Text style={styles.fieldLabel}>Activity Name</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editActivityName}
+                  onChangeText={setEditActivityName}
+                  placeholder="Exercise Name"
+                  placeholderTextColor="#97A89D"
+                  editable={!updatingLog}
+                />
+
+                {editingLog?.distance_km !== null || editingLog?.pace_seconds_per_km !== null ? (
+                  <>
+                    <Text style={styles.fieldLabel}>Distance (km)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editDistanceKm}
+                      onChangeText={setEditDistanceKm}
+                      keyboardType="decimal-pad"
+                      placeholder="e.g. 5"
+                      placeholderTextColor="#97A89D"
+                      editable={!updatingLog}
+                    />
+
+                    <Text style={styles.fieldLabel}>Duration (minutes)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editDurationMinutes}
+                      onChangeText={setEditDurationMinutes}
+                      keyboardType="number-pad"
+                      placeholder="e.g. 30"
+                      placeholderTextColor="#97A89D"
+                      editable={!updatingLog}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.fieldLabel}>Sets</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editSets}
+                      onChangeText={setEditSets}
+                      keyboardType="number-pad"
+                      placeholder="e.g. 3"
+                      placeholderTextColor="#97A89D"
+                      editable={!updatingLog}
+                    />
+
+                    <Text style={styles.fieldLabel}>Repetitions per set</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editRepetitions}
+                      onChangeText={setEditRepetitions}
+                      keyboardType="number-pad"
+                      placeholder="e.g. 10"
+                      placeholderTextColor="#97A89D"
+                      editable={!updatingLog}
+                    />
+
+                    <Text style={styles.fieldLabel}>Weight (kg)</Text>
+                    <TextInput
+                      style={styles.editInput}
+                      value={editWeightKg}
+                      onChangeText={setEditWeightKg}
+                      keyboardType="decimal-pad"
+                      placeholder="e.g. 40"
+                      placeholderTextColor="#97A89D"
+                      editable={!updatingLog}
+                    />
+                  </>
+                )}
+
+                <Text style={styles.fieldLabel}>Calories Burned</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editCaloriesBurned}
+                  onChangeText={setEditCaloriesBurned}
+                  keyboardType="decimal-pad"
+                  placeholder="Optional"
+                  placeholderTextColor="#97A89D"
+                  editable={!updatingLog}
+                />
+
+                <TouchableOpacity
+                  style={[styles.saveRoutineButton, updatingLog && styles.saveRoutineButtonDisabled]}
+                  disabled={updatingLog}
+                  onPress={() => void updateExerciseLog()}
+                >
+                  {updatingLog ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.saveRoutineButtonText}>Save Changes</Text>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   )
@@ -620,7 +942,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-
   container: {
     backgroundColor: '#F5FAF6',
     flexGrow: 1,
@@ -628,32 +949,27 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingTop: 24,
   },
-
   topBar: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-
   backHomeButton: {
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 72,
     paddingVertical: 8,
   },
-
   backHomeText: {
     color: '#1E5C35',
     fontSize: 15,
     fontWeight: '800',
   },
-
   topBarTitle: {
     color: '#16281D',
     fontSize: 18,
     fontWeight: '800',
   },
-
   saveTopButton: {
     alignItems: 'center',
     backgroundColor: '#1E5C35',
@@ -664,17 +980,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-
   saveTopButtonDisabled: {
     opacity: 0.7,
   },
-
   saveTopButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
   },
-
   title: {
     color: '#16281D',
     fontSize: 26,
@@ -682,14 +995,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
     textAlign: 'center',
   },
-
   screenSubtitle: {
     color: '#5C7267',
     fontSize: 14,
     marginTop: 6,
     textAlign: 'center',
   },
-
   card: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -699,7 +1010,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 20,
   },
-
   waterIconCircle: {
     alignItems: 'center',
     backgroundColor: '#D9ECDF',
@@ -708,25 +1018,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 88,
   },
-
   waterIcon: {
     fontSize: 46,
   },
-
   cardTitle: {
     color: '#16281D',
     fontSize: 18,
     fontWeight: '800',
     marginTop: 14,
   },
-
   amount: {
     color: '#1E5C35',
     fontSize: 34,
     fontWeight: '800',
     marginTop: 8,
   },
-
   subtitle: {
     color: '#5C7267',
     fontSize: 14,
@@ -734,7 +1040,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center',
   },
-
   progressBackground: {
     backgroundColor: '#E2ECE6',
     borderRadius: 999,
@@ -743,26 +1048,22 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     width: '100%',
   },
-
   progressFill: {
     backgroundColor: '#1E5C35',
     borderRadius: 999,
     height: '100%',
   },
-
   progressText: {
     color: '#708277',
     fontSize: 12,
     marginTop: 7,
   },
-
   inputRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
   },
-
   amountInput: {
     backgroundColor: '#F8FBF9',
     borderColor: '#1E5C35',
@@ -776,21 +1077,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     textAlign: 'center',
   },
-
   unitText: {
     color: '#1E5C35',
     fontSize: 20,
     fontWeight: '800',
     marginLeft: 10,
   },
-
   row: {
     flexDirection: 'row',
     gap: 10,
     marginTop: 16,
     width: '100%',
   },
-
   waterButton: {
     alignItems: 'center',
     borderRadius: 12,
@@ -799,40 +1097,27 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: 10,
   },
-
   waterButtonDisabled: {
     opacity: 0.7,
   },
-
   addButton: {
     backgroundColor: '#1E5C35',
   },
-
   addButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
   },
-
   removeButton: {
     backgroundColor: '#FFFFFF',
     borderColor: '#1E5C35',
     borderWidth: 1.5,
   },
-
   removeButtonText: {
     color: '#1E5C35',
     fontSize: 14,
     fontWeight: '800',
   },
-
-  inputHint: {
-    color: '#708277',
-    fontSize: 12,
-    marginTop: 14,
-    textAlign: 'center',
-  },
-
   wellnessSectionTitle: {
     color: '#5C7267',
     fontSize: 13,
@@ -842,7 +1127,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     textTransform: 'uppercase',
   },
-
   exerciseCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#DCE9E0',
@@ -850,14 +1134,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 20,
   },
-
   exerciseHeading: {
     color: '#16281D',
     fontSize: 18,
     fontWeight: '800',
     marginBottom: 16,
   },
-
   exerciseDropdown: {
     alignItems: 'center',
     backgroundColor: '#F8FBF9',
@@ -869,18 +1151,15 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: 14,
   },
-
   exerciseDropdownText: {
     color: '#16281D',
     fontSize: 14,
     fontWeight: '600',
   },
-
   exerciseDropdownPlaceholder: {
     color: '#97A89D',
     fontWeight: '400',
   },
-
   exerciseDropdownArrow: {
     color: '#1E5C35',
     fontSize: 22,
@@ -888,14 +1167,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: -4,
   },
-
   exerciseHelperText: {
     color: '#708277',
     fontSize: 12,
     lineHeight: 18,
     marginTop: 12,
   },
-
   syncCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#DCE9E0',
@@ -904,12 +1181,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 20,
   },
-
   syncTopRow: {
     alignItems: 'center',
     flexDirection: 'row',
   },
-
   deviceIconCircle: {
     alignItems: 'center',
     backgroundColor: '#D9ECDF',
@@ -919,27 +1194,22 @@ const styles = StyleSheet.create({
     marginRight: 12,
     width: 48,
   },
-
   deviceIcon: {
     fontSize: 25,
   },
-
   syncTextArea: {
     flex: 1,
   },
-
   syncCardTitle: {
     color: '#16281D',
     fontSize: 14,
     fontWeight: '800',
   },
-
   syncCardSubtitle: {
     color: '#708277',
     fontSize: 12,
     marginTop: 4,
   },
-
   syncButton: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -950,20 +1220,132 @@ const styles = StyleSheet.create({
     marginTop: 18,
     minHeight: 48,
   },
-
   syncButtonText: {
     color: '#1E5C35',
     fontSize: 13,
     fontWeight: '800',
   },
 
+  /* HISTORY STYLES */
+  historyTabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  historyTabPill: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DCE9E0',
+    borderRadius: 999,
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  historyTabPillActive: {
+    backgroundColor: '#1E5C35',
+    borderColor: '#1E5C35',
+  },
+  historyTabPillText: {
+    color: '#5C7267',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  historyTabPillTextActive: {
+    color: '#FFFFFF',
+  },
+  historyStateCard: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2ECE6',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+  },
+  historyStateText: {
+    color: '#5C7267',
+    fontSize: 13,
+    marginTop: 8,
+  },
+  emptyText: {
+    color: '#708277',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  historyCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2ECE6',
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  historyRow: {
+    borderBottomColor: '#E2ECE6',
+    borderBottomWidth: 1,
+    padding: 14,
+  },
+  historyInfo: {
+    marginBottom: 10,
+  },
+  historyName: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  historyMeta: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  historySubDetail: {
+    color: '#5C7267',
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 5,
+  },
+  historyDate: {
+    color: '#708277',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  historyActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editBtn: {
+    alignItems: 'center',
+    backgroundColor: '#EAF3EC',
+    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 32,
+    paddingHorizontal: 12,
+  },
+  editBtnText: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  deleteBtn: {
+    alignItems: 'center',
+    backgroundColor: '#FDE3E3',
+    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 32,
+    paddingHorizontal: 12,
+  },
+  deleteBtnText: {
+    color: '#B3261E',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  /* MODAL STYLES */
   modalBackdrop: {
     backgroundColor: 'rgba(22, 40, 29, 0.45)',
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
   },
-
   exerciseMenu: {
     backgroundColor: '#F5FAF6',
     borderColor: '#C9DBD0',
@@ -971,34 +1353,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 20,
   },
-
   exerciseMenuHeader: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 18,
   },
-
   exerciseMenuTitle: {
     color: '#16281D',
     fontSize: 21,
     fontWeight: '800',
   },
-
   closeMenuButton: {
     alignItems: 'center',
     height: 36,
     justifyContent: 'center',
     width: 36,
   },
-
   closeMenuText: {
     color: '#1E5C35',
     fontSize: 30,
     fontWeight: '300',
     lineHeight: 34,
   },
-
   exerciseCategoryOption: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -1011,17 +1388,139 @@ const styles = StyleSheet.create({
     minHeight: 60,
     paddingHorizontal: 22,
   },
-
   exerciseCategoryOptionText: {
     color: '#16281D',
     fontSize: 17,
     fontWeight: '800',
   },
-
   exerciseCategoryArrow: {
     color: '#1E5C35',
     fontSize: 30,
     fontWeight: '300',
     lineHeight: 32,
   },
+  modalKeyboardView: {
+    flex: 1,
+  },
+  editModal: {
+    backgroundColor: '#F5FAF6',
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    maxHeight: '90%',
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  editModalHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  editModalTitle: {
+    color: '#16281D',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  fieldLabel: {
+    color: '#16281D',
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  editInput: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#C9DBD0',
+    borderRadius: 12,
+    borderWidth: 1,
+    color: '#16281D',
+    fontSize: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  saveRoutineButton: {
+    alignItems: 'center',
+    backgroundColor: '#1E5C35',
+    borderRadius: 12,
+    justifyContent: 'center',
+    marginTop: 18,
+    minHeight: 50,
+  },
+  saveRoutineButtonDisabled: {
+    opacity: 0.7,
+  },
+  saveRoutineButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  goPremiumButton: {
+  alignItems: 'center',
+  backgroundColor: '#D4A017',
+  borderColor: '#B7791F',
+  borderRadius: 14,
+  borderWidth: 1,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  marginBottom: 8,
+  marginTop: 24,
+  minHeight: 52,
+  paddingHorizontal: 18,
+  shadowColor: '#8A6500',
+  shadowOffset: {
+    width: 0,
+    height: 3,
+  },
+  shadowOpacity: 0.2,
+  shadowRadius: 5,
+  elevation: 3,
+},
+goPremiumStar: {
+  fontSize: 18,
+  marginRight: 8,
+},
+goPremiumButtonText: {
+  color: '#FFFFFF',
+  fontSize: 15,
+  fontWeight: '900',
+  letterSpacing: 0.2,
+},
+premiumCard: {
+  alignItems: 'flex-start',
+  backgroundColor: '#FFFFFF',
+  borderColor: '#C9DBD0',
+  borderRadius: 18,
+  borderStyle: 'dashed',
+  borderWidth: 1.5,
+  flexDirection: 'row',
+  marginTop: 24,
+  padding: 16,
+},
+premiumIconCircle: {
+  alignItems: 'center',
+  backgroundColor: '#FFF4D6',
+  borderRadius: 20,
+  height: 40,
+  justifyContent: 'center',
+  marginRight: 12,
+  width: 40,
+},
+premiumIcon: {
+  fontSize: 19,
+},
+premiumContent: {
+  flex: 1,
+},
+premiumTitle: {
+  color: '#16281D',
+  fontSize: 14,
+  fontWeight: '800',
+},
+premiumText: {
+  color: '#708277',
+  fontSize: 12,
+  lineHeight: 18,
+  marginTop: 4,
+},
 })

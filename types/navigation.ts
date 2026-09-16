@@ -4,7 +4,7 @@ export type MainTabParamList = {
   Home: undefined
   Meals: undefined
   Wellness: undefined
-  Reports: undefined
+  Progress: undefined
   Profile: undefined
 }
 
@@ -12,7 +12,7 @@ export type PremiumTabParamList = {
   PuHome: undefined
   Meals: undefined
   Wellness: undefined
-  Reports: undefined
+  Progress: undefined
   PuProfile: undefined
 }
 
