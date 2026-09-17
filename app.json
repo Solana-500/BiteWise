@@ -29,7 +29,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "package": "com.bitewisefyp.BiteWise"
     },
     "web": {
       "favicon": "./assets/favicon.png"
