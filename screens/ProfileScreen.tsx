@@ -293,6 +293,17 @@ export default function ProfileScreen({ navigation }: Props) {
               activity_level: editActivityLevel.trim() || null,
               daily_calorie_target: getOptionalNumber(editCalorieTarget),
             }
+      const { data: existingProfile, error: existingProfileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (existingProfileError) {
+        throw existingProfileError
+      }
+
+      const isFirstProfileSave = !existingProfile
 
       const { data, error } = await supabase
         .from('profiles')
@@ -326,6 +337,21 @@ export default function ProfileScreen({ navigation }: Props) {
 
       setShowFitnessGoalMenu(false)
       setEditSection(null)
+
+      await loadProfile()
+
+      if (isFirstProfileSave) {
+        Alert.alert('Profile created', 'Welcome to BiteWise!', [
+          {
+            text: 'Continue',
+            onPress: () =>
+              navigation.navigate('Home', {
+                screen: 'HomeMain',
+              }),
+          },
+        ])
+        return
+      }
 
       Alert.alert('Profile updated', 'Your changes have been saved.')
     } catch (error: any) {
