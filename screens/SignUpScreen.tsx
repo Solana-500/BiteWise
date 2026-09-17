@@ -22,48 +22,83 @@ export default function SignUpScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleSignUp() {
-  if (!email || !password || !confirmPassword) {
-    Alert.alert('Missing information', 'Please complete all fields.')
-    return
+    const cleanedEmail = email.trim().toLowerCase()
+
+    if (!cleanedEmail || !password || !confirmPassword) {
+      Alert.alert('Missing information', 'Please complete all fields.')
+      return
+    }
+
+    if (password.length < 6) {
+      Alert.alert(
+        'Password too short',
+        'Use a password with at least 6 characters.'
+      )
+      return
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Password mismatch', 'The passwords do not match.')
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanedEmail,
+        password,
+        options: {
+          data: {
+            email: cleanedEmail,
+          },
+        },
+      })
+
+      console.log('Signup user:', data.user)
+      console.log('Signup session:', data.session)
+      console.log('Signup error:', error)
+
+      if (error) {
+        Alert.alert('Registration failed', error.message)
+        return
+      }
+
+      if (!data.user) {
+        Alert.alert(
+          'Registration failed',
+          'No user was created. Please try again.'
+        )
+        return
+      }
+
+      // This is normal when Supabase requires email confirmation.
+      if (!data.session) {
+        Alert.alert(
+          'Verify your email',
+          'Your account has been created. Open the verification email, confirm your account, then return and log in.',
+          [
+            {
+              text: 'Go to Login',
+              onPress: () => navigation.replace('Login'),
+            },
+          ]
+        )
+        return
+      }
+
+      navigation.replace('SignUp')
+    } catch (error: any) {
+      console.error('Signup error:', error)
+
+      Alert.alert(
+        'Registration failed',
+        error?.message ?? 'Something went wrong. Please try again.'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
-
-  if (password.length < 6) {
-    Alert.alert(
-      'Password too short',
-      'Use a password with at least 6 characters.'
-    )
-    return
-  }
-
-  if (password !== confirmPassword) {
-    Alert.alert('Password mismatch', 'The passwords do not match.')
-    return
-  }
-
-  setLoading(true)
-
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim(),
-    password,
-  })
-
-  setLoading(false)
-
-  if (error) {
-    Alert.alert('Registration failed', error.message)
-    return
-  }
-
-  if (!data.session) {
-    Alert.alert(
-      'Account created',
-      'Check your email to confirm your account, then return and log in.'
-    )
-    navigation.navigate('Login')
-  } else {
-    Alert.alert('Account created', 'You are now logged in.')
-  }
-}
 
   return (
     <View style={styles.container}>
@@ -116,7 +151,9 @@ export default function SignUpScreen({ navigation }: Props) {
         onPress={() => navigation.navigate('Login')}
         style={styles.linkButton}
       >
-        <Text style={styles.linkText}>Already have an account? Log In</Text>
+        <Text style={styles.linkText}>
+          Already have an account? Log In
+        </Text>
       </TouchableOpacity>
     </View>
   )
@@ -157,9 +194,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1E5C35',
     borderRadius: 10,
+    justifyContent: 'center',
     marginTop: 6,
     minHeight: 50,
-    justifyContent: 'center',
     paddingVertical: 14,
   },
   disabledButton: {
