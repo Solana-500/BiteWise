@@ -54,6 +54,7 @@ export type RootStackParamList = {
   PuCoach: undefined
   FoodLogging: undefined
   FavoriteList: undefined
+  Feedback: undefined
 
   ExerciseLibrary: {
     category: ExerciseCategory

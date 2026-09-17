@@ -28,6 +28,7 @@ import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
 import FavoriteListScreen from './screens/FavoriteListScreen'
+import FeedbackScreen from './screens/FeedbackScreen'
 
 
 import { supabase } from './services/supabase'
@@ -49,10 +50,11 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>()
 function HomeStackNavigator() {
   return (
     <HomeStack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+        screenOptions={{
+          animation: 'none',
+          headerShown: false,
+        }}
+      >
       <HomeStack.Screen
         name="HomeMain"
         component={HomeScreen}
@@ -74,6 +76,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        animation: 'none',
         tabBarActiveTintColor: '#1E5C35',
         tabBarInactiveTintColor: '#7C8F83',
         tabBarLabelStyle: {
@@ -378,8 +381,9 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
+     <Stack.Navigator
         screenOptions={{
+          animation: 'none',
           headerShown: true,
           headerStyle: {
             backgroundColor: '#F5FAF6',
@@ -461,7 +465,14 @@ export default function App() {
                 presentation: 'card',
               }}
             />
-
+            <Stack.Screen
+              name="Feedback"
+              component={FeedbackScreen}
+              options={{
+                animation: 'none',
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="ExerciseLibrary"
               component={ExerciseLibraryScreen}
@@ -482,6 +493,14 @@ export default function App() {
             <Stack.Screen
               name="FoodLogging"
               component={FoodLoggingScreen}
+              options={{
+                animation: 'none',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Feedback"
+              component={FeedbackScreen}
               options={{
                 animation: 'none',
                 headerShown: false,

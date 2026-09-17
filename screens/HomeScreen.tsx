@@ -226,8 +226,8 @@ export default function HomeScreen({ navigation }: Props) {
       key: 'review',
       icon: '⭐',
       title: 'Review',
-      subtitle: 'Lets us know what you think',
-      onPress: () => navigation.getParent()?.navigate('Progress')
+      subtitle: 'Let us know what you think',
+      onPress: () => navigation.getParent()?.navigate('Feedback'),
     },
   ]
 
