@@ -47,7 +47,8 @@ export type RootStackParamList = {
   SignUp: undefined
   CoachSignUp: undefined
   Onboarding: undefined
-
+  SubPremium: undefined
+  
   MainTabs: NavigatorScreenParams<MainTabParamList>
   PremiumTabs: NavigatorScreenParams<PremiumTabParamList>
 
@@ -55,6 +56,7 @@ export type RootStackParamList = {
   FoodLogging: undefined
   FavoriteList: undefined
   Feedback: undefined
+  
 
   ExerciseLibrary: {
     category: ExerciseCategory

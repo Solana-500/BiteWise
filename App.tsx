@@ -29,7 +29,7 @@ import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
 import FavoriteListScreen from './screens/FavoriteListScreen'
 import FeedbackScreen from './screens/FeedbackScreen'
-
+import SubPremiumScreen from './screens/SubPremiumScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -497,6 +497,11 @@ export default function App() {
                 animation: 'none',
                 headerShown: false,
               }}
+            />
+            <Stack.Screen
+              name="SubPremium"
+              component={SubPremiumScreen}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Feedback"

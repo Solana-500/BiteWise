@@ -21,7 +21,7 @@ type DashboardData = {
   full_name: string | null
   daily_calorie_target: number | null
   fitness_goal: string | null
-  tier: string | null
+  subscription_tier: string | null
 }
 
 type FeatureTile = {
@@ -92,7 +92,7 @@ export default function HomeScreen({ navigation }: Props) {
       const [profileResponse, mealsResponse] = await Promise.all([
         supabase
           .from('profiles')
-          .select('full_name, daily_calorie_target, fitness_goal, tier')
+          .select('full_name, daily_calorie_target, fitness_goal, subscription_tier')
           .eq('id', user.id)
           .single(),
 
@@ -179,7 +179,7 @@ export default function HomeScreen({ navigation }: Props) {
   const calorieProgress =
     calorieTarget > 0 ? Math.min(calories / calorieTarget, 1) : 0
 
-  const isPremium = profile?.tier === 'premium'
+  const isPremium = profile?.subscription_tier === 'premium'
 
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
 
@@ -247,10 +247,18 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.topBarTitle}>Home</Text>
 
         {!isPremium ? (
-          <TouchableOpacity style={styles.goPremiumBtn}>
-            <Text style={styles.goPremiumText}>Go Premium ✦</Text>
-          </TouchableOpacity>
-        ) : null}
+      <TouchableOpacity
+        style={styles.goPremiumBtn}
+        onPress={() =>
+          navigation.getParent()?.navigate('SubPremium' as never)
+        }
+        accessibilityRole="button"
+        accessibilityLabel="Go Premium"
+        accessibilityHint="View BiteWise Premium plans"
+      >
+        <Text style={styles.goPremiumText}>✦ Go Premium</Text>
+      </TouchableOpacity>
+    ) : null}
       </View>
 
       <View style={styles.heroCard}>

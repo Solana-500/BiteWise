@@ -594,12 +594,7 @@ export default function ProgressScreen() {
 
       <TouchableOpacity
   style={styles.goPremiumButton}
-  onPress={() =>
-    Alert.alert(
-      'BiteWise Premium',
-      'Premium features are coming soon. They will include detailed charts, longer-term trends, and personalised wellness insights.'
-    )
-  }
+  onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
   accessibilityRole="button"
   accessibilityLabel="Go Premium"
   accessibilityHint="Learn about upcoming BiteWise Premium features"

@@ -765,12 +765,7 @@ export default function WellnessScreen() {
         {/* Go Premium button */}
         <TouchableOpacity
           style={styles.goPremiumButton}
-          onPress={() =>
-            Alert.alert(
-              'BiteWise Premium',
-              'Premium features are coming soon. Upgrade later for advanced wellness trends, detailed exercise analysis, personalised guidance, and connected-device insights.'
-            )
-          }
+          onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
           accessibilityRole="button"
           accessibilityLabel="Go Premium"
           accessibilityHint="Learn about upcoming BiteWise Premium features"
