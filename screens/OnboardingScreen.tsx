@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -8,11 +9,32 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+
 import { supabase } from '../services/supabase'
 
 type Props = {
   onComplete: () => void
 }
+
+const FITNESS_GOALS = [
+  'Bodybuilding',
+  'Power Lifting',
+  'Hyrox',
+  'Fat Loss',
+  'Weight Gain',
+  'Maintenance',
+  'Weight Loss',
+] as const
+
+const ACTIVITY_LEVELS = [
+  'Sedentary',
+  'Lightly Active',
+  'Moderately Active',
+  'Very Active',
+] as const
+
+type FitnessGoal = (typeof FITNESS_GOALS)[number]
+type ActivityLevel = (typeof ACTIVITY_LEVELS)[number]
 
 export default function OnboardingScreen({ onComplete }: Props) {
   const [fullName, setFullName] = useState('')
@@ -20,8 +42,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
   const [sex, setSex] = useState<'Male' | 'Female'>('Male')
   const [heightCm, setHeightCm] = useState('')
   const [weightKg, setWeightKg] = useState('')
-  const [activityLevel, setActivityLevel] = useState('Moderately Active')
-  const [fitnessGoal, setFitnessGoal] = useState('Fat Loss')
+  const [activityLevel, setActivityLevel] =
+    useState<ActivityLevel>('Moderately Active')
+  const [fitnessGoal, setFitnessGoal] =
+    useState<FitnessGoal>('Fat Loss')
   const [loading, setLoading] = useState(false)
 
   function calculateDailyCalories() {
@@ -34,7 +58,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
         ? 10 * numericWeight + 6.25 * numericHeight - 5 * numericAge + 5
         : 10 * numericWeight + 6.25 * numericHeight - 5 * numericAge - 161
 
-    const activityMultipliers: Record<string, number> = {
+    const activityMultipliers: Record<ActivityLevel, number> = {
       Sedentary: 1.2,
       'Lightly Active': 1.375,
       'Moderately Active': 1.55,
@@ -42,21 +66,29 @@ export default function OnboardingScreen({ onComplete }: Props) {
     }
 
     const maintenance =
-      bmr * (activityMultipliers[activityLevel] ?? 1.2)
+      bmr * activityMultipliers[activityLevel]
 
-    if (fitnessGoal === 'Fat Loss') {
+    // Estimated calorie deficit for fat/weight loss goals.
+    if (fitnessGoal === 'Fat Loss' || fitnessGoal === 'Weight Loss') {
       return Math.round(maintenance - 400)
     }
 
-    if (fitnessGoal === 'Body Building') {
+    // Estimated calorie surplus for muscle/weight-gain goals.
+    if (
+      fitnessGoal === 'Bodybuilding' ||
+      fitnessGoal === 'Weight Gain'
+    ) {
       return Math.round(maintenance + 250)
     }
 
+    // Power Lifting, Hyrox, and Maintenance use maintenance calories.
     return Math.round(maintenance)
   }
 
   async function handleSaveProfile() {
-    if (!fullName || !age || !heightCm || !weightKg) {
+    const trimmedFullName = fullName.trim()
+
+    if (!trimmedFullName || !age || !heightCm || !weightKg) {
       Alert.alert(
         'Missing information',
         'Please enter your name, age, height, and weight.'
@@ -83,47 +115,70 @@ export default function OnboardingScreen({ onComplete }: Props) {
       return
     }
 
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    if (userError || !user) {
+      console.log('Onboarding auth user:', user)
+      console.log('Onboarding auth error:', userError)
+
+      if (userError || !user) {
+        Alert.alert(
+          'Login required',
+          'Your session is invalid or expired. Please log in again.'
+        )
+        return
+      }
+
+      const dailyCalorieTarget = calculateDailyCalories()
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: user.id,
+            full_name: trimmedFullName,
+            age: numericAge,
+            sex,
+            height_cm: numericHeight,
+            weight_kg: numericWeight,
+            activity_level: activityLevel,
+            fitness_goal: fitnessGoal,
+            daily_calorie_target: dailyCalorieTarget,
+            tier: 'free',
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'id',
+          }
+        )
+        .select()
+        .single()
+
+      console.log('Onboarding profile result:', data)
+      console.log('Onboarding profile error:', error)
+
+      if (error) {
+        Alert.alert('Could not save profile', error.message)
+        return
+      }
+
+      // App.tsx should switch from OnboardingScreen to the Main Tabs/Home.
+      onComplete()
+    } catch (error: any) {
+      console.error('Onboarding save error:', error)
+
+      Alert.alert(
+        'Could not save profile',
+        error?.message ?? 'Something went wrong. Please try again.'
+      )
+    } finally {
       setLoading(false)
-      Alert.alert('Login required', 'Please log in again.')
-      return
     }
-
-    const dailyCalorieTarget = calculateDailyCalories()
-
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: user.id,
-        full_name: fullName.trim(),
-        age: numericAge,
-        sex,
-        height_cm: numericHeight,
-        weight_kg: numericWeight,
-        activity_level: activityLevel,
-        fitness_goal: fitnessGoal,
-        daily_calorie_target: dailyCalorieTarget,
-        tier: 'free',
-        updated_at: new Date().toISOString(),
-      })
-
-    setLoading(false)
-
-    if (error) {
-      Alert.alert('Could not save profile', error.message)
-      return
-    }
-
-    // Tell App.tsx the profile now exists so it can switch
-    // the navigator into the Home/Meals/Wellness/Reports stack.
-    onComplete()
   }
 
   return (
@@ -132,7 +187,9 @@ export default function OnboardingScreen({ onComplete }: Props) {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.logo}>BiteWise</Text>
+
       <Text style={styles.title}>Set up your profile</Text>
+
       <Text style={styles.subtitle}>
         We will use this information to create an estimated nutrition target.
       </Text>
@@ -140,6 +197,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
       <Text style={styles.label}>Full name</Text>
       <TextInput
         autoCapitalize="words"
+        editable={!loading}
         onChangeText={setFullName}
         placeholder="e.g. Edmund Koh"
         placeholderTextColor="#8B9B90"
@@ -149,6 +207,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
       <Text style={styles.label}>Age</Text>
       <TextInput
+        editable={!loading}
         keyboardType="number-pad"
         onChangeText={setAge}
         placeholder="e.g. 22"
@@ -162,6 +221,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
         {(['Male', 'Female'] as const).map((option) => (
           <TouchableOpacity
             key={option}
+            disabled={loading}
             onPress={() => setSex(option)}
             style={[
               styles.optionButton,
@@ -182,6 +242,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
       <Text style={styles.label}>Height (cm)</Text>
       <TextInput
+        editable={!loading}
         keyboardType="decimal-pad"
         onChangeText={setHeightCm}
         placeholder="e.g. 171"
@@ -192,6 +253,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
       <Text style={styles.label}>Weight (kg)</Text>
       <TextInput
+        editable={!loading}
         keyboardType="decimal-pad"
         onChangeText={setWeightKg}
         placeholder="e.g. 68"
@@ -202,14 +264,10 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
       <Text style={styles.label}>Activity level</Text>
       <View style={styles.optionWrap}>
-        {[
-          'Sedentary',
-          'Lightly Active',
-          'Moderately Active',
-          'Very Active',
-        ].map((option) => (
+        {ACTIVITY_LEVELS.map((option) => (
           <TouchableOpacity
             key={option}
+            disabled={loading}
             onPress={() => setActivityLevel(option)}
             style={[
               styles.optionButton,
@@ -230,37 +288,38 @@ export default function OnboardingScreen({ onComplete }: Props) {
 
       <Text style={styles.label}>Fitness goal</Text>
       <View style={styles.optionWrap}>
-        {['Fat Loss', 'Body Building', 'Power Lifting', 'Hyrox'].map(
-          (option) => (
-            <TouchableOpacity
-              key={option}
-              onPress={() => setFitnessGoal(option)}
+        {FITNESS_GOALS.map((option) => (
+          <TouchableOpacity
+            key={option}
+            disabled={loading}
+            onPress={() => setFitnessGoal(option)}
+            style={[
+              styles.optionButton,
+              fitnessGoal === option && styles.optionButtonSelected,
+            ]}
+          >
+            <Text
               style={[
-                styles.optionButton,
-                fitnessGoal === option && styles.optionButtonSelected,
+                styles.optionText,
+                fitnessGoal === option && styles.optionTextSelected,
               ]}
             >
-              <Text
-                style={[
-                  styles.optionText,
-                  fitnessGoal === option && styles.optionTextSelected,
-                ]}
-              >
-                {option}
-              </Text>
-            </TouchableOpacity>
-          )
-        )}
+              {option}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <TouchableOpacity
         disabled={loading}
-        onPress={handleSaveProfile}
+        onPress={() => void handleSaveProfile()}
         style={[styles.saveButton, loading && styles.disabledButton]}
       >
-        <Text style={styles.saveButtonText}>
-          {loading ? 'Saving...' : 'Save Profile'}
-        </Text>
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.saveButtonText}>Save Profile</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   )
@@ -271,8 +330,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FAF6',
     flexGrow: 1,
     padding: 24,
-    paddingTop: 56,
     paddingBottom: 48,
+    paddingTop: 56,
   },
   logo: {
     color: '#1E5C35',
@@ -344,7 +403,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1E5C35',
     borderRadius: 10,
+    justifyContent: 'center',
     marginTop: 32,
+    minHeight: 52,
     paddingVertical: 15,
   },
   disabledButton: {

@@ -344,12 +344,7 @@ export default function FavoriteListScreen() {
 
         <TouchableOpacity
           style={styles.goPremiumButton}
-          onPress={() =>
-            Alert.alert(
-              'BiteWise Premium',
-              'Premium features are coming soon. Upgrade later for personalised recipes, meal plans, and detailed nutrition insights.'
-            )
-          }
+          onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
           accessibilityRole="button"
           accessibilityLabel="Go Premium"
         >

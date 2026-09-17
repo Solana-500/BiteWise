@@ -30,7 +30,7 @@ type ProfileData = {
   activity_level: string | null
   fitness_goal: string | null
   daily_calorie_target: number | null
-  tier: string | null
+  subscription_tier: string | null
 }
 
 type EditSection = 'personal' | 'goals' | null
@@ -50,7 +50,7 @@ const EMPTY_PROFILE: ProfileData = {
   activity_level: null,
   fitness_goal: null,
   daily_calorie_target: null,
-  tier: 'free',
+  subscription_tier: 'free',
 }
 
 export default function ProfileScreen({ navigation }: Props) {
@@ -96,7 +96,7 @@ export default function ProfileScreen({ navigation }: Props) {
       const { data, error } = await supabase
         .from('profiles')
         .select(
-          'full_name, age, sex, height_cm, weight_kg, activity_level, fitness_goal, daily_calorie_target, tier'
+          'full_name, age, sex, height_cm, weight_kg, activity_level, fitness_goal, daily_calorie_target, subscription_tier'
         )
         .eq('id', user.id)
         .maybeSingle()
@@ -413,7 +413,7 @@ export default function ProfileScreen({ navigation }: Props) {
 
           <View style={styles.tierBadge}>
             <Text style={styles.tierText}>
-              {profile?.tier === 'premium' ? 'PREMIUM USER' : 'FREE USER'}
+              {profile?.subscription_tier === 'premium' ? 'PREMIUM USER' : 'FREE USER'}
             </Text>
           </View>
         </View>
@@ -506,7 +506,7 @@ export default function ProfileScreen({ navigation }: Props) {
             <Text style={styles.accountTitle}>Subscription</Text>
 
             <Text style={styles.accountSub}>
-              {profile?.tier === 'premium'
+              {profile?.subscription_tier === 'premium'
                 ? 'Manage your Premium plan'
                 : 'Free plan · Upgrade when ready'}
             </Text>
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
     paddingBottom: 40,
-    paddingTop: 52,
+    paddingTop: 71,
   },
   backHomeButton: {
     alignSelf: 'flex-start',
