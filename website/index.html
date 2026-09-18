@@ -884,6 +884,14 @@
             >
 
 
+                <!-- SECTION TITLE -->
+
+                <h2 class="register-section-title">
+                    Account Information
+                </h2>
+
+
+
                 <!-- ACCOUNT TYPE -->
 
                 <input
@@ -1031,6 +1039,13 @@
                 </div>
 
 
+                <!-- REGISTRATION MESSAGE -->
+
+            <p
+                class="form-message"
+                id="register-message"
+            ></p>
+
 
                 <!-- MAIN BUTTON -->
 
@@ -1067,19 +1082,19 @@
 
 
         <!-- ====================================
-             STEP 2: COACH SPECIALTY
+             STEP 2: COACH REGISTRATION
+             (personal + coaching details)
         ===================================== -->
 
         <div
             class="register-step hidden"
-            id="register-step-specialty"
+            id="register-step-coach-details"
         >
-
 
             <button
                 type="button"
                 class="register-back"
-                id="specialty-back"
+                id="coach-details-back"
             >
                 ← Back
             </button>
@@ -1088,62 +1103,246 @@
             <div class="register-heading coach-step-heading">
 
                 <h1>
-                    Select your specialty
+                    Coach Registration
                 </h1>
 
                 <p>
-                    Select exactly one area of your expertise.
+                    Create a professional coach account. A system
+                    administrator will review your application before
+                    it is activated.
                 </p>
 
             </div>
 
 
-
-            <div class="coach-specialty-section">
-
-                <p class="account-type-label">
-                    Coaching Specialty
-                </p>
+            <div class="coach-details-section">
 
 
-                <div class="specialty-options">
+                <!-- ====== PERSONAL INFORMATION ====== -->
+
+                <h2 class="register-section-title">
+                    Personal Information
+                </h2>
 
 
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Fat Loss"
+                <!-- AGE + GENDER -->
+
+                <div class="coach-measurement-grid coach-age-gender-grid">
+
+                    <div class="form-group">
+
+                        <label for="coach-age">
+                            Age (optional)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-age"
+                            name="coach-age"
+                            placeholder="e.g. 28"
+                            min="18"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Gender
+                        </label>
+
+                        <div class="coach-gender-options">
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Male"
+                                >
+                                <span>Male</span>
+                            </label>
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Female"
+                                >
+                                <span>Female</span>
+                            </label>
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Other"
+                                >
+                                <span>Other</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HEIGHT + WEIGHT -->
+
+                <div class="coach-measurement-grid">
+
+                    <div class="form-group">
+
+                        <label for="coach-height">
+                            Height (cm)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-height"
+                            name="coach-height"
+                            placeholder="e.g. 175"
+                            min="1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="coach-weight">
+                            Weight (kg)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-weight"
+                            name="coach-weight"
+                            placeholder="e.g. 72"
+                            min="1"
+                            step="0.1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- ====== COACHING DETAILS ====== -->
+
+                <h2 class="register-section-title">
+                    Coaching Details
+                </h2>
+
+
+                <!-- SPECIALTIES -->
+
+                <div class="coach-specialty-section">
+
+                    <p class="account-type-label">
+                        Coaching specialties
+                    </p>
+
+                    <p class="specialty-hint">
+                        Select up to 3 specialties
+                    </p>
+
+
+                    <div class="specialty-options">
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Bodybuilding"
+                        >
+                            Bodybuilding
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Weight Loss Management"
+                        >
+                            Weight Loss Management
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Nutritionist"
+                        >
+                            Nutritionist
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Powerlifting"
+                        >
+                            Powerlifting
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Hyrox"
+                        >
+                            Hyrox
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="CrossFit"
+                        >
+                            CrossFit
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Marathon"
+                        >
+                            Marathon
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Running"
+                        >
+                            Running
+                        </button>
+
+                    </div>
+
+
+                    <span
+                        class="specialty-count"
+                        id="specialty-count"
                     >
-                        Fat Loss
-                    </button>
+                        0/3 selected
+                    </span>
+
+                </div>
 
 
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Body Building"
+                <!-- YEARS OF EXPERIENCE -->
+
+                <div class="form-group coach-experience-group">
+
+                    <label for="coach-years-experience">
+                        Years of experience
+                    </label>
+
+                    <input
+                        type="number"
+                        id="coach-years-experience"
+                        name="coach-years-experience"
+                        placeholder="e.g. 4"
+                        min="0"
                     >
-                        Body Building
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Power Lifting"
-                    >
-                        Power Lifting
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Hyrox"
-                    >
-                        Hyrox
-                    </button>
-
 
                 </div>
 
@@ -1157,127 +1356,18 @@
                 <button
                     type="button"
                     class="register-button"
-                    id="specialty-continue"
-                >
-                    Continue →
-                </button>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- ====================================
-             STEP 3: COACH CREDENTIALS
-        ===================================== -->
-
-        <div
-            class="register-step hidden"
-            id="register-step-credentials"
-        >
-
-
-            <button
-                type="button"
-                class="register-back"
-                id="credentials-back"
-            >
-                ← Back
-            </button>
-
-
-            <div class="register-heading coach-step-heading">
-
-                <h1>
-                    Submit your credentials
-                </h1>
-
-                <p>
-                    Upload your coaching credentials to verify
-                    your expertise.
-                </p>
-
-            </div>
-
-
-
-            <div class="credentials-section">
-
-
-                <p class="account-type-label">
-                    Upload Document
-                </p>
-
-
-
-                <label
-                    for="coach-credentials"
-                    class="credential-upload"
-                >
-
-
-                    <div class="upload-icon">
-                        ↑
-                    </div>
-
-
-                    <strong>
-                        Choose credential file
-                    </strong>
-
-
-                    <span>
-                        Acceptable file formats: .pdf, .docx
-                    </span>
-
-
-                    <span
-                        class="selected-file-name"
-                        id="selected-file-name"
-                    >
-                        No file selected
-                    </span>
-
-
-                </label>
-
-
-
-                <input
-                    type="file"
-                    id="coach-credentials"
-                    class="credential-file-input"
-                    accept=".pdf,.docx"
-                >
-
-
-
-                <p
-                    class="form-message"
-                    id="credential-message"
-                ></p>
-
-
-
-                <button
-                    type="button"
-                    class="register-button"
                     id="submit-coach-registration"
                 >
-                    Submit Registration
+                    Register as Coach
                 </button>
-
 
             </div>
 
         </div>
-
-
+    
     </div>
 
 </div>
-
 
 
 <!-- ========================================
@@ -1362,7 +1452,7 @@
 
         <!-- LOGIN FORM -->
 
-        <form class="login-form">
+        <form class="login-form" id="login-form">
 
 
             <input
@@ -1384,7 +1474,7 @@
                     type="email"
                     id="login-email"
                     name="login-email"
-                    placeholder="Enter your email"
+                    placeholder="you@email.com"
                     required
                 >
 
@@ -1410,12 +1500,42 @@
 
 
 
+            <!-- LOGIN MESSAGE -->
+
+            <p
+                class="form-message login-message"
+                id="login-message"
+            ></p>
+
+
+
             <button
                 type="submit"
                 class="login-submit-button"
             >
                 Log In
             </button>
+
+
+
+            <!-- SWITCH TO REGISTER (text changes per account type) -->
+
+            <a
+                href="#"
+                class="login-switch-link"
+                id="login-switch-link"
+                data-register-as="User"
+            >
+                Don't have a user account? Sign Up
+            </a>
+
+            <p
+                class="login-admin-note"
+                id="login-admin-note"
+                hidden
+            >
+                System administrator accounts are created by BiteWise.
+            </p>
 
 
 
@@ -1433,6 +1553,65 @@
 
 </div>
 
+
+
+<!-- ========================================
+     COACH SUCCESS POPUP
+========================================= -->
+
+<div
+    class="coach-success-modal"
+    id="coach-success-modal"
+    aria-hidden="true"
+>
+
+    <div
+        class="coach-success-overlay"
+        id="coach-success-overlay"
+    ></div>
+
+
+    <div
+        class="coach-success-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="coach-success-title"
+    >
+
+        <button
+            type="button"
+            class="coach-success-close"
+            id="coach-success-close"
+            aria-label="Close"
+        >
+            &times;
+        </button>
+
+        <div class="success-icon">
+            &#10003;
+        </div>
+
+        <h1 id="coach-success-title">
+            Application submitted
+        </h1>
+
+        <p>
+            Thanks for registering as a health coach. Your account is
+            now pending approval, and you will be able to log in once
+            an admin has reviewed it.
+        </p>
+
+        <button
+            type="button"
+            class="register-button"
+            id="coach-success-later"
+        >
+            Got it
+        </button>
+
+    </div>
+
+</div>
 
 
 <!-- ========================================

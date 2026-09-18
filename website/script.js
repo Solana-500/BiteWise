@@ -93,9 +93,15 @@ async function registerUser() {
 
     if (password !== confirmPassword) {
 
-        alert("Passwords do not match.");
+        if (registerMessage) {
+
+            registerMessage.textContent =
+                "Passwords do not match.";
+
+        }
 
         return;
+
     }
 
 
@@ -216,7 +222,7 @@ async function registerUser() {
         // ======================================
 
         window.location.href =
-            "download.html";
+            "download.html?welcome=1";
 
 
     } catch (error) {
@@ -235,6 +241,230 @@ async function registerUser() {
 
 }
 
+
+// ==============================================
+// COACH REGISTRATION
+// ==============================================
+
+async function registerCoach() {
+
+    const fullName =
+        document.getElementById(
+            "register-full-name"
+        )?.value.trim();
+
+    const email =
+        document.getElementById(
+            "register-email"
+        )?.value.trim();
+
+    const password =
+        document.getElementById(
+            "register-password"
+        )?.value;
+
+    const age =
+        document.getElementById(
+            "coach-age"
+        )?.value;
+
+    const gender =
+        document.querySelector(
+            'input[name="coach-gender"]:checked'
+        )?.value;
+
+    const height =
+        document.getElementById(
+            "coach-height"
+        )?.value;
+
+    const weight =
+        document.getElementById(
+            "coach-weight"
+        )?.value;
+
+    const yearsExperience =
+        document.getElementById(
+            "coach-years-experience"
+        )?.value;
+
+
+    // ==========================================
+    // FINAL VALIDATION
+    // ==========================================
+
+    if (
+        !fullName ||
+        !email ||
+        !password
+    ) {
+
+        alert(
+            "Account information is incomplete."
+        );
+
+        return;
+    }
+
+
+    if (
+        selectedSpecialties.length === 0
+    ) {
+
+        if (specialtyMessage) {
+
+            specialtyMessage.textContent =
+                "Please select at least one coaching specialty.";
+
+        }
+
+        return;
+    }
+
+
+    try {
+
+        // ======================================
+        // STEP 1: CREATE AUTH USER
+        // ======================================
+
+        const {
+            data: authData,
+            error: authError
+        } =
+            await supabaseClient.auth.signUp({
+
+                email:
+                    email.toLowerCase(),
+
+                password: password
+
+            });
+
+
+        if (
+            authError ||
+            !authData.user
+        ) {
+
+            console.error(
+                "Coach auth registration error:",
+                authError
+            );
+
+            alert(
+                authError?.message ||
+                "Unable to create the coach account."
+            );
+
+            return;
+        }
+
+
+        // ======================================
+        // STEP 2: CREATE COACH PROFILE
+        // ======================================
+
+        const {
+            error: profileError
+        } =
+            await supabaseClient
+                .from("profiles")
+                .insert({
+
+                    id:
+                        authData.user.id,
+
+                    full_name:
+                        fullName,
+
+                    app_role:
+                        "coach",
+
+                    approval_status:
+                        "pending",
+
+                    coaching_specialty:
+                        selectedSpecialties.join(", "),
+
+                    years_experience:
+                        yearsExperience?.trim() || null,
+
+                    age:
+                        age
+                            ? parseInt(age, 10)
+                            : null,
+
+                    gender:
+                        gender || null,
+
+                    height_cm:
+                        height
+                            ? parseFloat(height)
+                            : null,
+
+                    weight_kg:
+                        weight
+                            ? parseFloat(weight)
+                            : null,
+
+                    updated_at:
+                        new Date().toISOString()
+
+                });
+
+
+        if (profileError) {
+
+            console.error(
+                "Coach profile creation error:",
+                profileError
+            );
+
+            alert(
+                "Profile setup failed: " +
+                profileError.message
+            );
+
+            return;
+        }
+
+
+        // ======================================
+        // STEP 3: SIGN PENDING COACH OUT
+        // ======================================
+
+        await supabaseClient.auth.signOut();
+
+
+        // ======================================
+        // STEP 4: COMPLETE
+        // ======================================
+
+        closeRegisterModal();
+
+        document
+            .getElementById(
+                "coach-success-modal"
+            )
+            ?.classList.add("active");
+
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected coach registration error:",
+            error
+        );
+
+        alert(
+            error?.message ||
+            "Something went wrong while creating your coach account."
+        );
+
+    }
+
+}
 
 
 // ==============================================
@@ -353,16 +583,10 @@ const accountStep =
         "register-step-account"
     );
 
-const specialtyStep =
+const coachDetailsStep =
     document.getElementById(
-        "register-step-specialty"
+        "register-step-coach-details"
     );
-
-const credentialsStep =
-    document.getElementById(
-        "register-step-credentials"
-    );
-
 
 function showRegisterStep(step) {
 
@@ -370,12 +594,8 @@ function showRegisterStep(step) {
         "hidden"
     );
 
-    specialtyStep?.classList.add(
-        "hidden"
-    );
-
-    credentialsStep?.classList.add(
-        "hidden"
+    coachDetailsStep?.classList.add(
+    "hidden"
     );
 
 
@@ -437,6 +657,381 @@ const accountSubtitles = {
 };
 
 
+// Text under the Log In button changes per account type.
+// Admin has no sign-up, so it shows a plain note instead.
+
+const loginSwitchLink =
+    document.getElementById(
+        "login-switch-link"
+    );
+
+const loginAdminNote =
+    document.getElementById(
+        "login-admin-note"
+    );
+
+const loginSwitchOptions = {
+
+    User: {
+        text: "Don't have a user account? Sign Up",
+        registerAs: "User"
+    },
+
+    Coach: {
+        text: "New coach? Register as a Coach",
+        registerAs: "Coach"
+    }
+
+};
+
+
+function updateLoginFooter(accountType) {
+
+    const option =
+        loginSwitchOptions[accountType];
+
+    if (loginSwitchLink) {
+
+        loginSwitchLink.hidden = !option;
+
+        if (option) {
+
+            loginSwitchLink.textContent =
+                option.text;
+
+            loginSwitchLink.dataset.registerAs =
+                option.registerAs;
+
+        }
+
+    }
+
+    if (loginAdminNote) {
+
+        loginAdminNote.hidden = !!option;
+
+    }
+
+}
+
+
+loginSwitchLink?.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        const registerAs =
+            loginSwitchLink.dataset.registerAs ||
+            "User";
+
+        openRegisterModal();
+
+        // Pre-select the matching tab in the register popup
+
+        registerAccountTabs.forEach(
+            (tab) => {
+
+                if (
+                    tab.dataset.registerAccount ===
+                    registerAs
+                ) {
+
+                    tab.click();
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+// ==============================================
+// LOGIN
+// ==============================================
+//
+// Users and health coaches are checked and then sent to the
+// download page (there is no web app for them). Admins are
+// checked too, but the admin portal is not built yet.
+
+const loginForm =
+    document.getElementById(
+        "login-form"
+    );
+
+const loginMessage =
+    document.getElementById(
+        "login-message"
+    );
+
+const loginRoleForTab = {
+    User: "user",
+    Coach: "coach",
+    Admin: "admin"
+};
+
+const loginAccountLabel = {
+    User: "a user account",
+    Coach: "a coach account",
+    Admin: "an admin account"
+};
+
+
+function showLoginMessage(text, type) {
+
+    if (!loginMessage) {
+        return;
+    }
+
+    loginMessage.textContent = text || "";
+
+    loginMessage.classList.toggle(
+        "info",
+        type === "info"
+    );
+
+}
+
+
+loginForm?.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        showLoginMessage("");
+
+        const email =
+            document.getElementById(
+                "login-email"
+            )?.value.trim();
+
+        const password =
+            document.getElementById(
+                "login-password"
+            )?.value;
+
+        const selectedAccount =
+            accountTypeInput?.value || "User";
+
+        const submitButton =
+            loginForm.querySelector(
+                ".login-submit-button"
+            );
+
+
+        if (!email || !password) {
+
+            showLoginMessage(
+                "Please enter your email and password."
+            );
+
+            return;
+
+        }
+
+
+        if (submitButton) {
+
+            submitButton.disabled = true;
+
+            submitButton.textContent =
+                "Logging in...";
+
+        }
+
+
+        try {
+
+            // ==================================
+            // STEP 1: SIGN IN
+            // ==================================
+
+            const {
+                data: authData,
+                error: authError
+            } =
+                await supabaseClient.auth
+                    .signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+
+            if (authError || !authData?.user) {
+
+                showLoginMessage(
+                    authError?.message ===
+                    "Invalid login credentials"
+                        ? "Incorrect email or password."
+                        : (
+                            authError?.message ||
+                            "Unable to log in."
+                        )
+                );
+
+                return;
+
+            }
+
+
+            // ==================================
+            // STEP 2: LOAD PROFILE
+            // ==================================
+
+            const {
+                data: profile,
+                error: profileError
+            } =
+                await supabaseClient
+                    .from("profiles")
+                    .select(
+                        "app_role, approval_status"
+                    )
+                    .eq("id", authData.user.id)
+                    .single();
+
+
+            if (profileError || !profile) {
+
+                console.error(
+                    "Login profile error:",
+                    profileError
+                );
+
+                await supabaseClient.auth.signOut();
+
+                showLoginMessage(
+                    "We couldn't load your profile. Please try again."
+                );
+
+                return;
+
+            }
+
+
+            // ==================================
+            // STEP 3: CHECK ROLE MATCHES TAB
+            // ==================================
+
+            const expectedRole =
+                loginRoleForTab[selectedAccount];
+
+            if (profile.app_role !== expectedRole) {
+
+                await supabaseClient.auth.signOut();
+
+                showLoginMessage(
+                    "This isn't " +
+                    loginAccountLabel[selectedAccount] +
+                    ". Please choose the correct tab above."
+                );
+
+                return;
+
+            }
+
+
+            // ==================================
+            // STEP 4: COACH APPROVAL
+            // ==================================
+
+            if (expectedRole === "coach") {
+
+                if (
+                    profile.approval_status ===
+                    "pending"
+                ) {
+
+                    await supabaseClient.auth.signOut();
+
+                    showLoginMessage(
+                        "Your application is still being reviewed. " +
+                        "You'll be able to log in once it's approved."
+                    );
+
+                    return;
+
+                }
+
+                if (
+                    profile.approval_status ===
+                    "rejected"
+                ) {
+
+                    await supabaseClient.auth.signOut();
+
+                    showLoginMessage(
+                        "Your coach application was not approved."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            // ==================================
+            // STEP 5: ADMIN (PORTAL NOT BUILT YET)
+            // ==================================
+
+            if (expectedRole === "admin") {
+
+                await supabaseClient.auth.signOut();
+
+                showLoginMessage(
+                    "Admin web portal coming soon.",
+                    "info"
+                );
+
+                return;
+
+            }
+
+
+            // ==================================
+            // STEP 6: USER / APPROVED COACH
+            // ==================================
+            //
+            // No web app for these accounts, so sign out
+            // and send them to the mobile app download page.
+
+            await supabaseClient.auth.signOut();
+
+            window.location.href =
+                "download.html";
+
+        } catch (error) {
+
+            console.error(
+                "Unexpected login error:",
+                error
+            );
+
+            showLoginMessage(
+                "Something went wrong. Please try again."
+            );
+
+        } finally {
+
+            if (submitButton) {
+
+                submitButton.disabled = false;
+
+                submitButton.textContent =
+                    "Log In";
+
+            }
+
+        }
+
+    }
+);
+
+
 accountTabs.forEach((tab) => {
 
     tab.addEventListener(
@@ -480,6 +1075,10 @@ accountTabs.forEach((tab) => {
 
             }
 
+
+            updateLoginFooter(selectedAccount);
+            showLoginMessage("");
+
         }
     );
 
@@ -509,9 +1108,6 @@ const healthGoalGroup =
     );
 
 
-// FIXED:
-// Previously this said "healh-goal"
-
 const healthGoalSelect =
     document.getElementById(
         "health-goal"
@@ -524,53 +1120,43 @@ const registerMainButton =
     );
 
 
+const registerMessage =
+    document.getElementById(
+        "register-message"
+    );
+
+
 
 // ==============================================
-// COACH SPECIALTY VARIABLES
+// COACH REGISTRATION VARIABLES
 // ==============================================
+
+const coachDetailsBack =
+    document.getElementById(
+        "coach-details-back"
+    );
 
 const specialtyOptions =
     document.querySelectorAll(
         ".specialty-option"
     );
 
-
-const specialtyContinue =
-    document.getElementById(
-        "specialty-continue"
-    );
-
-
 const specialtyMessage =
     document.getElementById(
         "specialty-message"
     );
 
-
-let selectedSpecialty = null;
-
-
-
-// ==============================================
-// COACH CREDENTIAL VARIABLES
-// ==============================================
-
-const credentialInput =
+const specialtyCount =
     document.getElementById(
-        "coach-credentials"
+        "specialty-count"
     );
 
-
-const selectedFileName =
+const submitCoachRegistration =
     document.getElementById(
-        "selected-file-name"
+        "submit-coach-registration"
     );
 
-
-const credentialMessage =
-    document.getElementById(
-        "credential-message"
-    );
+let selectedSpecialties = [];
 
 
 
@@ -581,6 +1167,15 @@ const credentialMessage =
 function resetRegistration() {
 
     showRegisterStep(accountStep);
+
+    // Reset account form fields
+
+    const registerAccountForm =
+        document.getElementById(
+            "register-account-form"
+        );
+
+    registerAccountForm?.reset();
 
 
     // Reset account type to User
@@ -641,10 +1236,9 @@ function resetRegistration() {
     }
 
 
-    // Reset specialty
+    // Reset coach specialties
 
-    selectedSpecialty = null;
-
+    selectedSpecialties = [];
 
     specialtyOptions.forEach(
         (option) => {
@@ -656,6 +1250,12 @@ function resetRegistration() {
         }
     );
 
+    if (specialtyCount) {
+
+        specialtyCount.textContent =
+            "0/3 selected";
+
+    }
 
     if (specialtyMessage) {
 
@@ -663,27 +1263,67 @@ function resetRegistration() {
 
     }
 
+    // Reset coach personal information
 
-    // Reset credential message
+    const coachAge =
+        document.getElementById(
+            "coach-age"
+        );
 
-    if (credentialMessage) {
+    const coachGenderOptions =
+        document.querySelectorAll(
+            'input[name="coach-gender"]'
+        );
 
-        credentialMessage.textContent = "";
+    const coachHeight =
+        document.getElementById(
+            "coach-height"
+        );
+
+    const coachWeight =
+        document.getElementById(
+            "coach-weight"
+        );
+
+    const coachYearsExperience =
+        document.getElementById(
+            "coach-years-experience"
+        );
+
+
+    if (coachAge) {
+
+        coachAge.value = "";
 
     }
 
 
-    if (selectedFileName) {
+    coachGenderOptions.forEach(
+        (option) => {
 
-        selectedFileName.textContent =
-            "No file selected";
+            option.checked = false;
+
+        }
+    );
+
+
+    if (coachHeight) {
+
+        coachHeight.value = "";
 
     }
 
 
-    if (credentialInput) {
+    if (coachWeight) {
 
-        credentialInput.value = "";
+        coachWeight.value = "";
+
+    }
+
+
+    if (coachYearsExperience) {
+
+        coachYearsExperience.value = "";
 
     }
 
@@ -770,6 +1410,8 @@ function openLoginModal() {
 
 
 function closeLoginModal() {
+
+    showLoginMessage("");
 
     loginModal?.classList.remove(
         "active"
@@ -1043,6 +1685,12 @@ registerAccountForm?.addEventListener(
 
         event.preventDefault();
 
+        if (registerMessage) {
+
+            registerMessage.textContent = "";
+
+        }
+
 
         const selectedAccount =
             registerAccountTypeInput
@@ -1072,8 +1720,70 @@ registerAccountForm?.addEventListener(
             selectedAccount === "Coach"
         ) {
 
+            const fullName =
+                document.getElementById(
+                    "register-full-name"
+                )?.value.trim();
+
+            const email =
+                document.getElementById(
+                    "register-email"
+                )?.value.trim();
+
+            const password =
+                document.getElementById(
+                    "register-password"
+                )?.value;
+
+            const confirmPassword =
+                document.getElementById(
+                    "register-confirm-password"
+                )?.value;
+
+
+            if (
+                !fullName ||
+                !email ||
+                !password ||
+                !confirmPassword
+            ) {
+
+                alert(
+                    "Please complete all fields."
+                );
+
+                return;
+
+            }
+
+
+            if (password !== confirmPassword) {
+
+                if (registerMessage) {
+
+                    registerMessage.textContent =
+                        "Passwords do not match.";
+
+                }
+
+                return;
+
+            }
+
+
+            if (password.length < 6) {
+
+                alert(
+                    "Password must contain at least 6 characters."
+                );
+
+                return;
+
+            }
+
+
             showRegisterStep(
-                specialtyStep
+                coachDetailsStep
             );
 
         }
@@ -1084,7 +1794,7 @@ registerAccountForm?.addEventListener(
 
 
 // ==============================================
-// COACH SPECIALTY
+// COACH SPECIALTY SELECTION
 // ==============================================
 
 specialtyOptions.forEach(
@@ -1094,31 +1804,75 @@ specialtyOptions.forEach(
             "click",
             function() {
 
-                specialtyOptions.forEach(
-                    (item) => {
+                const specialty =
+                    option.dataset.specialty;
 
-                        item.classList.remove(
-                            "active"
+                const alreadySelected =
+                    selectedSpecialties.includes(
+                        specialty
+                    );
+
+
+                // Remove selected specialty
+
+                if (alreadySelected) {
+
+                    selectedSpecialties =
+                        selectedSpecialties.filter(
+                            (item) =>
+                                item !== specialty
                         );
 
+                    option.classList.remove(
+                        "active"
+                    );
+
+                }
+
+                // Add specialty if below limit
+
+                else {
+
+                    if (
+                        selectedSpecialties.length >= 3
+                    ) {
+
+                        if (specialtyMessage) {
+
+                            specialtyMessage.textContent =
+                                "You can select up to 3 specialties.";
+
+                        }
+
+                        return;
+
                     }
-                );
 
 
-                option.classList.add(
-                    "active"
-                );
+                    selectedSpecialties.push(
+                        specialty
+                    );
+
+                    option.classList.add(
+                        "active"
+                    );
+
+                }
 
 
-                selectedSpecialty =
-                    option.dataset
-                        .specialty;
+                // Update counter
+
+                if (specialtyCount) {
+
+                    specialtyCount.textContent =
+                        `${selectedSpecialties.length}/3 selected`;
+
+                }
 
 
                 if (specialtyMessage) {
 
-                    specialtyMessage
-                        .textContent = "";
+                    specialtyMessage.textContent = "";
 
                 }
 
@@ -1129,178 +1883,138 @@ specialtyOptions.forEach(
 );
 
 
+// ==============================================
+// COACH REGISTRATION BUTTON
+// (validates personal + coaching details, then registers)
+// ==============================================
 
-specialtyContinue?.addEventListener(
+submitCoachRegistration?.addEventListener(
     "click",
-    function() {
+    async function() {
 
-        if (!selectedSpecialty) {
+        function showError(message) {
 
             if (specialtyMessage) {
 
-                specialtyMessage
-                    .textContent =
-                    "Please select a coaching specialty.";
+                specialtyMessage.textContent = message;
 
             }
+
+        }
+
+        showError("");
+
+
+        const age =
+            document.getElementById(
+                "coach-age"
+            )?.value;
+
+        const gender =
+            document.querySelector(
+                'input[name="coach-gender"]:checked'
+            );
+
+        const height =
+            document.getElementById(
+                "coach-height"
+            )?.value;
+
+        const weight =
+            document.getElementById(
+                "coach-weight"
+            )?.value;
+
+        const yearsExperience =
+            document.getElementById(
+                "coach-years-experience"
+            )?.value;
+
+
+        // Personal information
+
+        if (!gender || !height || !weight) {
+
+            showError(
+                "Please complete your gender, height and weight."
+            );
+
+            return;
+
+        }
+
+        if (age && Number(age) < 18) {
+
+            showError("Age must be at least 18.");
+
+            return;
+
+        }
+
+        if (Number(height) <= 0) {
+
+            showError("Please enter a valid height.");
+
+            return;
+
+        }
+
+        if (Number(weight) <= 0) {
+
+            showError("Please enter a valid weight.");
 
             return;
 
         }
 
 
-        showRegisterStep(
-            credentialsStep
-        );
+        // Coaching information
 
-    }
-);
+        if (selectedSpecialties.length === 0) {
 
+            showError(
+                "Please select at least one coaching specialty."
+            );
 
-
-// ==============================================
-// COACH CREDENTIAL FILE
-// ==============================================
-
-credentialInput?.addEventListener(
-    "change",
-    function() {
-
-        const file =
-            credentialInput.files[0];
-
-
-        if (file) {
-
-            if (selectedFileName) {
-
-                selectedFileName
-                    .textContent =
-                    file.name;
-
-            }
-
-
-            if (credentialMessage) {
-
-                credentialMessage
-                    .textContent = "";
-
-            }
-
-        } else {
-
-            if (selectedFileName) {
-
-                selectedFileName
-                    .textContent =
-                    "No file selected";
-
-            }
+            return;
 
         }
 
-    }
-);
+        if (
+            yearsExperience === undefined ||
+            yearsExperience === ""
+        ) {
 
-
-
-// ==============================================
-// SUBMIT COACH REGISTRATION
-// ==============================================
-
-const submitCoachRegistration =
-    document.getElementById(
-        "submit-coach-registration"
-    );
-
-
-submitCoachRegistration
-    ?.addEventListener(
-        "click",
-        function() {
-
-            const file =
-                credentialInput
-                    ?.files[0];
-
-
-            if (!file) {
-
-                if (
-                    credentialMessage
-                ) {
-
-                    credentialMessage
-                        .textContent =
-                        "Please upload your coaching credentials.";
-
-                }
-
-                return;
-
-            }
-
-
-            /*
-                HEALTH COACH REGISTRATION
-                IS STILL PROTOTYPE-ONLY.
-
-                Later we will:
-
-                1. Create Supabase Auth user
-                2. Create profiles row
-                3. Set app_role = "coach"
-                4. Set coaching_specialty
-                5. Upload credential file
-                6. Create coach_documents row
-
-                We are NOT doing those database
-                operations yet.
-            */
-
-
-            console.log(
-                "Coach prototype data:"
+            showError(
+                "Please enter your years of experience."
             );
 
-            console.log(
-                "Specialty:",
-                selectedSpecialty
-            );
-
-            console.log(
-                "Credential file:",
-                file.name
-            );
-
-
-            alert(
-                "Coach registration is not connected to Supabase yet."
-            );
+            return;
 
         }
-    );
 
+        if (Number(yearsExperience) < 0) {
+
+            showError(
+                "Years of experience cannot be negative."
+            );
+
+            return;
+
+        }
+
+
+        await registerCoach();
+
+    }
+);
 
 
 // ==============================================
 // COACH STEP BACK BUTTONS
 // ==============================================
 
-const specialtyBack =
-    document.getElementById(
-        "specialty-back"
-    );
-
-
-const credentialsBack =
-    document.getElementById(
-        "credentials-back"
-    );
-
-
-specialtyBack?.addEventListener(
+coachDetailsBack?.addEventListener(
     "click",
     function() {
 
@@ -1312,13 +2026,50 @@ specialtyBack?.addEventListener(
 );
 
 
-credentialsBack?.addEventListener(
+// ==============================================
+// COACH SUCCESS POPUP
+// ==============================================
+
+const coachSuccessModal =
+    document.getElementById(
+        "coach-success-modal"
+    );
+
+const coachSuccessClose =
+    document.getElementById(
+        "coach-success-close"
+    );
+
+const coachSuccessLater =
+    document.getElementById(
+        "coach-success-later"
+    );
+
+const coachSuccessOverlay =
+    document.getElementById(
+        "coach-success-overlay"
+    );
+
+
+function closeCoachSuccessModal() {
+
+    coachSuccessModal
+        ?.classList.remove("active");
+
+}
+
+
+coachSuccessClose?.addEventListener(
     "click",
-    function() {
+    closeCoachSuccessModal
+);
 
-        showRegisterStep(
-            specialtyStep
-        );
+coachSuccessLater?.addEventListener(
+    "click",
+    closeCoachSuccessModal
+);
 
-    }
+coachSuccessOverlay?.addEventListener(
+    "click",
+    closeCoachSuccessModal
 );
