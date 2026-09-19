@@ -12,113 +12,93 @@ const supabaseClient = supabase.createClient(
 
 
 // ==============================================
-// USER REGISTRATION
+// USER REGISTRATION (2 parts: create account, then profile setup)
 // ==============================================
 
 async function registerUser() {
 
-    const fullNameInput =
-        document.getElementById("register-full-name");
-
-    const emailInput =
-        document.getElementById("register-email");
-
-    const passwordInput =
-        document.getElementById("register-password");
-
-    const confirmPasswordInput =
-        document.getElementById("register-confirm-password");
-
-    const healthGoalInput =
-        document.getElementById("health-goal");
-
-
     // ==========================================
-    // CHECK FORM ELEMENTS
+    // PART 1 OF 2: CREATE THE AUTH ACCOUNT
+    // (email + password only, like the mobile app)
+    // The profile is created in part 2 (saveUserProfile)
     // ==========================================
-
-    if (
-        !fullNameInput ||
-        !emailInput ||
-        !passwordInput ||
-        !confirmPasswordInput ||
-        !healthGoalInput
-    ) {
-
-        console.error(
-            "Registration form fields could not be found."
-        );
-
-        alert(
-            "There is a problem with the registration form."
-        );
-
-        return;
-    }
-
-
-    const fullName =
-        fullNameInput.value.trim();
 
     const email =
-        emailInput.value.trim();
+        document.getElementById(
+            "register-email"
+        )?.value.trim();
 
     const password =
-        passwordInput.value;
+        document.getElementById(
+            "register-password"
+        )?.value;
 
     const confirmPassword =
-        confirmPasswordInput.value;
+        document.getElementById(
+            "register-confirm-password"
+        )?.value;
 
-    const healthGoal =
-        healthGoalInput.value;
+
+    function showError(message) {
+
+        if (registerMessage) {
+
+            registerMessage.textContent = message;
+
+        }
+
+    }
+
+    showError("");
 
 
     // ==========================================
     // VALIDATION
     // ==========================================
 
-    if (
-        !fullName ||
-        !email ||
-        !password ||
-        !confirmPassword ||
-        !healthGoal
-    ) {
+    if (!email || !password || !confirmPassword) {
 
-        alert("Please complete all fields.");
+        showError(
+            "Please enter your email and password."
+        );
 
         return;
-    }
 
+    }
 
     if (password !== confirmPassword) {
 
-        if (registerMessage) {
-
-            registerMessage.textContent =
-                "Passwords do not match.";
-
-        }
+        showError("Passwords do not match.");
 
         return;
 
     }
 
-
     if (password.length < 6) {
 
-        alert(
+        showError(
             "Password must contain at least 6 characters."
         );
 
         return;
+
+    }
+
+
+    if (registerMainButton) {
+
+        registerMainButton.disabled = true;
+
+        registerMainButton.textContent =
+            "Creating account...";
+
     }
 
 
     try {
 
         // ======================================
-        // STEP 1: CREATE AUTH USER
+        // CREATE AUTH USER
         // ======================================
 
         const {
@@ -138,9 +118,10 @@ async function registerUser() {
                 authError
             );
 
-            alert(authError.message);
+            showError(authError.message);
 
             return;
+
         }
 
 
@@ -150,11 +131,33 @@ async function registerUser() {
                 "No user was returned after signup."
             );
 
-            alert(
+            showError(
                 "Account could not be created."
             );
 
             return;
+
+        }
+
+
+        // ======================================
+        // CHECK SESSION
+        // (needed to create the profile in part 2)
+        // ======================================
+
+        if (!authData.session) {
+
+            console.error(
+                "No authenticated session was returned."
+            );
+
+            showError(
+                "Your account was created, but your email " +
+                "must be verified before you can set up your profile."
+            );
+
+            return;
+
         }
 
 
@@ -164,25 +167,178 @@ async function registerUser() {
 
 
         // ======================================
-        // STEP 2: CHECK SESSION
+        // GO TO PART 2: PROFILE SETUP
         // ======================================
 
-        if (!authData.session) {
+        showRegisterStep(onboardingStep);
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected registration error:",
+            error
+        );
+
+        showError(
+            "Something went wrong while creating your account."
+        );
+
+    } finally {
+
+        if (registerMainButton) {
+
+            registerMainButton.disabled = false;
+
+            registerMainButton.textContent =
+                "Create Account";
+
+        }
+
+    }
+
+}
+
+
+// ==============================================
+// USER PROFILE SETUP (PART 2 OF 2)
+// Saves the onboarding details as the user's profile.
+// ==============================================
+
+async function saveUserProfile() {
+
+    const fullName =
+        document.getElementById(
+            "onboarding-full-name"
+        )?.value.trim();
+
+    const age =
+        document.getElementById(
+            "onboarding-age"
+        )?.value;
+
+    const height =
+        document.getElementById(
+            "onboarding-height"
+        )?.value;
+
+    const weight =
+        document.getElementById(
+            "onboarding-weight"
+        )?.value;
+
+    const {
+        sex,
+        activity,
+        goal
+    } = onboardingSelections;
+
+    const saveButton =
+        document.getElementById(
+            "onboarding-save-button"
+        );
+
+
+    function showError(message) {
+
+        if (onboardingMessage) {
+
+            onboardingMessage.textContent = message;
+
+        }
+
+    }
+
+    showError("");
+
+
+    // ==========================================
+    // VALIDATION
+    // ==========================================
+
+    if (
+        !fullName ||
+        !age ||
+        !sex ||
+        !height ||
+        !weight ||
+        !activity ||
+        !goal
+    ) {
+
+        showError("Please complete all fields.");
+
+        return;
+
+    }
+
+    const ageNumber = parseInt(age, 10);
+
+    if (!(ageNumber >= 1 && ageNumber <= 120)) {
+
+        showError("Please enter a valid age.");
+
+        return;
+
+    }
+
+    if (!(parseFloat(height) > 0)) {
+
+        showError("Please enter a valid height.");
+
+        return;
+
+    }
+
+    if (!(parseFloat(weight) > 0)) {
+
+        showError("Please enter a valid weight.");
+
+        return;
+
+    }
+
+
+    if (saveButton) {
+
+        saveButton.disabled = true;
+
+        saveButton.textContent = "Saving...";
+
+    }
+
+
+    try {
+
+        // ======================================
+        // GET THE ACCOUNT CREATED IN PART 1
+        // ======================================
+
+        const {
+            data: userData,
+            error: userError
+        } =
+            await supabaseClient.auth.getUser();
+
+
+        if (userError || !userData?.user) {
 
             console.error(
-                "No authenticated session was returned."
+                "Could not get the signed-in user:",
+                userError
             );
 
-            alert(
-                "Your account was created, but your email must be verified before your profile can be completed."
+            showError(
+                "We couldn't confirm your account. " +
+                "Please close this popup and try again."
             );
 
             return;
+
         }
 
 
         // ======================================
-        // STEP 3: CREATE PROFILE
+        // CREATE PROFILE
         // ======================================
 
         const {
@@ -191,9 +347,34 @@ async function registerUser() {
             await supabaseClient
                 .from("profiles")
                 .insert({
-                    id: authData.user.id,
-                    full_name: fullName,
-                    fitness_goal: healthGoal
+
+                    id:
+                        userData.user.id,
+
+                    full_name:
+                        fullName,
+
+                    age:
+                        ageNumber,
+
+                    gender:
+                        sex,
+
+                    height_cm:
+                        parseFloat(height),
+
+                    weight_kg:
+                        parseFloat(weight),
+
+                    activity_level:
+                        activity,
+
+                    fitness_goal:
+                        goal,
+
+                    updated_at:
+                        new Date().toISOString()
+
                 });
 
 
@@ -204,11 +385,13 @@ async function registerUser() {
                 profileError
             );
 
-            alert(
-                "Your account was created, but your profile could not be created. Please check the console."
+            showError(
+                "Profile setup failed: " +
+                profileError.message
             );
 
             return;
+
         }
 
 
@@ -218,24 +401,35 @@ async function registerUser() {
 
 
         // ======================================
-        // STEP 4: REGISTRATION COMPLETE
+        // DONE: no web app for users, so sign out
+        // and send them to the app download page
         // ======================================
+
+        await supabaseClient.auth.signOut();
 
         window.location.href =
             "download.html?welcome=1";
 
-
     } catch (error) {
 
         console.error(
-            "Unexpected registration error:",
+            "Unexpected profile error:",
             error
         );
 
-
-        alert(
-            "Something went wrong while creating your account."
+        showError(
+            "Something went wrong. Please try again."
         );
+
+    } finally {
+
+        if (saveButton) {
+
+            saveButton.disabled = false;
+
+            saveButton.textContent = "Save Profile";
+
+        }
 
     }
 
@@ -588,6 +782,11 @@ const coachDetailsStep =
         "register-step-coach-details"
     );
 
+const onboardingStep =
+    document.getElementById(
+        "register-step-onboarding"
+    );
+
 function showRegisterStep(step) {
 
     accountStep?.classList.add(
@@ -596,6 +795,10 @@ function showRegisterStep(step) {
 
     coachDetailsStep?.classList.add(
     "hidden"
+    );
+
+    onboardingStep?.classList.add(
+        "hidden"
     );
 
 
@@ -1102,15 +1305,15 @@ const registerAccountTypeInput =
     );
 
 
-const healthGoalGroup =
+const registerFullNameGroup =
     document.getElementById(
-        "health-goal-group"
+        "register-full-name-group"
     );
 
 
-const healthGoalSelect =
+const registerFullNameInput =
     document.getElementById(
-        "health-goal"
+        "register-full-name"
     );
 
 
@@ -1212,16 +1415,55 @@ function resetRegistration() {
     }
 
 
-    // Show Health Goal
+    // Full name is only asked here for health coaches
 
-    healthGoalGroup?.classList.remove(
+    registerFullNameGroup?.classList.add(
         "hidden"
     );
 
+    if (registerFullNameInput) {
 
-    if (healthGoalSelect) {
+        registerFullNameInput.required = false;
 
-        healthGoalSelect.required = true;
+    }
+
+    if (registerMessage) {
+
+        registerMessage.textContent = "";
+
+    }
+
+
+    // Reset user profile setup step
+
+    document.getElementById(
+        "onboarding-form"
+    )?.reset();
+
+    onboardingSelections = {
+        sex: "",
+        activity: "",
+        goal: ""
+    };
+
+    document.querySelectorAll(
+        ".choice-chip"
+    ).forEach(
+        (chip) => {
+
+            chip.classList.remove("active");
+
+            chip.setAttribute(
+                "aria-pressed",
+                "false"
+            );
+
+        }
+    );
+
+    if (onboardingMessage) {
+
+        onboardingMessage.textContent = "";
 
     }
 
@@ -1363,6 +1605,26 @@ function openRegisterModal() {
 
 
 function closeRegisterModal() {
+
+    // Account already exists at the profile step, so check first
+
+    if (
+        onboardingStep &&
+        !onboardingStep.classList.contains("hidden")
+    ) {
+
+        const leave = confirm(
+            "Your account has been created, but your profile " +
+            "isn't finished yet. Close anyway?"
+        );
+
+        if (!leave) {
+
+            return;
+
+        }
+
+    }
 
     registerModal?.classList.remove(
         "active"
@@ -1581,6 +1843,8 @@ registerAccountTabs.forEach(
 
                 // ==================================
                 // USER
+                // (email + password only; personal
+                //  details come in the profile step)
                 // ==================================
 
                 if (
@@ -1588,20 +1852,23 @@ registerAccountTabs.forEach(
                     "User"
                 ) {
 
-                    healthGoalGroup
+                    registerFullNameGroup
                         ?.classList
-                        .remove(
+                        .add(
                             "hidden"
                         );
 
 
                     if (
-                        healthGoalSelect
+                        registerFullNameInput
                     ) {
 
-                        healthGoalSelect
+                        registerFullNameInput
                             .required =
-                            true;
+                            false;
+
+                        registerFullNameInput
+                            .value = "";
 
                     }
 
@@ -1628,23 +1895,20 @@ registerAccountTabs.forEach(
                     "Coach"
                 ) {
 
-                    healthGoalGroup
+                    registerFullNameGroup
                         ?.classList
-                        .add(
+                        .remove(
                             "hidden"
                         );
 
 
                     if (
-                        healthGoalSelect
+                        registerFullNameInput
                     ) {
 
-                        healthGoalSelect
+                        registerFullNameInput
                             .required =
-                            false;
-
-                        healthGoalSelect
-                            .value = "";
+                            true;
 
                     }
 
@@ -1787,6 +2051,96 @@ registerAccountForm?.addEventListener(
             );
 
         }
+
+    }
+);
+
+
+
+// ==============================================
+// USER PROFILE SETUP (ONBOARDING STEP)
+// ==============================================
+
+const onboardingForm =
+    document.getElementById(
+        "onboarding-form"
+    );
+
+const onboardingMessage =
+    document.getElementById(
+        "onboarding-message"
+    );
+
+const choiceChips =
+    document.querySelectorAll(
+        ".choice-chip"
+    );
+
+let onboardingSelections = {
+    sex: "",
+    activity: "",
+    goal: ""
+};
+
+
+// Single-choice chips (sex, activity level, fitness goal)
+
+choiceChips.forEach(
+    (chip) => {
+
+        chip.addEventListener(
+            "click",
+            function() {
+
+                const group =
+                    chip.dataset.group;
+
+                choiceChips.forEach(
+                    (other) => {
+
+                        if (
+                            other.dataset.group ===
+                            group
+                        ) {
+
+                            other.classList.remove(
+                                "active"
+                            );
+
+                            other.setAttribute(
+                                "aria-pressed",
+                                "false"
+                            );
+
+                        }
+
+                    }
+                );
+
+                chip.classList.add("active");
+
+                chip.setAttribute(
+                    "aria-pressed",
+                    "true"
+                );
+
+                onboardingSelections[group] =
+                    chip.dataset.value;
+
+            }
+        );
+
+    }
+);
+
+
+onboardingForm?.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        await saveUserProfile();
 
     }
 );

@@ -903,9 +903,9 @@
 
 
 
-                <!-- FULL NAME -->
+                <!-- FULL NAME (health coach only; users give it in the profile step) -->
 
-                <div class="form-group">
+                <div class="form-group hidden" id="register-full-name-group">
 
                     <label for="register-full-name">
                         Full Name
@@ -916,7 +916,6 @@
                         id="register-full-name"
                         name="full-name"
                         placeholder="Jamie Lee"
-                        required
                     >
 
                 </div>
@@ -983,60 +982,6 @@
 
                 </div>
 
-
-
-                <!-- USER HEALTH GOAL -->
-
-                <div
-                    class="form-group"
-                    id="health-goal-group"
-                >
-
-                    <label for="health-goal">
-                        Health Goal
-                    </label>
-
-                    <select
-                        id="health-goal"
-                        name="health-goal"
-                        required
-                    >
-
-                        <option
-                            value=""
-                            disabled
-                            selected
-                        >
-                            Select your goal
-                        </option>
-
-                        <option value="BodyBuilding">
-                            Body Building
-                        </option>
-
-                        <option value="WeightLoss">
-                            Weight Loss
-                        </option>
-
-                        <option value="MuscleGain">
-                            Muscle Gain
-                        </option>
-
-                        <option value="Maintenance">
-                            Maintenance
-                        </option>
-
-                        <option value="FatLoss">
-                            Fat Loss
-                        </option>
-
-                        <option value="StayFit">
-                            Stay Fit
-                        </option>
-
-                    </select>
-
-                </div>
 
 
                 <!-- REGISTRATION MESSAGE -->
@@ -1362,6 +1307,310 @@
                 </button>
 
             </div>
+
+        </div>
+
+
+        <!-- ====================================
+             STEP 3: USER PROFILE SETUP (ONBOARDING)
+             The auth account already exists at this point.
+        ===================================== -->
+
+        <div
+            class="register-step hidden"
+            id="register-step-onboarding"
+        >
+
+            <div class="register-heading coach-step-heading">
+
+                <h1>
+                    Set up your profile
+                </h1>
+
+                <p>
+                    We will use this information to create an
+                    estimated nutrition target.
+                </p>
+
+            </div>
+
+
+            <form
+                class="register-form"
+                id="onboarding-form"
+                novalidate
+            >
+
+                <!-- FULL NAME -->
+
+                <div class="form-group">
+
+                    <label for="onboarding-full-name">
+                        Full name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="onboarding-full-name"
+                        name="onboarding-full-name"
+                        placeholder="e.g. Edmund Koh"
+                    >
+
+                </div>
+
+
+                <!-- AGE + SEX -->
+
+                <div class="coach-measurement-grid coach-age-gender-grid">
+
+                    <div class="form-group">
+
+                        <label for="onboarding-age">
+                            Age
+                        </label>
+
+                        <input
+                            type="number"
+                            id="onboarding-age"
+                            name="onboarding-age"
+                            placeholder="e.g. 22"
+                            min="1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Sex
+                        </label>
+
+                        <div class="choice-options sex-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="sex"
+                            data-value="Male"
+                            aria-pressed="false"
+                        >
+                            Male
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="sex"
+                            data-value="Female"
+                            aria-pressed="false"
+                        >
+                            Female
+                        </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HEIGHT + WEIGHT -->
+
+                <div class="coach-measurement-grid">
+
+                    <div class="form-group">
+
+                        <label for="onboarding-height">
+                            Height (cm)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="onboarding-height"
+                            name="onboarding-height"
+                            placeholder="e.g. 171"
+                            min="1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="onboarding-weight">
+                            Weight (kg)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="onboarding-weight"
+                            name="onboarding-weight"
+                            placeholder="e.g. 68"
+                            min="1"
+                            step="0.1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACTIVITY LEVEL -->
+
+                <div class="form-group">
+
+                    <label>
+                        Activity level
+                    </label>
+
+                    <div class="choice-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Sedentary"
+                            aria-pressed="false"
+                        >
+                            Sedentary
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Lightly Active"
+                            aria-pressed="false"
+                        >
+                            Lightly Active
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Moderately Active"
+                            aria-pressed="false"
+                        >
+                            Moderately Active
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Very Active"
+                            aria-pressed="false"
+                        >
+                            Very Active
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FITNESS GOAL -->
+
+                <div class="form-group">
+
+                    <label>
+                        Fitness goal
+                    </label>
+
+                    <div class="choice-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Bodybuilding"
+                            aria-pressed="false"
+                        >
+                            Bodybuilding
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Power Lifting"
+                            aria-pressed="false"
+                        >
+                            Power Lifting
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Hyrox"
+                            aria-pressed="false"
+                        >
+                            Hyrox
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Fat Loss"
+                            aria-pressed="false"
+                        >
+                            Fat Loss
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Weight Gain"
+                            aria-pressed="false"
+                        >
+                            Weight Gain
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Maintenance"
+                            aria-pressed="false"
+                        >
+                            Maintenance
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Weight Loss"
+                            aria-pressed="false"
+                        >
+                            Weight Loss
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <p
+                    class="form-message login-message"
+                    id="onboarding-message"
+                ></p>
+
+
+                <button
+                    type="submit"
+                    class="register-button"
+                    id="onboarding-save-button"
+                >
+                    Save Profile
+                </button>
+
+            </form>
 
         </div>
     
