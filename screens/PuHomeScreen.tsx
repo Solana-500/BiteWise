@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import {
   ActivityIndicator,
   Pressable,
@@ -44,7 +45,7 @@ function NutritionRow({ label, value, goal }: NutritionRowProps) {
 export default function PuHomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('User')
-  const [coachName, setCoachName] = useState('Not assigned yet')
+  const [coachName, setCoachName] = useState<string | null>(null)
   const [isPremium, setIsPremium] = useState(true)
 
   const [calories, setCalories] = useState({ consumed: 0, goal: 0 })
@@ -67,9 +68,11 @@ export default function PuHomeScreen({ navigation }: Props) {
     kcal: 0,
   })
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     void loadPuHome()
   }, [])
+)
 
   async function loadPuHome() {
     try {
@@ -91,24 +94,55 @@ export default function PuHomeScreen({ navigation }: Props) {
       }
 
       const { data: profile, error: profileError } = await supabase
+  .from('profiles')
+  .select('full_name, subscription_tier, assigned_coach_id')
+  .eq('id', user.id)
+  .maybeSingle<{
+    full_name: string | null
+    subscription_tier: string | null
+    assigned_coach_id: string | null
+  }>()
+
+    if (profileError) {
+      console.error(
+        'Unable to load premium user profile:',
+        profileError.message
+      )
+      return
+    }
+
+    console.log('Premium user profile:', profile)
+    console.log('Assigned coach ID:', profile?.assigned_coach_id)
+
+    setUserName(profile?.full_name?.trim() || 'User')
+    setIsPremium(profile?.subscription_tier === 'premium')
+
+    if (!profile?.assigned_coach_id) {
+      setCoachName(null)
+    } else {
+      const { data: coachProfile, error: coachError } = await supabase
         .from('profiles')
-        .select('full_name, subscription_tier')
-        .eq('id', user.id)
-        .maybeSingle<UserProfile>();
+        .select('full_name, app_role')
+        .eq('id', profile.assigned_coach_id)
+        .maybeSingle<{
+          full_name: string | null
+          app_role: 'user' | 'coach' | 'admin' | null
+        }>()
 
-        if (profileError) {
+      if (coachError) {
+        console.error('Unable to load assigned coach:', coachError.message)
+        setCoachName(null)
+      } else if (coachProfile?.app_role !== 'coach') {
         console.error(
-            'Unable to load premium user profile:',
-            profileError.message
-        );
-        return;
-        }
-
-        console.log('Premium user profile:', profile);
-
-        setUserName(profile?.full_name?.trim() || 'User');
-        setCoachName('Not assigned yet');
-        setIsPremium(profile?.subscription_tier === 'premium');
+          'The assigned_coach_id does not point to a coach profile:',
+          coachProfile
+        )
+        setCoachName(null)
+      } else {
+        console.log('Assigned coach profile:', coachProfile)
+        setCoachName(coachProfile.full_name?.trim() || null)
+      }
+    }
 
       // Temporary values until food_logs / progress_logs are connected.
       setCalories({ consumed: 0, goal: 0 })
@@ -146,14 +180,11 @@ export default function PuHomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Dashboard</Text>
-      </View>
-
       <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.headerRow}>
           <Text style={styles.pageHeading}>Dashboard</Text>
 
@@ -183,9 +214,14 @@ export default function PuHomeScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.coachTextBlock}>
-            <Text style={styles.coachName}>Coach {coachName}</Text>
+            <Text style={styles.coachName}>
+              {coachName ? `Coach ${coachName}` : 'Coach not assigned yet'}
+            </Text>
+
             <Text style={styles.coachSubtitle}>
-              Your assigned health coach
+              {coachName
+                ? 'Your assigned health coach'
+                : 'A coach will be assigned to you soon'}
             </Text>
           </View>
 
@@ -198,28 +234,42 @@ export default function PuHomeScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.progressCard}>
-          <View style={styles.progressTopRow}>
-            <View style={styles.ringOuter}>
-              <View style={styles.ringInner}>
-                <Text style={styles.ringPercentText}>{caloriePercent}%</Text>
-              </View>
-            </View>
-
-            <View style={styles.calorieTextBlock}>
-              <Text style={styles.calorieLabel}>Calorie Progress</Text>
-              <Text style={styles.calorieValue}>
-                {calories.consumed} / {calories.goal} kcal
-              </Text>
+        <View style={styles.progressTopRow}>
+          <View style={styles.ringOuter}>
+            <View style={styles.ringInner}>
+              <Text style={styles.ringPercentText}>{caloriePercent}%</Text>
             </View>
           </View>
 
-          <View style={styles.mealsHeaderRow}>
-            <Text style={styles.mealsHeading}>Today&apos;s Meals</Text>
+          <View style={styles.calorieTextBlock}>
+            <Text style={styles.calorieLabel}>Calorie Progress</Text>
 
-            <View style={styles.activePlanChip}>
-              <Text style={styles.activePlanChipText}>Active Meal Plan</Text>
-            </View>
+            <Text style={styles.calorieValue}>
+              {calories.consumed} / {calories.goal} kcal
+            </Text>
           </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.progressShortcutButton,
+              pressed && styles.pressedButton,
+            ]}
+            onPress={() => navigation.navigate('Progress')}
+            accessibilityRole="button"
+            accessibilityLabel="View progress"
+          >
+            <Text style={styles.progressShortcutText}>Progress</Text>
+            <Text style={styles.progressShortcutChevron}>›</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.mealsHeaderRow}>
+          <Text style={styles.mealsHeading}>Today&apos;s Meals</Text>
+
+          <View style={styles.activePlanChip}>
+            <Text style={styles.activePlanChipText}>Active Meal Plan</Text>
+          </View>
+        </View>
 
           {meals.map((meal) => (
             <View key={meal.label} style={styles.mealRow}>
@@ -233,9 +283,9 @@ export default function PuHomeScreen({ navigation }: Props) {
 
           <Pressable
             style={styles.logMealButton}
-            onPress={() => navigation.navigate('PuLogMeal')}
+            onPress={() => navigation.getParent()?.navigate('FoodLogging')}
           >
-            <Text style={styles.logMealText}> Log Meal</Text>
+            <Text style={styles.logMealText}>Log Meal</Text>
           </Pressable>
         </View>
 
@@ -272,6 +322,7 @@ export default function PuHomeScreen({ navigation }: Props) {
           </View>
         </Pressable>
 
+        <View style={styles.recommendationSection}>
         <Pressable
           style={styles.summaryLinkCard}
           onPress={() => navigation.navigate('PuRecommendation')}
@@ -280,6 +331,7 @@ export default function PuHomeScreen({ navigation }: Props) {
             <Text style={styles.summaryLinkHeading}>
               Personalized Recommendation
             </Text>
+
             <Text style={styles.chevron}>›</Text>
           </View>
 
@@ -287,6 +339,7 @@ export default function PuHomeScreen({ navigation }: Props) {
             {recommendation.name} — {recommendation.kcal} kcal
           </Text>
         </Pressable>
+      </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -320,11 +373,16 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 24,
-  },
+  scrollView: {
+  flex: 1,
+},
+
+content: {
+  flexGrow: 1,
+  paddingHorizontal: 20,
+  paddingTop: 18,
+  paddingBottom: 0,
+},
 
   headerRow: {
     flexDirection: 'row',
@@ -583,4 +641,32 @@ const styles = StyleSheet.create({
     color: '#7C8F83',
     fontSize: 13,
   },
+progressShortcutButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginLeft: 8,
+  borderRadius: 999,
+  backgroundColor: '#EAF3EC',
+  paddingHorizontal: 10,
+  paddingVertical: 8,
+},
+progressShortcutText: {
+  color: '#1E5C35',
+  fontSize: 11,
+  fontWeight: '800',
+},
+progressShortcutChevron: {
+  marginLeft: 3,
+  color: '#1E5C35',
+  fontSize: 18,
+  fontWeight: '400',
+  lineHeight: 18,
+},
+pressedButton: {
+  opacity: 0.78,
+},
+recommendationSection: {
+  flexGrow: 1,
+  justifyContent: 'flex-end',
+},
 })

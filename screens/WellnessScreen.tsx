@@ -126,7 +126,13 @@ function getTodayRange() {
   }
 }
 
-export default function WellnessScreen() {
+  type WellnessScreenProps = {
+    isPremium?: boolean
+  }
+
+  export default function WellnessScreen({
+    isPremium = false,
+  }: WellnessScreenProps) {
   const navigation = useNavigation<WellnessNavigationProp>()
 
   // Water State
@@ -744,7 +750,8 @@ export default function WellnessScreen() {
             <Text style={styles.syncButtonText}>Connect a Device</Text>
           </TouchableOpacity>
         </View>
-            
+
+        {!isPremium && (    
         <View style={styles.premiumCard}>
           <View style={styles.premiumIconCircle}>
             <Text style={styles.premiumIcon}>✦</Text>
@@ -761,18 +768,21 @@ export default function WellnessScreen() {
             </Text>
           </View>
         </View>
+        )}
 
         {/* Go Premium button */}
-        <TouchableOpacity
-          style={styles.goPremiumButton}
-          onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
-          accessibilityRole="button"
-          accessibilityLabel="Go Premium"
-          accessibilityHint="Learn about upcoming BiteWise Premium features"
-        >
-          <Text style={styles.goPremiumStar}>✦</Text>
-          <Text style={styles.goPremiumButtonText}>Go Premium</Text>
-        </TouchableOpacity>
+        {!isPremium && (
+                    <TouchableOpacity
+                style={styles.goPremiumButton}
+                onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Go Premium"
+                accessibilityHint="Learn about upcoming BiteWise Premium features"
+              >
+                <Text style={styles.goPremiumStar}>✦</Text>
+                <Text style={styles.goPremiumButtonText}>Go Premium</Text>
+              </TouchableOpacity>
+              )}
       </ScrollView>
 
       {/* --- CATEGORY PICKER MODAL --- */}

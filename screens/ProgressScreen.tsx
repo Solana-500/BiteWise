@@ -166,7 +166,13 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
   })
 }
 
-export default function ProgressScreen() {
+type ProgressScreenProps = {
+  isPremium?: boolean
+}
+
+export default function ProgressScreen({
+  isPremium = false,
+}: ProgressScreenProps) {
   const navigation = useNavigation<ProgressNavigationProp>()
 
   const [waterLogs, setWaterLogs] = useState<WaterLog[]>([])
@@ -315,18 +321,14 @@ export default function ProgressScreen() {
       }
     >
       <View style={styles.topBar}>
-  <TouchableOpacity
-    style={styles.backHomeButton}
-    onPress={() =>
-      navigation.navigate('Home', {
-        screen: 'HomeMain',
-      })
-    }
-    accessibilityRole="button"
-    accessibilityLabel="Go to Home"
-  >
-    <Text style={styles.backHomeText}>‹ Home</Text>
-  </TouchableOpacity>
+      <TouchableOpacity
+      style={styles.backHomeButton}
+      onPress={() => navigation.goBack()}
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
+    >
+      <Text style={styles.backHomeText}>‹ Home</Text>
+    </TouchableOpacity>
 
   <Text style={styles.topBarTitle}>Progress</Text>
 
@@ -578,30 +580,37 @@ export default function ProgressScreen() {
         </View>
       )}
 
-      <View style={styles.premiumCard}>
-        <View style={styles.premiumIconCircle}>
-          <Text style={styles.premiumIcon}>✦</Text>
-        </View>
+      {!isPremium && (    
+              <View style={styles.premiumCard}>
+                <View style={styles.premiumIconCircle}>
+                  <Text style={styles.premiumIcon}>✦</Text>
+                </View>
+      
+                <View style={styles.premiumContent}>
+                  <Text style={styles.premiumTitle}>
+                    More wellness insights later
+                  </Text>
+      
+                  <Text style={styles.premiumText}>
+                    Premium can unlock advanced exercise trends, detailed wellness
+                    analysis, personalised guidance, and connected-device insights.
+                  </Text>
+                </View>
+              </View>
+              )}
 
-        <View style={styles.premiumContent}>
-          <Text style={styles.premiumTitle}>More progress insights later</Text>
-          <Text style={styles.premiumText}>
-            Premium can unlock monthly trends, goals, detailed charts, and
-            personalised recommendations.
-          </Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-  style={styles.goPremiumButton}
-  onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
-  accessibilityRole="button"
-  accessibilityLabel="Go Premium"
-  accessibilityHint="Learn about upcoming BiteWise Premium features"
->
-  <Text style={styles.goPremiumStar}>✦</Text>
-  <Text style={styles.goPremiumButtonText}>Go Premium</Text>
-</TouchableOpacity>
+      {!isPremium && (
+            <TouchableOpacity
+        style={styles.goPremiumButton}
+        onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
+        accessibilityRole="button"
+        accessibilityLabel="Go Premium"
+        accessibilityHint="Learn about upcoming BiteWise Premium features"
+      >
+        <Text style={styles.goPremiumStar}>✦</Text>
+        <Text style={styles.goPremiumButtonText}>Go Premium</Text>
+      </TouchableOpacity>
+      )}
     </ScrollView>
   )
 }
