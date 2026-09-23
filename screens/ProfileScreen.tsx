@@ -53,6 +53,31 @@ const EMPTY_PROFILE: ProfileData = {
   subscription_tier: 'free',
 }
 
+function PremiumFeature({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: string
+  title: string
+  subtitle: string
+}) {
+  return (
+    <View style={styles.premiumFeatureRow}>
+      <View style={styles.premiumFeatureIconCircle}>
+        <Text style={styles.premiumFeatureIcon}>{icon}</Text>
+      </View>
+
+      <View style={styles.premiumFeatureTextContainer}>
+        <Text style={styles.premiumFeatureTitle}>{title}</Text>
+        <Text style={styles.premiumFeatureSubtitle}>{subtitle}</Text>
+      </View>
+
+      <Text style={styles.premiumFeatureCheck}>✓</Text>
+    </View>
+  )
+}
+
 export default function ProfileScreen({ navigation }: Props) {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -81,9 +106,6 @@ export default function ProfileScreen({ navigation }: Props) {
         error: userError,
       } = await supabase.auth.getUser()
 
-      console.log('Profile screen auth user:', user)
-      console.log('Profile screen auth error:', userError)
-
       if (userError) {
         throw userError
       }
@@ -100,9 +122,6 @@ export default function ProfileScreen({ navigation }: Props) {
         )
         .eq('id', user.id)
         .maybeSingle()
-
-      console.log('Load profile result:', data)
-      console.log('Load profile error:', error)
 
       if (error) {
         throw error
@@ -123,7 +142,6 @@ export default function ProfileScreen({ navigation }: Props) {
       })
     } catch (error: any) {
       console.error('Load profile error:', error)
-
       setProfile(EMPTY_PROFILE)
 
       Alert.alert(
@@ -171,21 +189,17 @@ export default function ProfileScreen({ navigation }: Props) {
         ? String(profile.age)
         : ''
     )
-
     setEditSex(profile?.sex ?? '')
-
     setEditHeightCm(
       profile?.height_cm !== null && profile?.height_cm !== undefined
         ? String(profile.height_cm)
         : ''
     )
-
     setEditWeightKg(
       profile?.weight_kg !== null && profile?.weight_kg !== undefined
         ? String(profile.weight_kg)
         : ''
     )
-
     setEditSection('personal')
   }
 
@@ -217,7 +231,6 @@ export default function ProfileScreen({ navigation }: Props) {
   async function openEditGoals() {
     setEditFitnessGoal(profile?.fitness_goal ?? '')
     setEditActivityLevel(profile?.activity_level ?? '')
-
     setEditCalorieTarget(
       profile?.daily_calorie_target !== null &&
         profile?.daily_calorie_target !== undefined
@@ -265,9 +278,6 @@ export default function ProfileScreen({ navigation }: Props) {
         error: userError,
       } = await supabase.auth.getUser()
 
-      console.log('Save profile auth user:', user)
-      console.log('Save profile auth error:', userError)
-
       if (userError) {
         throw userError
       }
@@ -293,11 +303,13 @@ export default function ProfileScreen({ navigation }: Props) {
               activity_level: editActivityLevel.trim() || null,
               daily_calorie_target: getOptionalNumber(editCalorieTarget),
             }
-      const { data: existingProfile, error: existingProfileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
+
+      const { data: existingProfile, error: existingProfileError } =
+        await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle()
 
       if (existingProfileError) {
         throw existingProfileError
@@ -318,12 +330,9 @@ export default function ProfileScreen({ navigation }: Props) {
           }
         )
         .select(
-          'full_name, age, sex, height_cm, weight_kg, activity_level, fitness_goal, daily_calorie_target, tier'
+          'full_name, age, sex, height_cm, weight_kg, activity_level, fitness_goal, daily_calorie_target, subscription_tier'
         )
         .single()
-
-      console.log('Profile upsert result:', data)
-      console.log('Profile upsert error:', error)
 
       if (error) {
         throw error
@@ -366,6 +375,10 @@ export default function ProfileScreen({ navigation }: Props) {
     }
   }
 
+  function openSubscription() {
+    navigation.getParent()?.navigate('SubPremium' as never)
+  }
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -373,6 +386,8 @@ export default function ProfileScreen({ navigation }: Props) {
       </View>
     )
   }
+
+  const isPremium = profile?.subscription_tier === 'premium'
 
   const initials = (profile?.full_name || 'BiteWise User')
     .split(' ')
@@ -411,9 +426,19 @@ export default function ProfileScreen({ navigation }: Props) {
 
           <Text style={styles.email}>{profile?.email || 'No email'}</Text>
 
-          <View style={styles.tierBadge}>
-            <Text style={styles.tierText}>
-              {profile?.subscription_tier === 'premium' ? 'PREMIUM USER' : 'FREE USER'}
+          <View
+            style={[
+              styles.tierBadge,
+              isPremium ? styles.premiumTierBadge : styles.freeTierBadge,
+            ]}
+          >
+            <Text
+              style={[
+                styles.tierText,
+                isPremium ? styles.premiumTierText : styles.freeTierText,
+              ]}
+            >
+              {isPremium ? '✦ PREMIUM MEMBER' : 'FREE USER'}
             </Text>
           </View>
         </View>
@@ -440,9 +465,7 @@ export default function ProfileScreen({ navigation }: Props) {
                 : 'Not set'
             }
           />
-
           <InfoRow label="Sex" value={profile?.sex || 'Not set'} />
-
           <InfoRow
             label="Height"
             value={
@@ -452,7 +475,6 @@ export default function ProfileScreen({ navigation }: Props) {
                 : 'Not set'
             }
           />
-
           <InfoRow
             label="Weight"
             value={
@@ -482,12 +504,10 @@ export default function ProfileScreen({ navigation }: Props) {
             label="Fitness goal"
             value={profile?.fitness_goal || 'Not set'}
           />
-
           <InfoRow
             label="Activity level"
             value={profile?.activity_level || 'Not set'}
           />
-
           <InfoRow
             label="Daily calorie target"
             value={
@@ -499,17 +519,102 @@ export default function ProfileScreen({ navigation }: Props) {
           />
         </View>
 
+        {isPremium ? (
+          <>
+            <Text style={styles.sectionTitle}>Premium Benefits</Text>
+
+            <View style={styles.premiumBenefitsCard}>
+              <PremiumFeature
+                icon="✦"
+                title="Personalised meal plans"
+                subtitle="Plans tailored to your goals and preferences"
+              />
+
+              <View style={styles.premiumDivider} />
+
+              <PremiumFeature
+                icon="◉"
+                title="Advanced progress reports"
+                subtitle="Track nutrition, weight, and wellness trends"
+              />
+
+              <View style={styles.premiumDivider} />
+
+              <PremiumFeature
+                icon="♛"
+                title="Priority coach support"
+                subtitle="Get priority access to your health coach"
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Upgrade Your Experience</Text>
+
+            <View style={styles.freePremiumPreviewCard}>
+              <Text style={styles.freePremiumPreviewTitle}>
+                Unlock BiteWise Premium
+              </Text>
+
+              <Text style={styles.freePremiumPreviewText}>
+                Get personalised meal plans, advanced progress reports, and priority coach support.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.upgradeButton}
+                onPress={openSubscription}
+                accessibilityRole="button"
+                accessibilityLabel="Go Premium"
+              >
+                <Text style={styles.upgradeButtonText}>✦ Go Premium</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
         <Text style={styles.sectionTitle}>Account</Text>
 
-        <TouchableOpacity style={styles.accountRow}>
-          <View>
-            <Text style={styles.accountTitle}>Subscription</Text>
+        <TouchableOpacity
+          style={[
+            styles.accountRow,
+            isPremium && styles.premiumSubscriptionRow,
+          ]}
+          onPress={openSubscription}
+          accessibilityRole="button"
+          accessibilityLabel="Manage subscription"
+        >
+          <View style={styles.subscriptionLeft}>
+            <View
+              style={[
+                styles.subscriptionIcon,
+                isPremium
+                  ? styles.premiumSubscriptionIcon
+                  : styles.freeSubscriptionIcon,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.subscriptionIconText,
+                  isPremium
+                    ? styles.premiumSubscriptionIconText
+                    : styles.freeSubscriptionIconText,
+                ]}
+              >
+                {isPremium ? '✦' : '○'}
+              </Text>
+            </View>
 
-            <Text style={styles.accountSub}>
-              {profile?.subscription_tier === 'premium'
-                ? 'Manage your Premium plan'
-                : 'Free plan · Upgrade when ready'}
-            </Text>
+            <View>
+              <Text style={styles.accountTitle}>
+                {isPremium ? 'Premium Subscription' : 'Subscription'}
+              </Text>
+
+              <Text style={styles.accountSub}>
+                {isPremium
+                  ? 'Manage plan and Premium benefits'
+                  : 'Free plan · Upgrade when ready'}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.chevron}>›</Text>
@@ -562,7 +667,6 @@ export default function ProfileScreen({ navigation }: Props) {
                 {editSection === 'personal' ? (
                   <>
                     <Text style={styles.fieldLabel}>Age</Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editAge}
@@ -574,7 +678,6 @@ export default function ProfileScreen({ navigation }: Props) {
                     />
 
                     <Text style={styles.fieldLabel}>Sex</Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editSex}
@@ -585,7 +688,6 @@ export default function ProfileScreen({ navigation }: Props) {
                     />
 
                     <Text style={styles.fieldLabel}>Height (cm)</Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editHeightCm}
@@ -597,7 +699,6 @@ export default function ProfileScreen({ navigation }: Props) {
                     />
 
                     <Text style={styles.fieldLabel}>Weight (kg)</Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editWeightKg}
@@ -632,8 +733,7 @@ export default function ProfileScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.goalDropdownText,
-                          !editFitnessGoal &&
-                            styles.goalDropdownPlaceholder,
+                          !editFitnessGoal && styles.goalDropdownPlaceholder,
                         ]}
                       >
                         {editFitnessGoal || 'Select a fitness goal'}
@@ -654,11 +754,7 @@ export default function ProfileScreen({ navigation }: Props) {
                       <View style={styles.goalOptionsContainer}>
                         {fitnessGoals.length === 0 ? (
                           <View style={styles.goalOptionsLoading}>
-                            <ActivityIndicator
-                              size="small"
-                              color="#1E5C35"
-                            />
-
+                            <ActivityIndicator size="small" color="#1E5C35" />
                             <Text style={styles.goalOptionsLoadingText}>
                               Loading available goals...
                             </Text>
@@ -689,9 +785,7 @@ export default function ProfileScreen({ navigation }: Props) {
                                   }}
                                   accessibilityRole="button"
                                   accessibilityLabel={`Choose ${goal}`}
-                                  accessibilityState={{
-                                    selected: isSelected,
-                                  }}
+                                  accessibilityState={{ selected: isSelected }}
                                 >
                                   <Text
                                     style={[
@@ -704,9 +798,7 @@ export default function ProfileScreen({ navigation }: Props) {
                                   </Text>
 
                                   {isSelected ? (
-                                    <Text style={styles.goalOptionCheck}>
-                                      ✓
-                                    </Text>
+                                    <Text style={styles.goalOptionCheck}>✓</Text>
                                   ) : null}
                                 </TouchableOpacity>
                               )
@@ -717,7 +809,6 @@ export default function ProfileScreen({ navigation }: Props) {
                     ) : null}
 
                     <Text style={styles.fieldLabel}>Activity level</Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editActivityLevel}
@@ -730,7 +821,6 @@ export default function ProfileScreen({ navigation }: Props) {
                     <Text style={styles.fieldLabel}>
                       Daily calorie target (kcal)
                     </Text>
-
                     <TextInput
                       style={styles.editInput}
                       value={editCalorieTarget}
@@ -836,17 +926,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   tierBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 999,
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
   tierText: {
-    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.4,
+  },
+  freeTierBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  premiumTierBadge: {
+    backgroundColor: '#D8B45A',
+  },
+  freeTierText: {
+    color: '#FFFFFF',
+  },
+  premiumTierText: {
+    color: '#163E25',
   },
   sectionHeader: {
     alignItems: 'center',
@@ -903,6 +1003,91 @@ const styles = StyleSheet.create({
     marginLeft: 14,
     textAlign: 'right',
   },
+  premiumBenefitsCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E7EFE9',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 22,
+    paddingHorizontal: 16,
+  },
+  premiumFeatureRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 78,
+  },
+  premiumFeatureIconCircle: {
+    alignItems: 'center',
+    backgroundColor: '#FFF4D6',
+    borderRadius: 19,
+    height: 38,
+    justifyContent: 'center',
+    marginRight: 12,
+    width: 38,
+  },
+  premiumFeatureIcon: {
+    color: '#9D7518',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  premiumFeatureTextContainer: {
+    flex: 1,
+  },
+  premiumFeatureTitle: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  premiumFeatureSubtitle: {
+    color: '#7C8F83',
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 3,
+  },
+  premiumFeatureCheck: {
+    color: '#1E5C35',
+    fontSize: 20,
+    fontWeight: '800',
+    marginLeft: 8,
+  },
+  premiumDivider: {
+    backgroundColor: '#E2ECE6',
+    height: 1,
+  },
+  freePremiumPreviewCard: {
+    backgroundColor: '#FFF7DC',
+    borderColor: '#F4C95D',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 22,
+    padding: 18,
+  },
+  freePremiumPreviewTitle: {
+    color: '#4E3907',
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  freePremiumPreviewText: {
+    color: '#69511D',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 7,
+  },
+  upgradeButton: {
+    alignItems: 'center',
+    backgroundColor: '#F4C95D',
+    borderRadius: 12,
+    justifyContent: 'center',
+    marginTop: 16,
+    minHeight: 46,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  upgradeButtonText: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '900',
+  },
   accountRow: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -913,6 +1098,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
     padding: 16,
+  },
+  premiumSubscriptionRow: {
+    borderColor: '#E8C86D',
+  },
+  subscriptionLeft: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+  },
+  subscriptionIcon: {
+    alignItems: 'center',
+    borderRadius: 20,
+    height: 40,
+    justifyContent: 'center',
+    marginRight: 12,
+    width: 40,
+  },
+  freeSubscriptionIcon: {
+    backgroundColor: '#EAF3EC',
+  },
+  premiumSubscriptionIcon: {
+    backgroundColor: '#FFF4D6',
+  },
+  subscriptionIconText: {
+    fontSize: 19,
+    fontWeight: '900',
+  },
+  freeSubscriptionIconText: {
+    color: '#1E5C35',
+  },
+  premiumSubscriptionIconText: {
+    color: '#9D7518',
   },
   accountTitle: {
     color: '#16281D',

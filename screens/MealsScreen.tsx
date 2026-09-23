@@ -423,11 +423,8 @@ export default function MealsScreen() {
         <View style={styles.topBar}>
   <TouchableOpacity
     style={styles.backHomeButton}
-    onPress={() =>
-      navigation.navigate('Home', {
-        screen: 'HomeMain',
-      })
-    }
+    onPress={() => navigation.goBack()}
+    
     accessibilityRole="button"
     accessibilityLabel="Go to Home"
   >
@@ -826,12 +823,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    backgroundColor: '#F5FAF6',
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 40,
-    paddingTop: 8,
-  },
+  backgroundColor: '#F5FAF6',
+  flexGrow: 1,
+  paddingHorizontal: 20,
+  paddingTop: 18,
+  paddingBottom: 16,
+},
   topBar: {
     alignItems: 'center',
     flexDirection: 'row',

@@ -22,7 +22,6 @@ import AdminHomeScreen from './screens/AdminHomeScreen'
 import AdminMoreScreen from './screens/AdminMoreScreen'
 import AdminUsersScreen from './screens/AdminUserListScreen'
 import PuHomeScreen from './screens/PuHomeScreen'
-import PuProfileScreen from './screens/PuProfileScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
 import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
@@ -30,6 +29,7 @@ import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
 import FavoriteListScreen from './screens/FavoriteListScreen'
 import FeedbackScreen from './screens/FeedbackScreen'
 import SubPremiumScreen from './screens/SubPremiumScreen'
+import PuChatScreen from './screens/PuChatScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -46,6 +46,14 @@ const PremiumTab = createBottomTabNavigator<PremiumTabParamList>()
 const AdminTabNav = createBottomTabNavigator()
 const CoachTabNav = createBottomTabNavigator()
 const HomeStack = createNativeStackNavigator<HomeStackParamList>()
+
+type PremiumHomeStackParamList = {
+  PuHomeMain: undefined
+  Progress: undefined
+}
+
+const PremiumHomeStack =
+  createNativeStackNavigator<PremiumHomeStackParamList>()
 
 function HomeStackNavigator() {
   return (
@@ -156,23 +164,37 @@ function MainTabs() {
   )
 }
 
+function PremiumHomeStackNavigator() {
+  return (
+    <PremiumHomeStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'none',
+      }}
+    >
+      <PremiumHomeStack.Screen
+        name="PuHomeMain"
+        component={PuHomeScreen}
+      />
+
+      <PremiumHomeStack.Screen name="Progress">
+        {() => <ProgressScreen isPremium />}
+      </PremiumHomeStack.Screen>
+    </PremiumHomeStack.Navigator>
+  )
+}
+
 function PremiumTabs() {
   return (
     <PremiumTab.Navigator
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#F5FAF6',
-        },
-        headerTintColor: '#1E5C35',
-        headerTitleStyle: {
-          fontWeight: '800',
-        },
+        headerShown: false,
         tabBarActiveTintColor: '#1E5C35',
         tabBarInactiveTintColor: '#7C8F83',
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '700',
+          marginTop: 0,
         },
         tabBarItemStyle: {
           flex: 1,
@@ -180,19 +202,19 @@ function PremiumTabs() {
           justifyContent: 'center',
         },
         tabBarStyle: {
-          height: 68,
-          paddingBottom: 8,
-          paddingTop: 7,
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E2ECE6',
-        },
+        height: 60,
+        paddingTop: 5,
+        paddingBottom: 5,
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E2ECE6',
+      },
       }}
     >
       <PremiumTab.Screen
         name="PuHome"
-        component={PuHomeScreen}
+        component={PremiumHomeStackNavigator}
         options={{
-          headerShown: false,
           tabBarLabel: 'Home',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>🏠</Text>
@@ -204,7 +226,7 @@ function PremiumTabs() {
         name="Meals"
         component={MealsScreen}
         options={{
-          title: 'Meals',
+          tabBarLabel: 'Meals',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>🍽️</Text>
           ),
@@ -213,31 +235,31 @@ function PremiumTabs() {
 
       <PremiumTab.Screen
         name="Wellness"
-        component={WellnessScreen}
         options={{
-          title: 'Wellness',
+          tabBarLabel: 'Wellness',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>💧</Text>
           ),
         }}
-      />
+      >
+        {() => <WellnessScreen isPremium />}
+      </PremiumTab.Screen>
 
       <PremiumTab.Screen
-        name="Progress"
-        component={ProgressScreen}
+        name="PuChat"
+        component={PuChatScreen}
         options={{
-          title: 'Progress',
+          tabBarLabel: 'Chat',
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 19 }}>📊</Text>
+            <Text style={{ color, fontSize: 19 }}>💬</Text>
           ),
         }}
       />
 
       <PremiumTab.Screen
-        name="PuProfile"
-        component={PuProfileScreen}
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          headerShown: false,
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>👤</Text>
@@ -444,45 +466,47 @@ export default function App() {
           </>
 
         ) : isPremium ? (
-          <>
-            <Stack.Screen
-              name="PremiumTabs"
-              component={PremiumTabs}
-              options={{ headerShown: false }}
-            />
+        <>
+          <Stack.Screen
+            name="PremiumTabs"
+            component={PremiumTabs}
+            options={{ headerShown: false }}
+          />
 
-            <Stack.Screen
-              name="PuCoach"
-              component={PuCoachScreen}
-              options={{ headerShown: false }}
-            />
+          <Stack.Screen
+            name="PuCoach"
+            component={PuCoachScreen}
+            options={{ headerShown: false }}
+          />
 
-            <Stack.Screen
-              name="FoodLogging"
-              component={FoodLoggingScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-            <Stack.Screen
-              name="Feedback"
-              component={FeedbackScreen}
-              options={{
-                animation: 'none',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ExerciseLibrary"
-              component={ExerciseLibraryScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-          </>
-        ) : (
+          <Stack.Screen
+            name="FoodLogging"
+            component={FoodLoggingScreen}
+            options={{
+              headerShown: false,
+              presentation: 'card',
+            }}
+          />
+
+          <Stack.Screen
+            name="Feedback"
+            component={FeedbackScreen}
+            options={{
+              animation: 'none',
+              headerShown: false,
+            }}
+          />
+
+          <Stack.Screen
+            name="ExerciseLibrary"
+            component={ExerciseLibraryScreen}
+            options={{
+              headerShown: false,
+              presentation: 'card',
+            }}
+          />
+        </>
+      ) : (
           <>
             <Stack.Screen
               name="MainTabs"

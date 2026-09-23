@@ -10,6 +10,7 @@ export type MainTabParamList = {
   Meals: undefined
   Wellness: undefined
   Progress: undefined
+  FavoriteList: undefined
   Profile: undefined
 }
 
@@ -17,8 +18,8 @@ export type PremiumTabParamList = {
   PuHome: undefined
   Meals: undefined
   Wellness: undefined
-  Progress: undefined
-  PuProfile: undefined
+  PuChat: undefined
+  Profile: undefined
 }
 
 export type AdminTabParamList = {
@@ -53,10 +54,11 @@ export type RootStackParamList = {
   PremiumTabs: NavigatorScreenParams<PremiumTabParamList>
 
   PuCoach: undefined
+  PuChat: undefined
   FoodLogging: undefined
   FavoriteList: undefined
   Feedback: undefined
-  
+  Progress: undefined
 
   ExerciseLibrary: {
     category: ExerciseCategory
