@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { type ComponentType, useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
@@ -30,6 +30,7 @@ import FavoriteListScreen from './screens/FavoriteListScreen'
 import FeedbackScreen from './screens/FeedbackScreen'
 import SubPremiumScreen from './screens/SubPremiumScreen'
 import PuChatScreen from './screens/PuChatScreen'
+import CoachChatScreen from './screens/CoachChatScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -178,7 +179,7 @@ function PremiumHomeStackNavigator() {
       />
 
       <PremiumHomeStack.Screen name="Progress">
-        {() => <ProgressScreen isPremium />}
+        {() => <ProgressScreen {...({ isPremium: true } as any)} />}
       </PremiumHomeStack.Screen>
     </PremiumHomeStack.Navigator>
   )
@@ -235,15 +236,14 @@ function PremiumTabs() {
 
       <PremiumTab.Screen
         name="Wellness"
+        component={WellnessScreen}
         options={{
           tabBarLabel: 'Wellness',
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 19 }}>💧</Text>
           ),
         }}
-      >
-        {() => <WellnessScreen isPremium />}
-      </PremiumTab.Screen>
+      />
 
       <PremiumTab.Screen
         name="PuChat"
@@ -463,6 +463,11 @@ export default function App() {
               component={CoachTabs}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="CoachChat"
+              component={CoachChatScreen}
+              options={{ headerShown: false }}
+            />
           </>
 
         ) : isPremium ? (
@@ -472,7 +477,11 @@ export default function App() {
             component={PremiumTabs}
             options={{ headerShown: false }}
           />
-
+          <Stack.Screen
+            name="SubPremium"
+            component={SubPremiumScreen}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="PuCoach"
             component={PuCoachScreen}

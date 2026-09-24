@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
 import type { HomeStackParamList } from '../types/navigation'
+import PremiumUpsellCard from '../components/PremiumUpsellCard'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>
 
@@ -355,20 +356,12 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       {!isPremium ? (
-        <View style={styles.upsellCard}>
-          <Text style={styles.upsellTitle}>
-            Unlock everything for $9.90/month
-          </Text>
-
-          <Text style={styles.upsellSub}>
-            Personal coach access, custom meal plans, and full analytics.
-          </Text>
-
-          <TouchableOpacity style={styles.upsellBtn}>
-            <Text style={styles.upsellBtnText}>See Premium Plans</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
+  <PremiumUpsellCard
+    onPress={() =>
+      navigation.getParent()?.navigate('SubPremium' as never)
+    }
+  />
+) : null}
     </ScrollView>
     </SafeAreaView>
   )
@@ -571,41 +564,5 @@ const styles = StyleSheet.create({
     color: '#7C8F83',
     fontSize: 11,
     lineHeight: 15,
-  },
-
-  upsellCard: {
-    alignItems: 'center',
-    backgroundColor: '#D9ECDF',
-    borderRadius: 16,
-    marginBottom: 20,
-    padding: 18,
-  },
-
-  upsellTitle: {
-    color: '#154526',
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-
-  upsellSub: {
-    color: '#5C7267',
-    fontSize: 12.5,
-    marginBottom: 14,
-    textAlign: 'center',
-  },
-
-  upsellBtn: {
-    backgroundColor: '#1E5C35',
-    borderRadius: 999,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-
-  upsellBtnText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
   },
 })

@@ -19,7 +19,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
+import PremiumUpsellCard from '../components/PremiumUpsellCard'
 import { supabase } from '../services/supabase'
 import type {
   MainTabParamList,
@@ -49,6 +49,10 @@ type Meal = {
 type FavoriteMeal = {
   id: string
   food_log_id: string
+}
+
+type ProfileSubscription = {
+  subscription_tier: string | null
 }
 
 const MEAL_TYPES: MealType[] = [
@@ -98,7 +102,7 @@ export default function MealsScreen() {
 
   const [manageMode, setManageMode] = useState<ManageMode>(null)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
-
+  const [isPremium, setIsPremium] = useState(false)
   const [editFoodName, setEditFoodName] = useState('')
   const [editCalories, setEditCalories] = useState('')
   const [editProtein, setEditProtein] = useState('')
@@ -108,64 +112,80 @@ export default function MealsScreen() {
     useState<MealType>('Breakfast')
 
   const loadMeals = useCallback(async () => {
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    if (userError) {
-      throw userError
-    }
+      if (userError) {
+        throw userError
+      }
 
-    if (!user) {
-      setMeals([])
-      setFavoriteMealIds([])
-      Alert.alert('Login required', 'Please log in again.')
-      return
-    }
+      if (!user) {
+        setMeals([])
+        setFavoriteMealIds([])
+        setIsPremium(false)
+        Alert.alert('Login required', 'Please log in again.')
+        return
+      }
 
-    const [mealsResult, favoritesResult] = await Promise.all([
-      supabase
-        .from('food_logs')
-        .select(
-          'id, food_name, calories, protein_g, carbs_g, fat_g, meal_type, logged_at'
+      const [mealsResult, favoritesResult, profileResult] = await Promise.all([
+        supabase
+          .from('food_logs')
+          .select(
+            'id, food_name, calories, protein_g, carbs_g, fat_g, meal_type, logged_at'
+          )
+          .eq('user_id', user.id)
+          .order('logged_at', { ascending: false }),
+
+        supabase
+          .from('favorite_meals')
+          .select('id, food_log_id')
+          .eq('user_id', user.id),
+
+        supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single(),
+      ])
+
+      if (mealsResult.error) {
+        throw mealsResult.error
+      }
+
+      if (favoritesResult.error) {
+        throw favoritesResult.error
+      }
+
+      if (profileResult.error) {
+        console.error('Load subscription tier error:', profileResult.error)
+        setIsPremium(false)
+      } else {
+        const profile = profileResult.data as ProfileSubscription | null
+        setIsPremium(profile?.subscription_tier === 'premium')
+      }
+
+      setMeals((mealsResult.data ?? []) as Meal[])
+
+      setFavoriteMealIds(
+        ((favoritesResult.data ?? []) as FavoriteMeal[]).map(
+          (favorite) => favorite.food_log_id
         )
-        .eq('user_id', user.id)
-        .order('logged_at', { ascending: false }),
-
-      supabase
-        .from('favorite_meals')
-        .select('id, food_log_id')
-        .eq('user_id', user.id),
-    ])
-
-    if (mealsResult.error) {
-      throw mealsResult.error
-    }
-
-    if (favoritesResult.error) {
-      throw favoritesResult.error
-    }
-
-    setMeals((mealsResult.data ?? []) as Meal[])
-
-    setFavoriteMealIds(
-      ((favoritesResult.data ?? []) as FavoriteMeal[]).map(
-        (favorite) => favorite.food_log_id
       )
-    )
-  } catch (error: any) {
-    console.error('Load meals error:', error)
+    } catch (error: any) {
+      console.error('Load meals error:', error)
 
-    Alert.alert(
-      'Meal error',
-      error?.message || 'Unable to load logged meals. Please try again.'
-    )
-  } finally {
-    setLoading(false)
-  }
-}, [])
+      Alert.alert(
+        'Meal error',
+        error?.message || 'Unable to load logged meals. Please try again.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useFocusEffect(
     useCallback(() => {
       void loadMeals()
@@ -315,6 +335,9 @@ export default function MealsScreen() {
       setMeals((currentMeals) =>
         currentMeals.filter((meal) => meal.id !== mealId)
       )
+      setFavoriteMealIds((currentIds) =>
+        currentIds.filter((favoriteMealId) => favoriteMealId !== mealId)
+      )
     } catch (error: any) {
       console.error('Delete meal error:', error)
 
@@ -327,65 +350,65 @@ export default function MealsScreen() {
     }
   }
 
-    async function toggleFavoriteMeal(meal: Meal) {
-  const isFavorite = favoriteMealIds.includes(meal.id)
+  async function toggleFavoriteMeal(meal: Meal) {
+    const isFavorite = favoriteMealIds.includes(meal.id)
 
-  try {
-    setUpdatingFavoriteId(meal.id)
+    try {
+      setUpdatingFavoriteId(meal.id)
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    if (userError) {
-      throw userError
-    }
-
-    if (!user) {
-      Alert.alert('Login required', 'Please log in again.')
-      return
-    }
-
-    if (isFavorite) {
-      const { error } = await supabase
-        .from('favorite_meals')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('food_log_id', meal.id)
-
-      if (error) {
-        throw error
+      if (userError) {
+        throw userError
       }
 
-      setFavoriteMealIds((currentIds) =>
-        currentIds.filter((mealId) => mealId !== meal.id)
+      if (!user) {
+        Alert.alert('Login required', 'Please log in again.')
+        return
+      }
+
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('favorite_meals')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('food_log_id', meal.id)
+
+        if (error) {
+          throw error
+        }
+
+        setFavoriteMealIds((currentIds) =>
+          currentIds.filter((mealId) => mealId !== meal.id)
+        )
+      } else {
+        const { error } = await supabase
+          .from('favorite_meals')
+          .insert({
+            user_id: user.id,
+            food_log_id: meal.id,
+          })
+
+        if (error) {
+          throw error
+        }
+
+        setFavoriteMealIds((currentIds) => [...currentIds, meal.id])
+      }
+    } catch (error: any) {
+      console.error('Toggle favourite meal error:', error)
+
+      Alert.alert(
+        'Could not update favourite',
+        error?.message || 'Please try again.'
       )
-    } else {
-      const { error } = await supabase
-        .from('favorite_meals')
-        .insert({
-          user_id: user.id,
-          food_log_id: meal.id,
-        })
-
-      if (error) {
-        throw error
-      }
-
-      setFavoriteMealIds((currentIds) => [...currentIds, meal.id])
+    } finally {
+      setUpdatingFavoriteId(null)
     }
-  } catch (error: any) {
-    console.error('Toggle favourite meal error:', error)
-
-    Alert.alert(
-      'Could not update favourite',
-      error?.message || 'Please try again.'
-    )
-  } finally {
-    setUpdatingFavoriteId(null)
   }
-}
 
   if (loading) {
     return (
@@ -421,24 +444,23 @@ export default function MealsScreen() {
         }
       >
         <View style={styles.topBar}>
-  <TouchableOpacity
-    style={styles.backHomeButton}
-    onPress={() => navigation.goBack()}
-    
-    accessibilityRole="button"
-    accessibilityLabel="Go to Home"
-  >
-    <Text style={styles.backHomeText}>‹ Home</Text>
-  </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backHomeButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go to Home"
+          >
+            <Text style={styles.backHomeText}>‹ Home</Text>
+          </TouchableOpacity>
 
-  <Text style={styles.topBarTitle}>Meals</Text>
+          <Text style={styles.topBarTitle}>Meals</Text>
 
-  <View style={styles.topBarSpacer} />
-</View>
+          <View style={styles.topBarSpacer} />
+        </View>
 
-<Text style={styles.subtitle}>
-  Track and manage your logged meals.
-</Text>
+        <Text style={styles.subtitle}>
+          Track and manage your logged meals.
+        </Text>
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Today&apos;s logged meals</Text>
@@ -458,81 +480,81 @@ export default function MealsScreen() {
 
         <Text style={styles.sectionTitle}>Meal History</Text>
 
-{displayedMeals.length === 0 ? (
-  <View style={styles.emptyCard}>
-    <Text style={styles.emptyTitle}>No meals logged yet</Text>
+        {displayedMeals.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>No meals logged yet</Text>
 
-    <Text style={styles.emptyText}>
-      Tap “Log New Food” to add your first meal.
-    </Text>
-  </View>
-) : (
-  <>
-        {displayedMeals.map((meal) => {
-      const isFavorite = favoriteMealIds.includes(meal.id)
-
-      return (
-        <View key={meal.id} style={styles.mealCard}>
-          <View style={styles.mealCardHeader}>
-            <View style={styles.mealMain}>
-              <Text style={styles.mealName}>{meal.food_name}</Text>
-
-              <Text style={styles.mealMeta}>
-                {Number(meal.calories ?? 0)} kcal ·{' '}
-                {formatMealType(meal.meal_type)}
-              </Text>
-
-              <Text style={styles.macroSummary}>
-                P {Number(meal.protein_g ?? 0)}g · C{' '}
-                {Number(meal.carbs_g ?? 0)}g · F{' '}
-                {Number(meal.fat_g ?? 0)}g
-              </Text>
-
-              <Text style={styles.mealDate}>
-                Logged {formatLoggedDate(meal.logged_at)}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.favoriteButton,
-                isFavorite && styles.favoriteButtonActive,
-              ]}
-              disabled={updatingFavoriteId === meal.id}
-              onPress={() => void toggleFavoriteMeal(meal)}
-              accessibilityRole="button"
-              accessibilityLabel={
-                isFavorite
-                  ? `Remove ${meal.food_name} from favourites`
-                  : `Add ${meal.food_name} to favourites`
-              }
-            >
-              {updatingFavoriteId === meal.id ? (
-                <ActivityIndicator size="small" color="#1E5C35" />
-              ) : (
-                <Text
-                  style={[
-                    styles.favoriteHeart,
-                    isFavorite && styles.favoriteHeartActive,
-                  ]}
-                >
-                  {isFavorite ? '♥' : '♡'}
-                </Text>
-              )}
-            </TouchableOpacity>
+            <Text style={styles.emptyText}>
+              Tap “Log New Food” to add your first meal.
+            </Text>
           </View>
-        </View>
-      )
-    })}
+        ) : (
+          <>
+            {displayedMeals.map((meal) => {
+              const isFavorite = favoriteMealIds.includes(meal.id)
 
-    {hasMoreMeals ? (
-      <Text style={styles.historyLimitText}>
-        Use Manage Logged Food below to
-        edit or delete older entries.
-      </Text>
-    ) : null}
-  </>
-)}
+              return (
+                <View key={meal.id} style={styles.mealCard}>
+                  <View style={styles.mealCardHeader}>
+                    <View style={styles.mealMain}>
+                      <Text style={styles.mealName}>{meal.food_name}</Text>
+
+                      <Text style={styles.mealMeta}>
+                        {Number(meal.calories ?? 0)} kcal ·{' '}
+                        {formatMealType(meal.meal_type)}
+                      </Text>
+
+                      <Text style={styles.macroSummary}>
+                        P {Number(meal.protein_g ?? 0)}g · C{' '}
+                        {Number(meal.carbs_g ?? 0)}g · F{' '}
+                        {Number(meal.fat_g ?? 0)}g
+                      </Text>
+
+                      <Text style={styles.mealDate}>
+                        Logged {formatLoggedDate(meal.logged_at)}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.favoriteButton,
+                        isFavorite && styles.favoriteButtonActive,
+                      ]}
+                      disabled={updatingFavoriteId === meal.id}
+                      onPress={() => void toggleFavoriteMeal(meal)}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        isFavorite
+                          ? `Remove ${meal.food_name} from favourites`
+                          : `Add ${meal.food_name} to favourites`
+                      }
+                    >
+                      {updatingFavoriteId === meal.id ? (
+                        <ActivityIndicator size="small" color="#1E5C35" />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.favoriteHeart,
+                            isFavorite && styles.favoriteHeartActive,
+                          ]}
+                        >
+                          {isFavorite ? '♥' : '♡'}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )
+            })}
+
+            {hasMoreMeals ? (
+              <Text style={styles.historyLimitText}>
+                Use Manage Logged Food below to edit or delete older entries.
+              </Text>
+            ) : null}
+          </>
+        )}
+
         <Text style={styles.sectionTitle}>Manage Logged Food</Text>
 
         <View style={styles.manageCard}>
@@ -576,9 +598,7 @@ export default function MealsScreen() {
                 meals.map((meal) => (
                   <View key={meal.id} style={styles.manageMealRow}>
                     <View style={styles.manageMealInfo}>
-                      <Text style={styles.manageMealName}>
-                        {meal.food_name}
-                      </Text>
+                      <Text style={styles.manageMealName}>{meal.food_name}</Text>
 
                       <Text style={styles.manageMealMeta}>
                         {formatMealType(meal.meal_type)} ·{' '}
@@ -646,9 +666,7 @@ export default function MealsScreen() {
                 meals.map((meal) => (
                   <View key={meal.id} style={styles.manageMealRow}>
                     <View style={styles.manageMealInfo}>
-                      <Text style={styles.manageMealName}>
-                        {meal.food_name}
-                      </Text>
+                      <Text style={styles.manageMealName}>{meal.food_name}</Text>
 
                       <Text style={styles.manageMealMeta}>
                         {formatMealType(meal.meal_type)} ·{' '}
@@ -673,6 +691,13 @@ export default function MealsScreen() {
             </View>
           ) : null}
         </View>
+
+        {!isPremium ? (
+  <PremiumUpsellCard
+    onPress={() => navigation.navigate('SubPremium')}
+  />
+) : null}
+
       </ScrollView>
 
       <Modal
@@ -732,8 +757,7 @@ export default function MealsScreen() {
                         <Text
                           style={[
                             styles.mealTypeButtonText,
-                            isSelected &&
-                              styles.mealTypeButtonTextActive,
+                            isSelected && styles.mealTypeButtonTextActive,
                           ]}
                         >
                           {mealType}
@@ -806,7 +830,7 @@ export default function MealsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-      </SafeAreaView>
+    </SafeAreaView>
   )
 }
 
@@ -817,18 +841,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-
-    safeArea: {
+  safeArea: {
     backgroundColor: '#F5FAF6',
     flex: 1,
   },
   container: {
-  backgroundColor: '#F5FAF6',
-  flexGrow: 1,
-  paddingHorizontal: 20,
-  paddingTop: 18,
-  paddingBottom: 16,
-},
+    backgroundColor: '#F5FAF6',
+    flexGrow: 1,
+    paddingBottom: 28,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+  },
   topBar: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -863,28 +886,24 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-
   summaryCard: {
-  backgroundColor: '#FFFFFF',
-  borderColor: '#E2ECE6',
-  borderRadius: 16,
-  borderWidth: 1,
-  marginTop: 18,
-  padding: 18,
-},
-
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2ECE6',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 18,
+    padding: 18,
+  },
   summaryTitle: {
     color: '#16281D',
     fontSize: 16,
     fontWeight: '800',
   },
-
   summaryValue: {
     color: '#5C7267',
     fontSize: 13,
     marginTop: 5,
   },
-
   primaryButton: {
     alignItems: 'center',
     backgroundColor: '#1E5C35',
@@ -892,13 +911,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 14,
   },
-
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
   },
-
   sectionTitle: {
     color: '#5C7267',
     fontSize: 13,
@@ -908,7 +925,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     textTransform: 'uppercase',
   },
-
   emptyCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#E2ECE6',
@@ -916,19 +932,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 18,
   },
-
   emptyTitle: {
     color: '#16281D',
     fontSize: 15,
     fontWeight: '800',
   },
-
   emptyText: {
     color: '#7C8F83',
     fontSize: 13,
     marginTop: 5,
   },
-
   mealCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#E2ECE6',
@@ -966,32 +979,27 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-
   mealName: {
     color: '#16281D',
     fontSize: 14,
     fontWeight: '800',
   },
-
   mealMeta: {
     color: '#7C8F83',
     fontSize: 11.5,
     marginTop: 5,
   },
-
   macroSummary: {
     color: '#1E5C35',
     fontSize: 11,
     fontWeight: '700',
     marginTop: 6,
   },
-
   mealDate: {
     color: '#7C8F83',
     fontSize: 11,
     marginTop: 6,
   },
-
   manageCard: {
     backgroundColor: '#FFFFFF',
     borderColor: '#E2ECE6',
@@ -1000,7 +1008,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     overflow: 'hidden',
   },
-
   manageRow: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -1008,61 +1015,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
-
   manageRowActive: {
     backgroundColor: '#EAF3EC',
   },
-
   deleteManageRowActive: {
     backgroundColor: '#FDECEC',
   },
-
   manageText: {
     color: '#16281D',
     fontSize: 14,
     fontWeight: '700',
   },
-
   manageTextActive: {
     color: '#1E5C35',
     fontWeight: '800',
   },
-
   deleteManageText: {
     color: '#B3261E',
   },
-
   deleteManageTextActive: {
     color: '#B3261E',
     fontWeight: '800',
   },
-
   chevron: {
     color: '#1E5C35',
     fontSize: 27,
     fontWeight: '300',
   },
-
   chevronActive: {
     fontSize: 20,
     fontWeight: '800',
   },
-
   trash: {
     color: '#B3261E',
     fontSize: 27,
   },
-
   trashActive: {
     fontSize: 20,
     fontWeight: '800',
   },
-
   divider: {
     backgroundColor: '#E2ECE6',
     height: 1,
   },
-
   manageList: {
     backgroundColor: '#F8FBF9',
     borderTopColor: '#E2ECE6',
@@ -1070,19 +1065,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
-
   manageListHint: {
     color: '#7C8F83',
     fontSize: 12,
     marginBottom: 8,
   },
-
   manageEmptyText: {
     color: '#7C8F83',
     fontSize: 13,
     paddingVertical: 10,
   },
-
   manageMealRow: {
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -1093,31 +1085,26 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 12,
   },
-
   manageMealInfo: {
     flex: 1,
     paddingRight: 8,
   },
-
   manageMealName: {
     color: '#16281D',
     fontSize: 13,
     fontWeight: '800',
   },
-
   manageMealMeta: {
     color: '#1E5C35',
     fontSize: 11.5,
     fontWeight: '700',
     marginTop: 4,
   },
-
   manageMealDate: {
     color: '#7C8F83',
     fontSize: 11,
     marginTop: 4,
   },
-
   editButton: {
     alignItems: 'center',
     backgroundColor: '#EAF3EC',
@@ -1127,13 +1114,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 9,
   },
-
   editButtonText: {
     color: '#1E5C35',
     fontSize: 12,
     fontWeight: '800',
   },
-
   manageDeleteButton: {
     alignItems: 'center',
     backgroundColor: '#FDE3E3',
@@ -1143,23 +1128,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 9,
   },
-
   manageDeleteText: {
     color: '#B3261E',
     fontSize: 12,
     fontWeight: '800',
   },
-
   modalKeyboardAvoidingView: {
     flex: 1,
   },
-
   modalBackdrop: {
     backgroundColor: 'rgba(22, 40, 29, 0.45)',
     flex: 1,
     justifyContent: 'flex-end',
   },
-
   editModal: {
     backgroundColor: '#F5FAF6',
     borderTopLeftRadius: 26,
@@ -1169,34 +1150,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-
   editModalHeader: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-
   editModalTitle: {
     color: '#16281D',
     fontSize: 20,
     fontWeight: '800',
   },
-
   closeModalButton: {
     alignItems: 'center',
     height: 36,
     justifyContent: 'center',
     width: 36,
   },
-
   closeModalText: {
     color: '#1E5C35',
     fontSize: 30,
     fontWeight: '300',
     lineHeight: 34,
   },
-
   editFieldLabel: {
     color: '#16281D',
     fontSize: 13,
@@ -1204,7 +1180,6 @@ const styles = StyleSheet.create({
     marginBottom: 7,
     marginTop: 12,
   },
-
   editInput: {
     backgroundColor: '#FFFFFF',
     borderColor: '#C9DBD0',
@@ -1215,13 +1190,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
   },
-
   mealTypeButtons: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-
   mealTypeButton: {
     backgroundColor: '#FFFFFF',
     borderColor: '#C9DBD0',
@@ -1230,22 +1203,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 9,
   },
-
   mealTypeButtonActive: {
     backgroundColor: '#1E5C35',
     borderColor: '#1E5C35',
   },
-
   mealTypeButtonText: {
     color: '#1E5C35',
     fontSize: 12,
     fontWeight: '800',
   },
-
   mealTypeButtonTextActive: {
     color: '#FFFFFF',
   },
-
   saveButton: {
     alignItems: 'center',
     backgroundColor: '#1E5C35',
@@ -1254,22 +1223,19 @@ const styles = StyleSheet.create({
     marginTop: 24,
     minHeight: 52,
   },
-
   saveButtonDisabled: {
     opacity: 0.7,
   },
-
   saveButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
-
   historyLimitText: {
-  color: '#7C8F83',
-  fontSize: 12,
-  lineHeight: 18,
-  marginTop: 2,
-  textAlign: 'center',
-},
-}) 
+    color: '#7C8F83',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+})

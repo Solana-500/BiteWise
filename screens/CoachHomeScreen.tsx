@@ -171,7 +171,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
 
             <Pressable
               style={styles.featureCard}
-              onPress={() => navigation.navigate('CoachMessages')}
+              onPress={() => navigation.navigate('CoachChat')}
             >
               <Text style={styles.featureEmoji}>💬</Text>
               <Text style={styles.featureTitle}>Messages</Text>
@@ -196,7 +196,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
 
           <Pressable
             style={styles.activityCard}
-            onPress={() => navigation.navigate('CoachMessages')}
+            onPress={() =>
+            navigation.getParent()?.navigate('CoachChat' as never)
+          }
           >
             <Text style={styles.activityEmoji}>💬</Text>
 
@@ -248,7 +250,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
         <CoachTab
           label="Messages"
           icon="💬"
-          onPress={() => navigation.navigate('CoachMessages')}
+          onPress={() => navigation.navigate('CoachChat')}
         />
         <CoachTab
           label="Profile"

@@ -21,11 +21,12 @@ type NavigationProp = NativeStackNavigationProp<
 >
 
 const PREMIUM_FEATURES = [
+  'AI meal planning and recommendations',
+  'AI voice recognition for food logging',
+  'Personal coach access',
   'Advanced nutrition insights',
-  'Detailed macro and calorie trends',
-  'Personalized wellness recommendations',
-  'Progress reports and goal tracking',
-  'Priority access to future BiteWise features',
+  'Advanced progress reports and tracking',
+  'Quick access to exercise tutorial videos',
 ]
 
 export default function SubPremiumScreen() {
@@ -104,7 +105,7 @@ export default function SubPremiumScreen() {
         </TouchableOpacity>
 
         <View style={styles.heroCard}>
-          <Text style={styles.crown}>★</Text>
+          <Text style={styles.crown}>✦</Text>
 
           <Text style={styles.heroTitle}>BiteWise Premium</Text>
 
@@ -114,7 +115,8 @@ export default function SubPremiumScreen() {
           </Text>
 
           <View style={styles.priceBadge}>
-            <Text style={styles.priceText}>Premium Membership</Text>
+            <Text style={styles.priceAmount}>$9.90</Text>
+            <Text style={styles.pricePeriod}>/ month</Text>
           </View>
         </View>
 
@@ -133,12 +135,21 @@ export default function SubPremiumScreen() {
         </View>
 
         <View style={styles.planCard}>
-          <Text style={styles.planLabel}>BITEWISE PREMIUM</Text>
+          <View style={styles.planTopRow}>
+            <View>
+              <Text style={styles.planLabel}>BITEWISE PREMIUM</Text>
+              <Text style={styles.planTitle}>Monthly membership</Text>
+            </View>
 
-          <Text style={styles.planTitle}>Unlock your full progress view</Text>
+            <View style={styles.planPriceContainer}>
+              <Text style={styles.planPriceAmount}>$9.90</Text>
+              <Text style={styles.planPricePeriod}>/ month</Text>
+            </View>
+          </View>
 
           <Text style={styles.planDescription}>
-            Upgrade to access advanced features and personalized insights.
+            Unlock AI-powered logging, personalised recommendations, coaching tools,
+            advanced nutrition analytics, and progress tracking.
           </Text>
 
           <Text style={styles.demoText}>
@@ -213,21 +224,27 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-  priceBadge: {
+    priceBadge: {
+    alignItems: 'baseline',
     backgroundColor: 'rgba(244, 201, 93, 0.2)',
     borderColor: '#F4C95D',
     borderRadius: 999,
     borderWidth: 1,
+    flexDirection: 'row',
     marginTop: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  priceText: {
+  priceAmount: {
+    color: '#FDE9A9',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  pricePeriod: {
     color: '#FDE9A9',
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    marginLeft: 4,
   },
   sectionTitle: {
     color: '#16281D',
@@ -275,6 +292,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: 20,
     padding: 18,
+  },
+    planTopRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  planPriceContainer: {
+    alignItems: 'flex-end',
+  },
+  planPriceAmount: {
+    color: '#4E3907',
+    fontSize: 23,
+    fontWeight: '900',
+  },
+  planPricePeriod: {
+    color: '#8A6410',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 1,
   },
   planLabel: {
     color: '#8A6410',
