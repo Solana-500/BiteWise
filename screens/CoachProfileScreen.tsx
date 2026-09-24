@@ -243,7 +243,7 @@ export default function CoachProfileScreen({ navigation }: Props) {
         <CoachTab
           label="Messages"
           icon="💬"
-          onPress={() => navigation.navigate('CoachMessages')}
+          onPress={() => navigation.navigate('CoachChat')}
         />
         <CoachTab label="Profile" icon="👤" active onPress={() => {}} />
       </View>

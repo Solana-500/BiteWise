@@ -92,7 +92,7 @@ export default function CoachContentScreen({ navigation }: Props) {
         <CoachTab
           label="Messages"
           icon="💬"
-          onPress={() => navigation.navigate('CoachMessages')}
+          onPress={() => navigation.navigate('CoachChat')}
         />
         <CoachTab
           label="Profile"

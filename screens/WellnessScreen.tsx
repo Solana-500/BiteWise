@@ -22,6 +22,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
+import PremiumUpsellCard from '../components/PremiumUpsellCard'
 import type {
   ExerciseCategory,
   MainTabParamList,
@@ -126,13 +127,7 @@ function getTodayRange() {
   }
 }
 
-  type WellnessScreenProps = {
-    isPremium?: boolean
-  }
-
-  export default function WellnessScreen({
-    isPremium = false,
-  }: WellnessScreenProps) {
+  export default function WellnessScreen() {
   const navigation = useNavigation<WellnessNavigationProp>()
 
   // Water State
@@ -163,6 +158,8 @@ function getTodayRange() {
   const [editCaloriesBurned, setEditCaloriesBurned] = useState('')
   const [updatingLog, setUpdatingLog] = useState(false)
 
+  const [isPremium, setIsPremium] = useState(false)
+
   // --- DATA LOADING ---
   const loadWellnessData = useCallback(async () => {
     try {
@@ -175,6 +172,7 @@ function getTodayRange() {
         setWaterToday(0)
         setExerciseLogs([])
         setSavedRoutines([])
+        setIsPremium(false)
         return
       }
 
@@ -182,7 +180,7 @@ function getTodayRange() {
 
       setLoadingHistory(true)
 
-      const [waterRes, exerciseRes, routineRes] = await Promise.all([
+      const [waterRes, exerciseRes, routineRes, profileRes] = await Promise.all([
         supabase
           .from('water_logs')
           .select('id, amount_ml, logged_at')
@@ -212,7 +210,24 @@ function getTodayRange() {
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
+
+          supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single(),
       ])
+
+          if (profileRes.error) {
+            console.error(
+              'Load Wellness subscription tier error:',
+              profileRes.error
+            )
+
+            setIsPremium(false)
+          } else {
+            setIsPremium(profileRes.data?.subscription_tier === 'premium')
+          }
 
       // 1. Water
       const totalWater = (waterRes.data ?? []).reduce(
@@ -478,6 +493,29 @@ function getTodayRange() {
     )
   }
 
+  function goHome() {
+    const routeNames = navigation.getState().routeNames
+
+    if (routeNames.includes('PremiumTabs') || routeNames.includes('PuHome')) {
+      navigation.navigate('PremiumTabs', {
+        screen: 'PuHome',
+      })
+      return
+    }
+
+    if (routeNames.includes('MainTabs') || routeNames.includes('Home')) {
+      navigation.navigate('MainTabs', {
+        screen: 'Home',
+        params: {
+          screen: 'HomeMain',
+        },
+      })
+      return
+    }
+
+    navigation.goBack()
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
@@ -495,11 +533,7 @@ function getTodayRange() {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backHomeButton}
-            onPress={() =>
-              navigation.navigate('Home', {
-                screen: 'HomeMain',
-              })
-            }
+            onPress={goHome}
             accessibilityRole="button"
             accessibilityLabel="Go to Home"
           >
@@ -750,39 +784,11 @@ function getTodayRange() {
             <Text style={styles.syncButtonText}>Connect a Device</Text>
           </TouchableOpacity>
         </View>
-
-        {!isPremium && (    
-        <View style={styles.premiumCard}>
-          <View style={styles.premiumIconCircle}>
-            <Text style={styles.premiumIcon}>✦</Text>
-          </View>
-
-          <View style={styles.premiumContent}>
-            <Text style={styles.premiumTitle}>
-              More wellness insights later
-            </Text>
-
-            <Text style={styles.premiumText}>
-              Premium can unlock advanced exercise trends, detailed wellness
-              analysis, personalised guidance, and connected-device insights.
-            </Text>
-          </View>
-        </View>
-        )}
-
-        {/* Go Premium button */}
-        {!isPremium && (
-                    <TouchableOpacity
-                style={styles.goPremiumButton}
-                onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
-                accessibilityRole="button"
-                accessibilityLabel="Go Premium"
-                accessibilityHint="Learn about upcoming BiteWise Premium features"
-              >
-                <Text style={styles.goPremiumStar}>✦</Text>
-                <Text style={styles.goPremiumButtonText}>Go Premium</Text>
-              </TouchableOpacity>
-              )}
+        {!isPremium ? (
+          <PremiumUpsellCard
+            onPress={() => navigation.navigate('SubPremium')}
+          />
+        ) : null}
       </ScrollView>
 
       {/* --- CATEGORY PICKER MODAL --- */}
@@ -1476,72 +1482,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  goPremiumButton: {
-  alignItems: 'center',
-  backgroundColor: '#D4A017',
-  borderColor: '#B7791F',
-  borderRadius: 14,
-  borderWidth: 1,
-  flexDirection: 'row',
-  justifyContent: 'center',
-  marginBottom: 8,
-  marginTop: 24,
-  minHeight: 52,
-  paddingHorizontal: 18,
-  shadowColor: '#8A6500',
-  shadowOffset: {
-    width: 0,
-    height: 3,
-  },
-  shadowOpacity: 0.2,
-  shadowRadius: 5,
-  elevation: 3,
-},
-goPremiumStar: {
-  fontSize: 18,
-  marginRight: 8,
-},
-goPremiumButtonText: {
-  color: '#FFFFFF',
-  fontSize: 15,
-  fontWeight: '900',
-  letterSpacing: 0.2,
-},
-premiumCard: {
-  alignItems: 'flex-start',
-  backgroundColor: '#FFFFFF',
-  borderColor: '#C9DBD0',
-  borderRadius: 18,
-  borderStyle: 'dashed',
-  borderWidth: 1.5,
-  flexDirection: 'row',
-  marginTop: 24,
-  padding: 16,
-},
-premiumIconCircle: {
-  alignItems: 'center',
-  backgroundColor: '#FFF4D6',
-  borderRadius: 20,
-  height: 40,
-  justifyContent: 'center',
-  marginRight: 12,
-  width: 40,
-},
-premiumIcon: {
-  fontSize: 19,
-},
-premiumContent: {
-  flex: 1,
-},
-premiumTitle: {
-  color: '#16281D',
-  fontSize: 14,
-  fontWeight: '800',
-},
-premiumText: {
-  color: '#708277',
-  fontSize: 12,
-  lineHeight: 18,
-  marginTop: 4,
-},
 })

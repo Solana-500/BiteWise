@@ -13,6 +13,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
+import PremiumUpsellCard from '../components/PremiumUpsellCard'
 
 import { supabase } from '../services/supabase'
 import type { MainTabParamList, RootStackParamList } from '../types/navigation'
@@ -166,19 +167,14 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
   })
 }
 
-type ProgressScreenProps = {
-  isPremium?: boolean
-}
-
-export default function ProgressScreen({
-  isPremium = false,
-}: ProgressScreenProps) {
+  export default function ProgressScreen() {
   const navigation = useNavigation<ProgressNavigationProp>()
 
   const [waterLogs, setWaterLogs] = useState<WaterLog[]>([])
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
 
   const loadProgressData = useCallback(async () => {
     try {
@@ -191,6 +187,19 @@ export default function ProgressScreen({
         setWaterLogs([])
         setExerciseLogs([])
         return
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Could not load subscription tier:', profileError)
+        setIsPremium(false)
+      } else {
+        setIsPremium(profile?.subscription_tier === 'premium')
       }
 
       const weekStart = getWeekStartDate()
@@ -339,12 +348,27 @@ export default function ProgressScreen({
   A simple overview of your wellness this week.
 </Text>
 
-      <View style={styles.freePlanBadge}>
-        <Text style={styles.freePlanBadgeText}>FREE PLAN</Text>
-        <Text style={styles.freePlanText}>
-          Your basic weekly wellness summary
-        </Text>
-      </View>
+      <View
+  style={[
+    styles.freePlanBadge,
+    isPremium && styles.premiumPlanBadge,
+  ]}
+>
+  <Text
+    style={[
+      styles.freePlanBadgeText,
+      isPremium && styles.premiumPlanBadgeText,
+    ]}
+  >
+    {isPremium ? '✦ PREMIUM PLAN' : 'FREE PLAN'}
+  </Text>
+
+  <Text style={styles.freePlanText}>
+    {isPremium
+      ? 'Your full wellness and progress summary'
+      : 'Your basic weekly wellness summary'}
+  </Text>
+</View>
 
       <Text style={styles.sectionTitle}>Today</Text>
 
@@ -579,38 +603,13 @@ export default function ProgressScreen({
           })}
         </View>
       )}
-
-      {!isPremium && (    
-              <View style={styles.premiumCard}>
-                <View style={styles.premiumIconCircle}>
-                  <Text style={styles.premiumIcon}>✦</Text>
-                </View>
-      
-                <View style={styles.premiumContent}>
-                  <Text style={styles.premiumTitle}>
-                    More wellness insights later
-                  </Text>
-      
-                  <Text style={styles.premiumText}>
-                    Premium can unlock advanced exercise trends, detailed wellness
-                    analysis, personalised guidance, and connected-device insights.
-                  </Text>
-                </View>
-              </View>
-              )}
-
-      {!isPremium && (
-            <TouchableOpacity
-        style={styles.goPremiumButton}
-        onPress={() => navigation.getParent()?.navigate('SubPremium' as never)}
-        accessibilityRole="button"
-        accessibilityLabel="Go Premium"
-        accessibilityHint="Learn about upcoming BiteWise Premium features"
-      >
-        <Text style={styles.goPremiumStar}>✦</Text>
-        <Text style={styles.goPremiumButtonText}>Go Premium</Text>
-      </TouchableOpacity>
-      )}
+      {!isPremium ? (
+  <PremiumUpsellCard
+    onPress={() =>
+      navigation.getParent()?.navigate('SubPremium' as never)
+    }
+  />
+) : null}
     </ScrollView>
   )
 }
@@ -989,73 +988,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  premiumCard: {
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#C9DBD0',
-    borderRadius: 18,
-    borderStyle: 'dashed',
-    borderWidth: 1.5,
-    flexDirection: 'row',
-    marginTop: 24,
-    padding: 16,
-  },
-  premiumIconCircle: {
-    alignItems: 'center',
-    backgroundColor: '#FFF4D6',
-    borderRadius: 20,
-    height: 40,
-    justifyContent: 'center',
-    marginRight: 12,
-    width: 40,
-  },
-  premiumIcon: {
-    fontSize: 19,
-  },
-  premiumContent: {
-    flex: 1,
-  },
-  premiumTitle: {
-    color: '#16281D',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  premiumText: {
-    color: '#708277',
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  goPremiumButton: {
-  alignItems: 'center',
-  backgroundColor: '#D4A017',
-  borderColor: '#B7791F',
-  borderRadius: 14,
-  borderWidth: 1,
-  flexDirection: 'row',
-  justifyContent: 'center',
-  marginTop: 18,
-  minHeight: 52,
-  paddingHorizontal: 18,
-  shadowColor: '#8A6500',
-  shadowOffset: {
-    width: 0,
-    height: 3,
-  },
-  shadowOpacity: 0.2,
-  shadowRadius: 5,
-  elevation: 3,
-},
-goPremiumStar: {
-  fontSize: 18,
-  marginRight: 8,
-},
-goPremiumButtonText: {
-  color: '#FFFFFF',
-  fontSize: 15,
-  fontWeight: '900',
-  letterSpacing: 0.2,
-},
 topBar: {
   alignItems: 'center',
   flexDirection: 'row',
@@ -1089,5 +1021,13 @@ screenSubtitle: {
   lineHeight: 18,
   marginTop: 10,
   textAlign: 'center',
+},
+premiumPlanBadge: {
+  backgroundColor: '#FFF7DC',
+  borderColor: '#F4C95D',
+},
+
+premiumPlanBadgeText: {
+  color: '#8A6410',
 },
 })

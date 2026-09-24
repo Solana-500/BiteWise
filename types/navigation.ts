@@ -80,6 +80,7 @@ export type RootStackParamList = {
   CoachHome: undefined
   CoachContent: undefined
   CoachProfile: undefined
+  CoachChat: undefined
 
   AdminHome: undefined
   AdminMore: undefined

@@ -15,11 +15,6 @@ type Props = {
   navigation: any
 }
 
-type UserProfile = {
-  full_name: string | null;
-  subscription_tier: string | null;
-}   
-
 type Meal = {
   label: 'Breakfast' | 'Lunch' | 'Dinner'
   description: string
@@ -46,7 +41,7 @@ export default function PuHomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('User')
   const [coachName, setCoachName] = useState<string | null>(null)
-  const [isPremium, setIsPremium] = useState(true)
+ 
 
   const [calories, setCalories] = useState({ consumed: 0, goal: 0 })
 
@@ -115,7 +110,6 @@ export default function PuHomeScreen({ navigation }: Props) {
     console.log('Assigned coach ID:', profile?.assigned_coach_id)
 
     setUserName(profile?.full_name?.trim() || 'User')
-    setIsPremium(profile?.subscription_tier === 'premium')
 
     if (!profile?.assigned_coach_id) {
       setCoachName(null)
@@ -185,27 +179,29 @@ export default function PuHomeScreen({ navigation }: Props) {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-        <View style={styles.headerRow}>
-          <Text style={styles.pageHeading}>Dashboard</Text>
+                <View style={styles.headerRow}>
+          <View style={styles.headerSideSpacer} />
+
+          <View style={styles.brandBlock}>
+            <Text style={styles.brandName}>BiteWise</Text>
+            <Text style={styles.premiumHeaderLabel}>PREMIUM</Text>
+          </View>
 
           <Pressable
-            style={styles.avatarButton}
-            onPress={() => navigation.navigate('PuProfile')}
+            style={({ pressed }) => [
+              styles.avatarButton,
+              pressed && styles.pressedButton,
+            ]}
+            onPress={() => navigation.navigate('Profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
           >
             <Text style={styles.avatarEmoji}>👤</Text>
           </Pressable>
         </View>
 
         <View style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
-            <Text style={styles.heroGreeting}>Hello, {firstName}</Text>
-
-            {isPremium ? (
-              <View style={styles.premiumChip}>
-                <Text style={styles.premiumChipText}>Premium</Text>
-              </View>
-            ) : null}
-          </View>
+          <Text style={styles.heroGreeting}>Hello, {firstName}</Text>
         </View>
 
         <View style={styles.coachCard}>
@@ -384,31 +380,52 @@ content: {
   paddingBottom: 0,
 },
 
-  headerRow: {
+    headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 48,
     marginBottom: 16,
   },
-  pageHeading: {
+  headerSideSpacer: {
+    width: 40,
+    height: 40,
+  },
+  brandBlock: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandName: {
     color: '#16281D',
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+  },
+  premiumHeaderLabel: {
+    marginTop: 1,
+    color: '#957115',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1.5,
   },
   avatarButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#1E5C35',
+    borderColor: '#D8B45A',
   },
   avatarEmoji: {
     fontSize: 18,
   },
-
+  pressedButton: {
+    opacity: 0.78,
+  },
+  
   heroCard: {
     marginBottom: 14,
     padding: 18,
@@ -417,25 +434,9 @@ content: {
     borderWidth: 1,
     borderColor: '#E2ECE6',
   },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   heroGreeting: {
     color: '#16281D',
     fontSize: 18,
-    fontWeight: '800',
-  },
-  premiumChip: {
-    borderRadius: 999,
-    backgroundColor: '#8FD3A6',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  premiumChipText: {
-    color: '#1E5C35',
-    fontSize: 12,
     fontWeight: '800',
   },
 
@@ -661,9 +662,6 @@ progressShortcutChevron: {
   fontSize: 18,
   fontWeight: '400',
   lineHeight: 18,
-},
-pressedButton: {
-  opacity: 0.78,
 },
 recommendationSection: {
   flexGrow: 1,

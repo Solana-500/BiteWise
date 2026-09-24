@@ -16,9 +16,14 @@ import { useFocusEffect } from '@react-navigation/native'
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
 
 import { supabase } from '../services/supabase'
-import type { MainTabParamList } from '../types/navigation'
+import type {
+  MainTabParamList,
+  PremiumTabParamList,
+} from '../types/navigation'
 
-type Props = BottomTabScreenProps<MainTabParamList, 'Profile'>
+type Props = {
+  navigation: any
+}
 
 type ProfileData = {
   full_name: string | null
@@ -158,6 +163,21 @@ export default function ProfileScreen({ navigation }: Props) {
       void loadProfile()
     }, [loadProfile])
   )
+
+  function goHome() {
+  const currentTabRoutes = navigation.getState().routeNames
+
+  const tabNavigation = navigation as any
+
+  if (currentTabRoutes.includes('PuHome')) {
+    tabNavigation.navigate('PuHome')
+    return
+  }
+
+  tabNavigation.navigate('Home', {
+    screen: 'HomeMain',
+  })
+}
 
   async function handleLogout() {
     Alert.alert(
@@ -350,17 +370,14 @@ export default function ProfileScreen({ navigation }: Props) {
       await loadProfile()
 
       if (isFirstProfileSave) {
-        Alert.alert('Profile created', 'Welcome to BiteWise!', [
-          {
-            text: 'Continue',
-            onPress: () =>
-              navigation.navigate('Home', {
-                screen: 'HomeMain',
-              }),
-          },
-        ])
-        return
-      }
+      Alert.alert('Profile created', 'Welcome to BiteWise!', [
+        {
+          text: 'Continue',
+          onPress: goHome,
+        },
+      ])
+      return
+    }
 
       Alert.alert('Profile updated', 'Your changes have been saved.')
     } catch (error: any) {
@@ -404,11 +421,7 @@ export default function ProfileScreen({ navigation }: Props) {
       >
         <TouchableOpacity
           style={styles.backHomeButton}
-          onPress={() =>
-            navigation.navigate('Home', {
-              screen: 'HomeMain',
-            })
-          }
+          onPress={goHome}
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >
@@ -557,7 +570,9 @@ export default function ProfileScreen({ navigation }: Props) {
               </Text>
 
               <Text style={styles.freePremiumPreviewText}>
-                Get personalised meal plans, advanced progress reports, and priority coach support.
+                Get AI meal planning, voice food logging, personal coach access,
+              advanced nutrition insights, progress reports, and exercise tutorial
+              videos for $9.90/month.
               </Text>
 
               <TouchableOpacity
