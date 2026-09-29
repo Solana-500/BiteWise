@@ -1175,6 +1175,17 @@ select {
     margin-bottom: -3px;
 }
 
+.coach-details-section .register-section-title {
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #e3ebe6;
+}
+
+.coach-details-section .register-section-title:not(:first-child) {
+    margin-top: 32px;
+}
+
 .register-back {
     margin-bottom: 10px;
 
