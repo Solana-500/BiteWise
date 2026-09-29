@@ -1222,19 +1222,14 @@ loginForm?.addEventListener(
 
 
             // ==================================
-            // STEP 5: ADMIN (PORTAL NOT BUILT YET)
+            // STEP 5: ADMIN 
             // ==================================
 
             if (expectedRole === "admin") {
 
-                await supabaseClient.auth.signOut();
-
-                showLoginMessage(
-                    "Admin web portal coming soon.",
-                    "info"
-                );
-
-                return;
+               window.location.href =
+                "../admin_web/admin-dashboard.html";
+            return;
 
             }
 
