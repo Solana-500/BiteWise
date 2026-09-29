@@ -636,6 +636,344 @@ button {
 
 
 /* =========================================
+   COACH MANAGEMENT
+========================================= */
+
+.coach-management-content {
+    padding: 34px 38px 50px;
+}
+
+.management-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 26px;
+}
+
+.management-heading h1 {
+    margin-bottom: 7px;
+
+    font-size: 26px;
+}
+
+.management-heading p {
+    color: #78817b;
+
+    font-size: 14px;
+}
+
+
+/* =========================================
+   COACH TABS
+========================================= */
+
+.coach-tabs {
+    display: flex;
+    gap: 8px;
+
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #dfe6e1;
+}
+
+.coach-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 12px 16px;
+
+    background: transparent;
+    color: #6d766f;
+
+    border: none;
+    border-bottom: 2px solid transparent;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.coach-tab:hover {
+    color: #185d35;
+}
+
+.coach-tab.active {
+    color: #185d35;
+    border-bottom-color: #185d35;
+}
+
+.tab-count {
+    min-width: 23px;
+
+    padding: 3px 7px;
+
+    background: #edf2ee;
+    color: #68716b;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    text-align: center;
+}
+
+.coach-tab.active .tab-count {
+    background: #e3f0e7;
+    color: #185d35;
+}
+
+
+/* =========================================
+   TAB PANELS
+========================================= */
+
+.coach-tab-panel {
+    display: none;
+}
+
+.coach-tab-panel.active {
+    display: block;
+}
+
+
+/* =========================================
+   MANAGEMENT CARD
+========================================= */
+
+.management-card {
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8e4;
+    border-radius: 12px;
+}
+
+.management-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 22px;
+
+    border-bottom: 1px solid #e8ede9;
+}
+
+.management-card-header h2 {
+    margin-bottom: 5px;
+
+    font-size: 16px;
+}
+
+.management-card-header p {
+    color: #8a928d;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.coach-search input {
+    width: 240px;
+
+    padding: 10px 13px;
+
+    background: #ffffff;
+    color: #303832;
+
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+
+    outline: none;
+
+    font-size: 13px;
+}
+
+.coach-search input:focus {
+    border-color: #6c9b7d;
+
+    box-shadow:
+        0 0 0 3px rgba(24, 93, 53, 0.08);
+}
+
+
+/* =========================================
+   COACH TABLE
+========================================= */
+
+.coach-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.coach-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    text-align: left;
+}
+
+.coach-table th {
+    padding: 13px 20px;
+
+    background: #fafcfa;
+    color: #7b847e;
+
+    border-bottom: 1px solid #e8ede9;
+
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.coach-table td {
+    padding: 18px 20px;
+
+    color: #3e4741;
+
+    border-bottom: 1px solid #edf0ee;
+
+    font-size: 13px;
+
+    vertical-align: middle;
+}
+
+.coach-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.coach-table tbody tr:not(.table-empty-row):hover {
+    background: #fbfcfb;
+}
+
+
+/* =========================================
+   TABLE EMPTY STATE
+========================================= */
+
+.table-empty-row td {
+    padding: 55px 20px;
+}
+
+.table-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 6px;
+
+    color: #929a95;
+
+    text-align: center;
+}
+
+.table-empty-state strong {
+    color: #606962;
+
+    font-size: 13px;
+}
+
+.table-empty-state span {
+    font-size: 12px;
+}
+
+
+/* =========================================
+   COACH STATUS
+========================================= */
+
+.coach-status {
+    display: inline-flex;
+
+    padding: 5px 9px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.coach-status.pending {
+    background: #fff4d8;
+    color: #8a6518;
+}
+
+.coach-status.active {
+    background: #e5f3e9;
+    color: #185d35;
+}
+
+.coach-status.suspended {
+    background: #f4e8e8;
+    color: #9a4141;
+}
+
+
+/* =========================================
+   COACH ACTION BUTTONS
+========================================= */
+
+.coach-action-button {
+    padding: 8px 13px;
+
+    background: #ffffff;
+    color: #185d35;
+
+    border: 1px solid #b9d0c0;
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.coach-action-button:hover {
+    background: #edf6f0;
+}
+
+
+/* =========================================
+   COACH MANAGEMENT RESPONSIVE
+========================================= */
+
+@media (max-width: 760px) {
+
+    .coach-management-content {
+        padding: 26px 20px;
+    }
+
+    .coach-tabs {
+        overflow-x: auto;
+    }
+
+    .coach-tab {
+        white-space: nowrap;
+    }
+
+    .management-card-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .coach-search input {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================
    RESPONSIVE
 ========================================= */
 

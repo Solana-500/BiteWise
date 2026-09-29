@@ -178,6 +178,54 @@ async function loadDashboardStatistics() {
 
 
 /* =========================================
+   COACH MANAGEMENT TABS
+========================================= */
+
+const coachTabs =
+    document.querySelectorAll(".coach-tab");
+
+const coachTabPanels =
+    document.querySelectorAll(".coach-tab-panel");
+
+
+coachTabs.forEach((tab) => {
+
+    tab.addEventListener("click", () => {
+
+        const selectedTab =
+            tab.dataset.coachTab;
+
+
+        /* Remove active state */
+
+        coachTabs.forEach((item) => {
+            item.classList.remove("active");
+        });
+
+        coachTabPanels.forEach((panel) => {
+            panel.classList.remove("active");
+        });
+
+
+        /* Activate selected tab */
+
+        tab.classList.add("active");
+
+        const selectedPanel =
+            document.getElementById(
+                `${selectedTab}-panel`
+            );
+
+        if (selectedPanel) {
+            selectedPanel.classList.add("active");
+        }
+
+    });
+
+});
+
+
+/* =========================================
    LOG OUT
 ========================================= */
 
