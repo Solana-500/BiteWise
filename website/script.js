@@ -767,6 +767,50 @@ const loginButtons =
     );
 
 
+// ==============================================
+// FORGOT PASSWORD MODAL
+// ==============================================
+
+const forgotPasswordModal =
+    document.getElementById(
+        "forgot-password-modal"
+    );
+
+const forgotPasswordLink =
+    document.getElementById(
+        "forgot-password-link"
+    );
+
+const forgotPasswordClose =
+    document.getElementById(
+        "forgot-password-close"
+    );
+
+const forgotPasswordOverlay =
+    document.getElementById(
+        "forgot-password-overlay"
+    );
+
+const backToLogin =
+    document.getElementById(
+        "back-to-login"
+    );
+
+const forgotPasswordEmail =
+    document.getElementById(
+        "forgot-password-email"
+    );
+
+const forgotPasswordForm =
+    document.getElementById(
+        "forgot-password-form"
+    );
+
+const forgotPasswordMessage =
+    document.getElementById(
+        "forgot-password-message"
+    );
+
 
 // ==============================================
 // REGISTER STEPS
@@ -1691,6 +1735,59 @@ function closeLoginModal() {
 }
 
 
+function openForgotPasswordModal() {
+
+    const loginEmail =
+        document.getElementById(
+            "login-email"
+        )?.value.trim();
+
+    // Close login modal
+    loginModal?.classList.remove("active");
+
+    loginModal?.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    // Open forgot password modal
+    forgotPasswordModal?.classList.add(
+        "active"
+    );
+
+    forgotPasswordModal?.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+    // Carry over email if user already entered one
+    if (forgotPasswordEmail && loginEmail) {
+        forgotPasswordEmail.value = loginEmail;
+    }
+}
+
+
+function closeForgotPasswordModal() {
+
+    forgotPasswordModal?.classList.remove(
+        "active"
+    );
+
+    forgotPasswordModal?.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    document.body.classList.remove(
+        "modal-open"
+    );
+
+}
+
 
 // ==============================================
 // OPEN BUTTONS
@@ -1760,6 +1857,133 @@ loginOverlay?.addEventListener(
     closeLoginModal
 );
 
+// ==============================================
+// FORGOT PASSWORD BUTTONS
+// ==============================================
+
+forgotPasswordLink?.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        openForgotPasswordModal();
+
+    }
+);
+
+
+forgotPasswordClose?.addEventListener(
+    "click",
+    closeForgotPasswordModal
+);
+
+
+forgotPasswordOverlay?.addEventListener(
+    "click",
+    closeForgotPasswordModal
+);
+
+
+backToLogin?.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        closeForgotPasswordModal();
+
+        openLoginModal();
+
+    }
+);
+
+
+// ==============================================
+// SEND PASSWORD RESET EMAIL
+// ==============================================
+
+forgotPasswordForm?.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const email =
+            forgotPasswordEmail?.value.trim();
+
+        const submitButton =
+            forgotPasswordForm.querySelector(
+                ".login-submit-button"
+            );
+
+        forgotPasswordMessage.textContent = "";
+
+        if (!email) {
+            forgotPasswordMessage.textContent =
+                "Please enter your email address.";
+            return;
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent =
+                "Sending...";
+        }
+
+        try {
+
+            const { error } =
+                await supabaseClient.auth
+                    .resetPasswordForEmail(
+                        email,
+                        {
+                            redirectTo:
+                            new URL(
+                                "reset-password.html",
+                                window.location.href
+                            ).href
+                        }
+                    );
+
+            if (error) {
+
+                console.error(
+                    "Password reset error:",
+                    error
+                );
+
+                forgotPasswordMessage.textContent =
+                    error.message;
+
+                return;
+            }
+
+            forgotPasswordMessage.textContent =
+                "If an account exists for this email, a password reset link has been sent.";
+
+        } catch (error) {
+
+            console.error(
+                "Unexpected password reset error:",
+                error
+            );
+
+            forgotPasswordMessage.textContent =
+                "Something went wrong. Please try again.";
+
+        } finally {
+
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent =
+                    "Send Reset Link";
+            }
+
+        }
+
+    }
+);
 
 
 // ==============================================
@@ -1788,6 +2012,15 @@ document.addEventListener(
             ) {
 
                 closeLoginModal();
+
+            }
+
+            if (
+                forgotPasswordModal?.classList
+                    .contains("active")
+            ) {
+
+                closeForgotPasswordModal();
 
             }
 
@@ -2426,4 +2659,159 @@ coachSuccessLater?.addEventListener(
 coachSuccessOverlay?.addEventListener(
     "click",
     closeCoachSuccessModal
+);
+
+// ==============================================
+// RESET PASSWORD
+// ==============================================
+
+const resetPasswordForm =
+    document.getElementById(
+        "reset-password-form"
+    );
+
+const newPasswordInput =
+    document.getElementById(
+        "new-password"
+    );
+
+const confirmNewPasswordInput =
+    document.getElementById(
+        "confirm-new-password"
+    );
+
+const resetPasswordMessage =
+    document.getElementById(
+        "reset-password-message"
+    );
+
+
+// ==============================================
+// UPDATE PASSWORD
+// ==============================================
+
+resetPasswordForm?.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const newPassword =
+            newPasswordInput?.value;
+
+        const confirmPassword =
+            confirmNewPasswordInput?.value;
+
+        const submitButton =
+            document.getElementById(
+                "reset-password-button"
+            );
+
+
+        // Clear previous message
+        if (resetPasswordMessage) {
+            resetPasswordMessage.textContent = "";
+        }
+
+
+        // ==========================================
+        // VALIDATION
+        // ==========================================
+
+        if (!newPassword || !confirmPassword) {
+
+            resetPasswordMessage.textContent =
+                "Please enter and confirm your new password.";
+
+            return;
+        }
+
+
+        if (newPassword !== confirmPassword) {
+
+            resetPasswordMessage.textContent =
+                "Passwords do not match.";
+
+            return;
+        }
+
+
+        if (newPassword.length < 6) {
+
+            resetPasswordMessage.textContent =
+                "Password must contain at least 6 characters.";
+
+            return;
+        }
+
+
+        // ==========================================
+        // UPDATE PASSWORD
+        // ==========================================
+
+        if (submitButton) {
+
+            submitButton.disabled = true;
+
+            submitButton.textContent =
+                "Resetting Password...";
+        }
+
+
+        try {
+
+            const { error } =
+                await supabaseClient.auth.updateUser({
+                    password: newPassword
+                });
+
+
+            if (error) {
+
+                console.error(
+                    "Password reset error:",
+                    error
+                );
+
+                resetPasswordMessage.textContent =
+                    "Unable to reset your password. " +
+                    "Please request a new reset link.";
+
+                return;
+            }
+
+
+            // ======================================
+            // SUCCESS
+            // ======================================
+
+            resetPasswordMessage.textContent =
+                "Password successfully reset!";
+
+            resetPasswordForm.reset();
+
+
+        } catch (error) {
+
+            console.error(
+                "Unexpected password reset error:",
+                error
+            );
+
+            resetPasswordMessage.textContent =
+                "Something went wrong. Please try again.";
+
+        } finally {
+
+            if (submitButton) {
+
+                submitButton.disabled = false;
+
+                submitButton.textContent =
+                    "Reset Password";
+            }
+
+        }
+
+    }
 );

@@ -1791,6 +1791,7 @@
             <a
                 href="#"
                 class="forgot-password-link"
+                id="forgot-password-link"
             >
                 Forgot password?
             </a>
@@ -1800,6 +1801,83 @@
 
     </div>
 
+</div>
+
+
+<!-- ========================================
+     FORGOT PASSWORD POPUP
+========================================= -->
+
+<div
+    class="login-modal"
+    id="forgot-password-modal"
+    aria-hidden="true"
+>
+    <div
+        class="login-modal-overlay"
+        id="forgot-password-overlay"
+    ></div>
+
+    <div class="login-card">
+
+        <button
+            type="button"
+            class="login-close"
+            id="forgot-password-close"
+            aria-label="Close"
+        >
+            &times;
+        </button>
+
+        <div class="login-heading">
+            <h1>Reset Password</h1>
+
+            <p>
+                Enter the email associated with your BiteWise account.
+            </p>
+        </div>
+
+        <form
+            class="login-form"
+            id="forgot-password-form"
+        >
+
+            <div class="form-group">
+                <label for="forgot-password-email">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="forgot-password-email"
+                    placeholder="you@email.com"
+                    required
+                >
+            </div>
+
+            <p
+                class="form-message login-message"
+                id="forgot-password-message"
+            ></p>
+
+            <button
+                type="submit"
+                class="login-submit-button"
+            >
+                Send Reset Link
+            </button>
+
+            <a
+                href="#"
+                class="login-switch-link"
+                id="back-to-login"
+            >
+                ← Back to Log In
+            </a>
+
+        </form>
+
+    </div>
 </div>
 
 
