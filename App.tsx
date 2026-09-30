@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import type { Session } from '@supabase/supabase-js'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import LoginScreen from './screens/LoginScreen'
 import SignUpScreen from './screens/SignUpScreen'
@@ -31,6 +32,12 @@ import FeedbackScreen from './screens/FeedbackScreen'
 import SubPremiumScreen from './screens/SubPremiumScreen'
 import PuChatScreen from './screens/PuChatScreen'
 import CoachChatScreen from './screens/CoachChatScreen'
+import CoachClientsScreen from './screens/CoachClientsScreen'
+import CoachConversationScreen from './screens/CoachConversationScreen'
+import CoachMealPlansScreen from './screens/CoachMealPlansScreen'
+import CoachCreateMealPlanScreen from './screens/CoachCreateMealPlanScreen'
+import CoachMealPlanBuilderScreen from './screens/CoachMealPlanBuilderScreen'
+import CoachMealPlanReviewScreen from './screens/CoachMealPlanReviewScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -295,6 +302,7 @@ function CoachTabs() {
     >
       <CoachTabNav.Screen name="CoachHome" component={CoachHomeScreen} />
       <CoachTabNav.Screen name="CoachContent" component={CoachContentScreen} />
+      <CoachTabNav.Screen name="CoachClients" component={CoachClientsScreen} />
       <CoachTabNav.Screen name="CoachProfile" component={CoachProfileScreen} />
     </CoachTabNav.Navigator>
   )
@@ -402,6 +410,7 @@ export default function App() {
   }
 
   return (
+    <SafeAreaProvider>
     <NavigationContainer>
      <Stack.Navigator
         screenOptions={{
@@ -466,6 +475,31 @@ export default function App() {
             <Stack.Screen
               name="CoachChat"
               component={CoachChatScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachConversation"
+              component={CoachConversationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachMealPlans"
+              component={CoachMealPlansScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachCreateMealPlan"
+              component={CoachCreateMealPlanScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachMealPlanBuilder"
+              component={CoachMealPlanBuilderScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachMealPlanReview"
+              component={CoachMealPlanReviewScreen}
               options={{ headerShown: false }}
             />
           </>
@@ -572,5 +606,6 @@ export default function App() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   )
 }

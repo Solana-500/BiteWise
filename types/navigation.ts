@@ -82,6 +82,56 @@ export type RootStackParamList = {
   CoachProfile: undefined
   CoachChat: undefined
 
+  CoachMealPlans: undefined
+  CoachCreateMealPlan: undefined
+  CoachMealPlanBuilder: {
+  planBasics: {
+    clientId: string
+    clientName: string
+    clientGoal: string
+    clientDietaryPreference: string
+    clientAllergies: string
+    planTitle: string
+    goal: string
+    duration: string
+    calorieTarget: number
+    coachNotes: string
+  }
+}
+
+CoachMealPlanReview: {
+  planId?: string
+  planBasics: {
+    clientId: string
+    clientName: string
+    clientGoal: string
+    clientDietaryPreference: string
+    clientAllergies: string
+    planTitle: string
+    goal: string
+    duration: string
+    calorieTarget: number
+    coachNotes: string
+  }
+  mealsByDay: Record<
+    string,
+    Array<{
+      id: string
+      mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
+      name: string
+      calories: number
+      serving: string
+      tags: string[]
+    }>
+  >
+}
+
+  CoachConversation: {
+  assignmentId: string
+  clientId: string
+  clientName: string
+}
+
   AdminHome: undefined
   AdminMore: undefined
   AdminTabs: NavigatorScreenParams<AdminTabParamList> | undefined

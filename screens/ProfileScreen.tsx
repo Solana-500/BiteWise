@@ -342,7 +342,6 @@ export default function ProfileScreen({ navigation }: Props) {
         .upsert(
           {
             id: user.id,
-            email: user.email ?? null,
             ...updates,
           },
           {
