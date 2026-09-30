@@ -37,41 +37,58 @@ export default function CoachHomeScreen({ navigation }: Props) {
   }, []);
 
   const loadCoachHome = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-      if (!user) {
-        navigation.replace('Login');
-        return;
-      }
+    if (userError) {
+      throw userError
+    }
 
-      const { data: profile, error } = await supabase
+    if (!user) {
+      navigation.replace('Login')
+      return
+    }
+
+    const [profileResult, clientCountResult] = await Promise.all([
+      supabase
         .from('profiles')
         .select('full_name, coaching_specialty')
         .eq('id', user.id)
-        .single<CoachProfile>();
+        .single<CoachProfile>(),
 
-      if (error) throw error;
+      supabase
+        .from('coach_assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('coach_id', user.id),
+    ])
 
-      setCoachName(profile?.full_name || 'Coach');
-      setSpecialty(profile?.coaching_specialty || '');
-
-      // Temporary values until the coach-related tables are created.
-      setStats({
-        clients: 0,
-        pendingContent: 0,
-        approvedContent: 0,
-        unreadMessages: 0,
-        recentRatings: 0,
-      });
-    } catch (error) {
-      console.error('Unable to load coach dashboard:', error);
-    } finally {
-      setLoading(false);
+    if (profileResult.error) {
+      throw profileResult.error
     }
-  };
+
+    if (clientCountResult.error) {
+      throw clientCountResult.error
+    }
+
+    setCoachName(profileResult.data?.full_name || 'Coach')
+    setSpecialty(profileResult.data?.coaching_specialty || '')
+
+    setStats({
+      clients: clientCountResult.count ?? 0,
+      pendingContent: 0,
+      approvedContent: 0,
+      unreadMessages: 0,
+      recentRatings: 0,
+    })
+  } catch (error) {
+    console.error('Unable to load coach dashboard:', error)
+  } finally {
+    setLoading(false)
+  }
+}
 
   const firstName = coachName.trim().split(' ')[0] || 'Coach';
 
