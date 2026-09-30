@@ -450,6 +450,177 @@
 
     </div>
 
+    <!-- =====================================
+        REVIEW COACH APPLICATION MODAL
+    ====================================== -->
+
+    <div class="modal-overlay" id="coach-review-modal">
+
+        <div class="coach-review-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="coach-review-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <div class="coach-review-header">
+                <div>
+                    <span class="review-label">
+                        Coach Application
+                    </span>
+
+                    <h2 id="review-coach-name">
+                        Applicant
+                    </h2>
+
+                    <span class="coach-status pending">
+                        Pending
+                    </span>
+                </div>
+            </div>
+
+
+            <div class="review-section">
+
+                <h3>Applicant Information</h3>
+
+                <div class="review-details-grid">
+
+                    <div class="review-detail">
+                        <span>Full Name</span>
+                        <strong id="review-full-name">—</strong>
+                    </div>
+
+                    <div class="review-detail">
+                        <span>Age</span>
+                        <strong id="review-age">—</strong>
+                    </div>
+
+                    <div class="review-detail">
+                        <span>Gender</span>
+                        <strong id="review-gender">—</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="review-section">
+
+                <h3>Professional Information</h3>
+
+                <div class="review-details-grid">
+
+                    <div class="review-detail">
+                        <span>Specialties</span>
+                        <strong id="review-specialties">—</strong>
+                    </div>
+
+                    <div class="review-detail">
+                        <span>Years of Experience</span>
+                        <strong id="review-experience">—</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="review-section">
+
+                <h3>Credentials</h3>
+
+                <div class="credentials-placeholder">
+                    <strong>
+                        Credential verification is not available yet.
+                    </strong>
+
+                    <p>
+                        Coach credential documents will appear here
+                        once credential submission is implemented.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="coach-review-actions">
+
+                <button
+                    type="button"
+                    class="reject-application-button"
+                    id="reject-application"
+                >
+                    Reject Application
+                </button>
+
+                <button
+                    type="button"
+                    class="approve-application-button"
+                    id="approve-application"
+                >
+                    Approve Application
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================
+        REJECT COACH CONFIRMATION MODAL
+    ====================================== -->
+
+    <div id="reject-confirm-modal" class="modal-overlay">
+
+        <div class="modal-box confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="reject-confirm-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Reject Coach Application?</h2>
+
+            <p>
+                Are you sure you want to reject this coach application?
+                This action will mark the application as rejected.
+            </p>
+
+            <div class="confirmation-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-reject"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="reject-button"
+                    id="confirm-reject"
+                >
+                    Reject Application
+                </button>
+
+            </div>
+
+        </div>
+
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="admin-script.js"></script>
 

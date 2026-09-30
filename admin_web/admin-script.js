@@ -9,6 +9,635 @@ const supabaseClient = supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
+let coachApplications = [];
+let selectedCoachApplication = null;
+
+async function loadCoachApplications() {
+    const tableBody =
+        document.getElementById("applications-table-body");
+
+    const countElement =
+        document.getElementById("applications-count");
+
+    if (!tableBody) {
+        return;
+    }
+
+    try {
+        const { data: applications, error } =
+            await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    full_name,
+                    age,
+                    gender,
+                    coaching_specialty,
+                    years_experience,
+                    approval_status
+                `)
+                .eq("app_role", "coach")
+                .eq("approval_status", "pending")
+                .order("full_name", { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        coachApplications = applications;
+
+        if (countElement) {
+            countElement.textContent = applications.length;
+        }
+
+        if (applications.length === 0) {
+            tableBody.innerHTML = `
+                <tr class="table-empty-row">
+                    <td colspan="5">
+                        <div class="table-empty-state">
+                            <strong>No pending applications</strong>
+                            <span>
+                                New Health Coach applications
+                                will appear here.
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        tableBody.innerHTML = applications
+            .map((coach) => {
+                return `
+                    <tr>
+                        <td>
+                            <strong>
+                                ${escapeHTML(coach.full_name || "Unnamed Applicant")}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${formatSpecialties(
+                                coach.coaching_specialty
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExperience(
+                                coach.years_experience
+                            )}
+                        </td>
+
+                        <td>
+                            <span class="coach-status pending">
+                                Pending
+                            </span>
+                        </td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="coach-action-button"
+                                data-coach-id="${coach.id}"
+                            >
+                                Review
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            })
+            .join("");
+
+    } catch (error) {
+        console.error(
+            "Error loading coach applications:",
+            error
+        );
+
+        if (countElement) {
+            countElement.textContent = "—";
+        }
+
+        tableBody.innerHTML = `
+            <tr class="table-empty-row">
+                <td colspan="5">
+                    <div class="table-empty-state">
+                        <strong>
+                            Unable to load applications
+                        </strong>
+                        <span>
+                            Please try again later.
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+async function loadApprovedCoaches() {
+
+    const tableBody =
+        document.getElementById("approved-table-body");
+
+    const countElement =
+        document.getElementById("approved-count");
+
+    // Not on the Coach Management page
+    if (!tableBody) {
+        return;
+    }
+
+    try {
+
+        const { data: coaches, error } =
+            await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    full_name,
+                    coaching_specialty,
+                    years_experience,
+                    approval_status
+                `)
+                .eq("app_role", "coach")
+                .eq("approval_status", "approved")
+                .order("full_name", {
+                    ascending: true
+                });
+
+        if (error) {
+            throw error;
+        }
+
+
+        if (countElement) {
+            countElement.textContent =
+                coaches.length;
+        }
+
+
+        if (coaches.length === 0) {
+
+            tableBody.innerHTML = `
+                <tr class="table-empty-row">
+                    <td colspan="5">
+
+                        <div class="table-empty-state">
+
+                            <strong>
+                                No approved coaches
+                            </strong>
+
+                            <span>
+                                Approved Health Coaches
+                                will appear here.
+                            </span>
+
+                        </div>
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tableBody.innerHTML = coaches
+            .map((coach) => {
+
+                return `
+                    <tr>
+
+                        <td>
+                            <strong>
+                                ${escapeHTML(
+                                    coach.full_name ||
+                                    "Unnamed Coach"
+                                )}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${formatSpecialties(
+                                coach.coaching_specialty
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatExperience(
+                                coach.years_experience
+                            )}
+                        </td>
+
+                        <td>
+                            <span class="coach-status active">
+                                Active
+                            </span>
+                        </td>
+
+                        <td>
+                            <button
+                                type="button"
+                                class="coach-action-button"
+                                data-approved-coach-id="${coach.id}"
+                            >
+                                View
+                            </button>
+                        </td>
+
+                    </tr>
+                `;
+
+            })
+            .join("");
+
+    } catch (error) {
+
+        console.error(
+            "Error loading approved coaches:",
+            error
+        );
+
+        if (countElement) {
+            countElement.textContent = "—";
+        }
+
+        tableBody.innerHTML = `
+            <tr class="table-empty-row">
+                <td colspan="5">
+
+                    <div class="table-empty-state">
+
+                        <strong>
+                            Unable to load approved coaches
+                        </strong>
+
+                        <span>
+                            Please try again later.
+                        </span>
+
+                    </div>
+
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+/* =========================================
+   COACH APPLICATION REVIEW
+========================================= */
+
+const coachReviewModal =
+    document.getElementById("coach-review-modal");
+
+const coachReviewClose =
+    document.getElementById("coach-review-close");
+
+const applicationsTableBody =
+    document.getElementById(
+        "applications-table-body"
+    );
+
+const approveApplicationButton =
+    document.getElementById("approve-application");
+
+const rejectApplicationButton =
+    document.getElementById("reject-application");
+
+const rejectConfirmModal =
+    document.getElementById("reject-confirm-modal");
+
+const rejectConfirmClose =
+    document.getElementById("reject-confirm-close");
+
+const cancelRejectButton =
+    document.getElementById("cancel-reject");
+
+const confirmRejectButton =
+    document.getElementById("confirm-reject");
+
+function displayReviewValue(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "Not provided";
+    }
+
+    return String(value);
+}
+
+
+function openCoachReviewModal(coachId) {
+
+    const coach = coachApplications.find(
+        (application) =>
+            application.id === coachId
+    );
+
+    if (!coach || !coachReviewModal) {
+        return;
+    }
+
+    selectedCoachApplication = coach;
+
+
+    document.getElementById(
+        "review-coach-name"
+    ).textContent =
+        displayReviewValue(coach.full_name);
+
+
+    document.getElementById(
+        "review-full-name"
+    ).textContent =
+        displayReviewValue(coach.full_name);
+
+
+    document.getElementById(
+        "review-age"
+    ).textContent =
+        displayReviewValue(coach.age);
+
+
+    document.getElementById(
+        "review-gender"
+    ).textContent =
+        displayReviewValue(coach.gender);
+
+
+    document.getElementById(
+        "review-specialties"
+    ).textContent =
+        Array.isArray(coach.coaching_specialty)
+            ? coach.coaching_specialty.join(", ")
+            : displayReviewValue(
+                coach.coaching_specialty
+            );
+
+
+    document.getElementById(
+        "review-experience"
+    ).textContent =
+        formatExperience(
+            coach.years_experience
+        );
+
+
+    coachReviewModal.classList.add("show");
+}
+
+
+function closeCoachReviewModal() {
+
+    if (!coachReviewModal) {
+        return;
+    }
+
+    coachReviewModal.classList.remove("show");
+
+    selectedCoachApplication = null;
+}
+
+
+function openRejectConfirmation() {
+
+    if (!selectedCoachApplication) {
+        return;
+    }
+
+    rejectConfirmModal?.classList.add("show");
+}
+
+
+function closeRejectConfirmation() {
+
+    rejectConfirmModal?.classList.remove("show");
+}
+
+
+async function approveCoachApplication() {
+
+    if (!selectedCoachApplication) {
+        return;
+    }
+
+    const coachId =
+        selectedCoachApplication.id;
+
+    const coachName =
+        selectedCoachApplication.full_name;
+
+
+    try {
+
+        approveApplicationButton.disabled = true;
+        approveApplicationButton.textContent =
+            "Approving...";
+
+
+        const { error } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+                    approval_status: "approved"
+                })
+                .eq("id", coachId)
+                .eq("app_role", "coach")
+                .eq("approval_status", "pending");
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        closeCoachReviewModal();
+
+        await loadCoachApplications();
+        await loadApprovedCoaches();
+
+        console.log(
+            `${coachName} has been approved.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error approving coach application:",
+            error
+        );
+
+        alert(
+            "Unable to approve the coach application. " +
+            "Please try again."
+        );
+
+    } finally {
+
+        approveApplicationButton.disabled = false;
+        approveApplicationButton.textContent =
+            "Approve Application";
+
+    }
+
+}
+
+
+async function rejectCoachApplication() {
+
+    if (!selectedCoachApplication) {
+        return;
+    }
+
+    const coachId =
+        selectedCoachApplication.id;
+
+    const coachName =
+        selectedCoachApplication.full_name;
+
+    try {
+
+        confirmRejectButton.disabled = true;
+        confirmRejectButton.textContent = "Rejecting...";
+
+
+        const { data, error } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+                    approval_status: "rejected"
+                })
+                .eq("id", coachId)
+                .eq("app_role", "coach")
+                .eq("approval_status", "pending")
+                .select("id, approval_status");
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                "No coach application was updated."
+            );
+        }
+
+
+        closeRejectConfirmation();
+        closeCoachReviewModal();
+
+        await loadCoachApplications();
+        await loadApprovedCoaches();
+
+        console.log(
+            `${coachName} has been rejected.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error rejecting coach application:",
+            error
+        );
+
+        alert(
+            "Unable to reject the coach application. " +
+            "Please try again."
+        );
+
+    } finally {
+
+        confirmRejectButton.disabled = false;
+        confirmRejectButton.textContent = "Reject Application";
+
+    }
+}
+
+
+applicationsTableBody?.addEventListener(
+    "click",
+    (event) => {
+
+        const reviewButton =
+            event.target.closest(
+                ".coach-action-button"
+            );
+
+        if (!reviewButton) {
+            return;
+        }
+
+        const coachId =
+            reviewButton.dataset.coachId;
+
+        openCoachReviewModal(coachId);
+    }
+);
+
+coachReviewClose?.addEventListener(
+    "click",
+    closeCoachReviewModal
+);
+
+
+coachReviewModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === coachReviewModal) {
+            closeCoachReviewModal();
+        }
+
+    }
+);
+
+approveApplicationButton?.addEventListener(
+    "click",
+    approveCoachApplication
+);
+
+rejectApplicationButton?.addEventListener(
+    "click",
+    openRejectConfirmation
+);
+
+confirmRejectButton?.addEventListener(
+    "click",
+    rejectCoachApplication
+);
+
+cancelRejectButton?.addEventListener(
+    "click",
+    closeRejectConfirmation
+);
+
+rejectConfirmClose?.addEventListener(
+    "click",
+    closeRejectConfirmation
+);
+
+rejectConfirmModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === rejectConfirmModal) {
+            closeRejectConfirmation();
+        }
+
+    }
+);
+
 
 /* =========================================
    ADMIN ACCESS CHECK
@@ -61,6 +690,50 @@ async function checkAdminAccess() {
     console.log("Admin access verified.");
 
     await loadDashboardStatistics();
+    await loadCoachApplications();
+    await loadApprovedCoaches();
+}
+
+
+function escapeHTML(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function formatSpecialties(specialties) {
+    if (!specialties) {
+        return "Not provided";
+    }
+
+    if (Array.isArray(specialties)) {
+        return specialties
+            .map((specialty) => escapeHTML(specialty))
+            .join(", ");
+    }
+
+    return escapeHTML(specialties);
+}
+
+
+function formatExperience(years) {
+    if (
+        years === null ||
+        years === undefined ||
+        years === ""
+    ) {
+        return "Not provided";
+    }
+
+    const value = Number(years);
+
+    return `${escapeHTML(years)} ${
+        value === 1 ? "year" : "years"
+    }`;
 }
 
 
@@ -186,7 +859,6 @@ const coachTabs =
 
 const coachTabPanels =
     document.querySelectorAll(".coach-tab-panel");
-
 
 coachTabs.forEach((tab) => {
 
@@ -316,11 +988,24 @@ logoutModal?.addEventListener("click", (event) => {
 
 document.addEventListener("keydown", (event) => {
 
-    if (
-        event.key === "Escape" &&
-        logoutModal?.classList.contains("show")
-    ) {
+    if (event.key !== "Escape") {
+        return;
+    }
+
+    if (logoutModal?.classList.contains("show")) {
         closeLogoutModal();
+    }
+
+    if (
+        coachReviewModal?.classList.contains("show")
+    ) {
+        closeCoachReviewModal();
+    }
+
+    if (
+        rejectConfirmModal?.classList.contains("show")
+    ) {
+        closeRejectConfirmation();
     }
 
 });
