@@ -398,6 +398,283 @@
 
         </main>
 
+
+    <!-- =====================================
+        APPROVED COACH DETAILS MODAL
+    ====================================== -->
+
+    <div class="modal-overlay" id="approved-coach-modal">
+
+        <div class="modal-box coach-review-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="approved-coach-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Health Coach Details</h2>
+
+            <div class="coach-profile-summary">
+
+                <div class="coach-profile-avatar">
+                    <span id="approved-coach-initials">—</span>
+                </div>
+
+                <div class="coach-profile-heading">
+
+                    <h3 id="approved-coach-name">—</h3>
+
+                    <p>Health Coach</p>
+
+                    <span class="coach-status active">
+                        Active
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="coach-details-section">
+
+                <h3>Coach Information</h3>
+
+                <div class="coach-details-grid">
+
+                    <div class="coach-detail-item">
+
+                        <span class="review-label">
+                            Specialties
+                        </span>
+
+                        <span id="approved-coach-specialties">
+                            —
+                        </span>
+
+                    </div>
+
+                    <div class="coach-detail-item">
+
+                        <span class="review-label">
+                            Experience
+                        </span>
+
+                        <span id="approved-coach-experience">
+                            —
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="coach-management-actions">
+
+                <button
+                    type="button"
+                    class="reject-button"
+                    id="suspend-coach"
+                >
+                    Suspend Coach
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================
+        SUSPEND COACH CONFIRMATION MODAL
+    ====================================== -->
+
+    <div id="suspend-confirm-modal" class="modal-overlay">
+
+        <div class="modal-box confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="suspend-confirm-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Suspend Health Coach?</h2>
+
+            <p>
+                Are you sure you want to suspend this Health Coach?
+                The coach will be temporarily restricted from accessing
+                their coach account.
+            </p>
+
+            <div class="confirmation-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-suspend"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="reject-button"
+                    id="confirm-suspend"
+                >
+                    Suspend
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+        SUSPENDED COACH DETAILS MODAL
+    ====================================== -->
+
+    <div class="modal-overlay" id="suspended-coach-modal">
+
+        <div class="modal-box coach-review-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="suspended-coach-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Health Coach Details</h2>
+
+            <div class="coach-profile-summary">
+
+                <div class="coach-profile-avatar">
+                    <span id="suspended-coach-initials">—</span>
+                </div>
+
+                <div class="coach-profile-heading">
+
+                    <h3 id="suspended-coach-name">—</h3>
+
+                    <p>Health Coach</p>
+
+                    <span class="coach-status suspended">
+                        Suspended
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="coach-details-section">
+
+                <h3>Coach Information</h3>
+
+                <div class="coach-details-grid">
+
+                    <div class="coach-detail-item">
+                        <span class="review-label">
+                            Specialties
+                        </span>
+
+                        <span id="suspended-coach-specialties">
+                            —
+                        </span>
+                    </div>
+
+                    <div class="coach-detail-item">
+                        <span class="review-label">
+                            Experience
+                        </span>
+
+                        <span id="suspended-coach-experience">
+                            —
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="coach-management-actions">
+
+                <button
+                    type="button"
+                    class="approve-application-button"
+                    id="reactivate-coach"
+                >
+                    Reactivate Coach
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+        REACTIVATE COACH CONFIRMATION MODAL
+    ====================================== -->
+
+    <div id="reactivate-confirm-modal" class="modal-overlay">
+
+        <div class="modal-box confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="reactivate-confirm-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Reactivate Health Coach?</h2>
+
+            <p>
+                Are you sure you want to reactivate this Health Coach?
+                The coach will regain access to their coach account.
+            </p>
+
+            <div class="confirmation-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-reactivate"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="approve-application-button"
+                    id="confirm-reactivate"
+                >
+                    Reactivate
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
     <!-- =====================================
         LOGOUT CONFIRMATION MODAL
     ====================================== -->
@@ -449,6 +726,7 @@
         </div>
 
     </div>
+
 
     <!-- =====================================
         REVIEW COACH APPLICATION MODAL

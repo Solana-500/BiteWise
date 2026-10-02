@@ -11,6 +11,10 @@ const supabaseClient = supabase.createClient(
 
 let coachApplications = [];
 let selectedCoachApplication = null;
+let approvedCoaches = [];
+let selectedApprovedCoach = null;
+let suspendedCoaches = [];
+let selectedSuspendedCoach = null;
 
 async function loadCoachApplications() {
     const tableBody =
@@ -161,13 +165,17 @@ async function loadApprovedCoaches() {
                     full_name,
                     coaching_specialty,
                     years_experience,
-                    approval_status
+                    approval_status,
+                    is_suspended
                 `)
                 .eq("app_role", "coach")
                 .eq("approval_status", "approved")
+                .eq("is_suspended", false)
                 .order("full_name", {
                     ascending: true
                 });
+        
+                approvedCoaches = coaches;
 
         if (error) {
             throw error;
@@ -289,6 +297,152 @@ async function loadApprovedCoaches() {
     }
 }
 
+async function loadSuspendedCoaches() {
+
+    const tableBody =
+        document.getElementById("suspended-table-body");
+
+    const countElement =
+        document.getElementById("suspended-count");
+
+    if (!tableBody) {
+        return;
+    }
+
+    try {
+
+        const { data: coaches, error } =
+            await supabaseClient
+                .from("profiles")
+                .select(`
+                    id,
+                    full_name,
+                    coaching_specialty,
+                    years_experience,
+                    approval_status,
+                    is_suspended
+                `)
+                .eq("app_role", "coach")
+                .eq("approval_status", "approved")
+                .eq("is_suspended", true)
+                .order("full_name", {
+                    ascending: true
+                });
+
+        if (error) {
+            throw error;
+        }
+
+        suspendedCoaches = coaches;
+
+        if (countElement) {
+            countElement.textContent = coaches.length;
+        }
+
+        if (coaches.length === 0) {
+
+            tableBody.innerHTML = `
+                <tr class="table-empty-row">
+                    <td colspan="5">
+
+                        <div class="table-empty-state">
+
+                            <strong>
+                                No suspended coaches
+                            </strong>
+
+                            <span>
+                                Suspended Health Coaches
+                                will appear here.
+                            </span>
+
+                        </div>
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        tableBody.innerHTML = coaches
+            .map((coach) => `
+                <tr>
+
+                    <td>
+                        <strong>
+                            ${escapeHTML(
+                                coach.full_name ||
+                                "Unnamed Coach"
+                            )}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${formatSpecialties(
+                            coach.coaching_specialty
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatExperience(
+                            coach.years_experience
+                        )}
+                    </td>
+
+                    <td>
+                        <span class="coach-status suspended">
+                            Suspended
+                        </span>
+                    </td>
+
+                    <td>
+                        <button
+                            type="button"
+                            class="coach-action-button"
+                            data-suspended-coach-id="${coach.id}"
+                        >
+                            View
+                        </button>
+                    </td>
+
+                </tr>
+            `)
+            .join("");
+
+    } catch (error) {
+
+        console.error(
+            "Error loading suspended coaches:",
+            error
+        );
+
+        if (countElement) {
+            countElement.textContent = "—";
+        }
+
+        tableBody.innerHTML = `
+            <tr class="table-empty-row">
+                <td colspan="5">
+
+                    <div class="table-empty-state">
+
+                        <strong>
+                            Unable to load suspended coaches
+                        </strong>
+
+                        <span>
+                            Please try again later.
+                        </span>
+
+                    </div>
+
+                </td>
+            </tr>
+        `;
+    }
+}
+
 
 /* =========================================
    COACH APPLICATION REVIEW
@@ -322,6 +476,49 @@ const cancelRejectButton =
 
 const confirmRejectButton =
     document.getElementById("confirm-reject");
+
+const approvedCoachModal =
+    document.getElementById("approved-coach-modal");
+
+const approvedCoachClose =
+    document.getElementById("approved-coach-close");
+
+const suspendCoachButton =
+    document.getElementById("suspend-coach");
+
+const suspendConfirmModal =
+    document.getElementById("suspend-confirm-modal");
+
+const suspendConfirmClose =
+    document.getElementById("suspend-confirm-close");
+
+const cancelSuspendButton =
+    document.getElementById("cancel-suspend");
+
+const confirmSuspendButton =
+    document.getElementById("confirm-suspend");
+
+const suspendedCoachModal =
+    document.getElementById("suspended-coach-modal");
+
+const suspendedCoachClose =
+    document.getElementById("suspended-coach-close");
+
+const reactivateCoachButton =
+    document.getElementById("reactivate-coach");
+
+const reactivateConfirmModal =
+    document.getElementById("reactivate-confirm-modal");
+
+const reactivateConfirmClose =
+    document.getElementById("reactivate-confirm-close");
+
+const cancelReactivateButton =
+    document.getElementById("cancel-reactivate");
+
+const confirmReactivateButton =
+    document.getElementById("confirm-reactivate");
+
 
 function displayReviewValue(value) {
     if (
@@ -565,6 +762,317 @@ async function rejectCoachApplication() {
 }
 
 
+function openApprovedCoachModal(coachId) {
+
+    const coach = approvedCoaches.find(
+        (coach) => coach.id === coachId
+    );
+
+    if (!coach) {
+        return;
+    }
+
+    selectedApprovedCoach = coach;
+
+    document.getElementById(
+        "approved-coach-name"
+    ).textContent =
+        coach.full_name || "—";
+
+    const initials = coach.full_name
+    ? coach.full_name
+        .split(" ")
+        .map((name) => name.charAt(0))
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+
+    document.getElementById(
+        "approved-coach-initials"
+    ).textContent = initials;
+
+    document.getElementById(
+        "approved-coach-specialties"
+    ).textContent =
+        Array.isArray(coach.coaching_specialty)
+            ? coach.coaching_specialty.join(", ")
+            : coach.coaching_specialty || "—";
+
+    document.getElementById(
+        "approved-coach-experience"
+    ).textContent =
+        formatExperience(coach.years_experience);
+
+    approvedCoachModal?.classList.add("show");
+}
+
+
+function closeApprovedCoachModal() {
+
+    approvedCoachModal?.classList.remove("show");
+
+    selectedApprovedCoach = null;
+}
+
+document
+    .getElementById("approved-table-body")
+    ?.addEventListener("click", (event) => {
+
+        const button =
+            event.target.closest(
+                "[data-approved-coach-id]"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        openApprovedCoachModal(
+            button.dataset.approvedCoachId
+        );
+    });
+
+function openSuspendConfirmation() {
+
+    if (!selectedApprovedCoach) {
+        return;
+    }
+
+    suspendConfirmModal?.classList.add("show");
+}
+
+
+function closeSuspendConfirmation() {
+
+    suspendConfirmModal?.classList.remove("show");
+}
+
+async function suspendCoach() {
+
+    if (!selectedApprovedCoach) {
+        return;
+    }
+
+    const coachId = selectedApprovedCoach.id;
+    const coachName = selectedApprovedCoach.full_name;
+
+    try {
+
+        confirmSuspendButton.disabled = true;
+        confirmSuspendButton.textContent = "Suspending...";
+
+        const { data, error } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+                    is_suspended: true
+                })
+                .eq("id", coachId)
+                .eq("app_role", "coach")
+                .eq("approval_status", "approved")
+                .eq("is_suspended", false)
+                .select("id, is_suspended");
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                "No coach account was updated."
+            );
+        }
+
+        closeSuspendConfirmation();
+        closeApprovedCoachModal();
+
+        await loadApprovedCoaches();
+        await loadSuspendedCoaches();
+
+        console.log(
+            `${coachName} has been suspended.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error suspending coach:",
+            error
+        );
+
+        alert(
+            "Unable to suspend the Health Coach. " +
+            "Please try again."
+        );
+
+    } finally {
+
+        confirmSuspendButton.disabled = false;
+        confirmSuspendButton.textContent =
+            "Suspend Coach";
+    }
+}
+
+function openSuspendedCoachModal(coachId) {
+
+    const coach = suspendedCoaches.find(
+        (coach) => coach.id === coachId
+    );
+
+    if (!coach) {
+        return;
+    }
+
+    selectedSuspendedCoach = coach;
+
+    document.getElementById(
+        "suspended-coach-name"
+    ).textContent =
+        coach.full_name || "—";
+
+
+    const initials = coach.full_name
+        ? coach.full_name
+            .split(" ")
+            .map((name) => name.charAt(0))
+            .join("")
+            .toUpperCase()
+            .slice(0, 2)
+        : "?";
+
+    document.getElementById(
+        "suspended-coach-initials"
+    ).textContent = initials;
+
+
+    document.getElementById(
+        "suspended-coach-specialties"
+    ).textContent =
+        Array.isArray(coach.coaching_specialty)
+            ? coach.coaching_specialty.join(", ")
+            : coach.coaching_specialty || "—";
+
+
+    document.getElementById(
+        "suspended-coach-experience"
+    ).textContent =
+        formatExperience(
+            coach.years_experience
+        );
+
+
+    suspendedCoachModal?.classList.add("show");
+}
+
+
+function closeSuspendedCoachModal() {
+
+    suspendedCoachModal?.classList.remove("show");
+
+    selectedSuspendedCoach = null;
+}
+
+document
+    .getElementById("suspended-table-body")
+    ?.addEventListener("click", (event) => {
+
+        const button =
+            event.target.closest(
+                "[data-suspended-coach-id]"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        openSuspendedCoachModal(
+            button.dataset.suspendedCoachId
+        );
+    });
+
+function openReactivateConfirmation() {
+
+    if (!selectedSuspendedCoach) {
+        return;
+    }
+
+    reactivateConfirmModal?.classList.add("show");
+}
+
+
+function closeReactivateConfirmation() {
+
+    reactivateConfirmModal?.classList.remove("show");
+}
+
+async function reactivateCoach() {
+
+    if (!selectedSuspendedCoach) {
+        return;
+    }
+
+    const coachId = selectedSuspendedCoach.id;
+    const coachName = selectedSuspendedCoach.full_name;
+
+    try {
+
+        confirmReactivateButton.disabled = true;
+        confirmReactivateButton.textContent =
+            "Reactivating...";
+
+        const { data, error } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+                    is_suspended: false
+                })
+                .eq("id", coachId)
+                .eq("app_role", "coach")
+                .eq("approval_status", "approved")
+                .eq("is_suspended", true)
+                .select("id, is_suspended");
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                "No coach account was updated."
+            );
+        }
+
+        closeReactivateConfirmation();
+        closeSuspendedCoachModal();
+
+        await loadSuspendedCoaches();
+        await loadApprovedCoaches();
+
+        console.log(
+            `${coachName} has been reactivated.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error reactivating coach:",
+            error
+        );
+
+        alert(
+            "Unable to reactivate the Health Coach. " +
+            "Please try again."
+        );
+
+    } finally {
+
+        confirmReactivateButton.disabled = false;
+        confirmReactivateButton.textContent =
+            "Reactivate Coach";
+    }
+}
+
 applicationsTableBody?.addEventListener(
     "click",
     (event) => {
@@ -638,6 +1146,99 @@ rejectConfirmModal?.addEventListener(
     }
 );
 
+approvedCoachClose?.addEventListener(
+    "click",
+    closeApprovedCoachModal
+);
+
+approvedCoachModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === approvedCoachModal) {
+            closeApprovedCoachModal();
+        }
+
+    }
+);
+
+suspendCoachButton?.addEventListener(
+    "click",
+    openSuspendConfirmation
+);
+
+cancelSuspendButton?.addEventListener(
+    "click",
+    closeSuspendConfirmation
+);
+
+suspendConfirmClose?.addEventListener(
+    "click",
+    closeSuspendConfirmation
+);
+
+suspendConfirmModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === suspendConfirmModal) {
+            closeSuspendConfirmation();
+        }
+
+    }
+);
+
+confirmSuspendButton?.addEventListener(
+    "click",
+    suspendCoach
+);
+
+suspendedCoachClose?.addEventListener(
+    "click",
+    closeSuspendedCoachModal
+);
+
+suspendedCoachModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === suspendedCoachModal) {
+            closeSuspendedCoachModal();
+        }
+
+    }
+);
+
+reactivateCoachButton?.addEventListener(
+    "click",
+    openReactivateConfirmation
+);
+
+cancelReactivateButton?.addEventListener(
+    "click",
+    closeReactivateConfirmation
+);
+
+reactivateConfirmClose?.addEventListener(
+    "click",
+    closeReactivateConfirmation
+);
+
+reactivateConfirmModal?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === reactivateConfirmModal) {
+            closeReactivateConfirmation();
+        }
+
+    }
+);
+
+confirmReactivateButton?.addEventListener(
+    "click",
+    reactivateCoach
+);
 
 /* =========================================
    ADMIN ACCESS CHECK
@@ -692,6 +1293,7 @@ async function checkAdminAccess() {
     await loadDashboardStatistics();
     await loadCoachApplications();
     await loadApprovedCoaches();
+    await loadSuspendedCoaches();
 }
 
 
@@ -1006,6 +1608,18 @@ document.addEventListener("keydown", (event) => {
         rejectConfirmModal?.classList.contains("show")
     ) {
         closeRejectConfirmation();
+    }
+
+    if (
+        suspendConfirmModal?.classList.contains("show")
+    ) {
+        closeSuspendConfirmation();
+    }
+
+    if (
+        reactivateConfirmModal?.classList.contains("show")
+    ) {
+        closeReactivateConfirmation();
     }
 
 });
