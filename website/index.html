@@ -1052,9 +1052,9 @@
                 </h1>
 
                 <p>
-                    Create a professional coach account. A system
-                    administrator will review your application before
-                    it is activated.
+                    Complete your profile to submit your coach application.
+                    Your application will be reviewed by a system administrator
+                    before your coach account is approved.
                 </p>
 
             </div>
@@ -1177,7 +1177,7 @@
                 <!-- ====== COACHING DETAILS ====== -->
 
                 <h2 class="register-section-title">
-                    Coaching Details
+                    Professional Information
                 </h2>
 
 
@@ -1288,6 +1288,33 @@
                         placeholder="e.g. 4"
                         min="0"
                     >
+
+                </div>
+
+                <!-- COACH CREDENTIAL -->
+
+                <div class="form-group coach-credential-group">
+
+                    <label for="coach-credential">
+                        Credential
+                    </label>
+
+                    <p class="credential-hint">
+                        Upload a supporting credential or certification document.
+                        Accepted formats: PDF, JPG, PNG.
+                    </p>
+
+                    <input
+                        type="file"
+                        id="coach-credential"
+                        name="coach-credential"
+                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    >
+
+                    <p
+                        class="form-message"
+                        id="credential-message"
+                    ></p>
 
                 </div>
 

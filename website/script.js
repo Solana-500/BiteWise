@@ -482,6 +482,19 @@ async function registerCoach() {
             "coach-years-experience"
         )?.value;
 
+    const credentialInput =
+        document.getElementById(
+            "coach-credential"
+        );
+
+    const credentialFile =
+        credentialInput?.files?.[0];
+
+    const credentialMessage =
+        document.getElementById(
+            "credential-message"
+        );
+
 
     // ==========================================
     // FINAL VALIDATION
@@ -515,6 +528,54 @@ async function registerCoach() {
         return;
     }
 
+    if (!credentialFile) {
+
+        if (credentialMessage) {
+            credentialMessage.textContent =
+                "Please upload a credential or certification document.";
+        }
+
+        return;
+    }
+
+    const allowedCredentialTypes = [
+        "application/pdf",
+        "image/jpeg",
+        "image/png"
+    ];
+
+    if (
+        !allowedCredentialTypes.includes(
+            credentialFile.type
+        )
+    ) {
+
+        if (credentialMessage) {
+            credentialMessage.textContent =
+                "Please upload a PDF, JPG, or PNG file.";
+        }
+
+        return;
+    }
+
+    const maxCredentialSize = 5 * 1024 * 1024;
+
+    if (
+        credentialFile.size >
+        maxCredentialSize
+    ) {
+
+        if (credentialMessage) {
+            credentialMessage.textContent =
+                "Credential file must be 5 MB or smaller.";
+        }
+
+        return;
+    }
+
+    if (credentialMessage) {
+        credentialMessage.textContent = "";
+    }
 
     try {
 
@@ -623,16 +684,106 @@ async function registerCoach() {
             return;
         }
 
+        // ======================================
+        // STEP 3: UPLOAD COACH CREDENTIAL
+        // ======================================
+
+        const coachId = authData.user.id;
+
+
+        // Create a safe filename
+        const safeFileName =
+            credentialFile.name
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Z0-9._-]/g, "");
+
+
+        // Storage policy requires:
+        // <coach UUID>/<filename>
+        const credentialPath =
+            `${coachId}/${Date.now()}_${safeFileName}`;
+
+
+        const {
+            error: uploadError
+        } =
+            await supabaseClient.storage
+                .from("coach-certificates")
+                .upload(
+                    credentialPath,
+                    credentialFile
+                );
+
+
+        if (uploadError) {
+
+            console.error(
+                "Credential upload error:",
+                uploadError
+            );
+
+            alert(
+                "Unable to upload your credential: " +
+                uploadError.message
+            );
+
+            return;
+        }
 
         // ======================================
-        // STEP 3: SIGN PENDING COACH OUT
+        // STEP 4: CREATE DOCUMENT RECORD
+        // ======================================
+
+        const {
+            error: documentError
+        } =
+            await supabaseClient
+                .from("coach_documents")
+                .insert({
+
+                    coach_id:
+                        coachId,
+
+                    file_name:
+                        credentialFile.name,
+
+                    file_path:
+                        credentialPath,
+
+                    file_type:
+                        credentialFile.type,
+
+                    verification_status:
+                        "pending"
+
+                });
+
+
+        if (documentError) {
+
+            console.error(
+                "Coach document record error:",
+                documentError
+            );
+
+            alert(
+                "Credential information could not be saved: " +
+                documentError.message
+            );
+
+            return;
+        }
+
+
+        // ======================================
+        // STEP 5: SIGN PENDING COACH OUT
         // ======================================
 
         await supabaseClient.auth.signOut();
 
 
         // ======================================
-        // STEP 4: COMPLETE
+        // STEP 6: COMPLETE
         // ======================================
 
         closeRegisterModal();
@@ -1001,7 +1152,7 @@ loginSwitchLink?.addEventListener(
 //
 // Users and health coaches are checked and then sent to the
 // download page (there is no web app for them). Admins are
-// checked too, but the admin portal is not built yet.
+// checked and then sent to the system admin web portal.
 
 const loginForm =
     document.getElementById(
@@ -1135,7 +1286,7 @@ loginForm?.addEventListener(
                 await supabaseClient
                     .from("profiles")
                     .select(
-                        "app_role, approval_status"
+                        "app_role, approval_status, is_suspended"
                     )
                     .eq("id", authData.user.id)
                     .single();
@@ -1156,6 +1307,21 @@ loginForm?.addEventListener(
 
                 return;
 
+            }
+
+            // ==================================
+            // CHECK ACCOUNT SUSPENSION
+            // ==================================
+
+            if (profile.is_suspended === true) {
+
+                await supabaseClient.auth.signOut();
+
+                showLoginMessage(
+                    "Your account has been suspended and access is currently unavailable."
+                );
+
+                return;
             }
 
 

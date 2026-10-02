@@ -1175,6 +1175,17 @@ select {
     margin-bottom: -3px;
 }
 
+.coach-details-section .register-section-title {
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #e3ebe6;
+}
+
+.coach-details-section .register-section-title:not(:first-child) {
+    margin-top: 32px;
+}
+
 .register-back {
     margin-bottom: 10px;
 
@@ -1351,6 +1362,27 @@ select {
 
 .coach-experience-group {
     margin-bottom: 0;
+}
+
+.coach-credential-group {
+    margin-top: 24px;
+}
+
+.credential-hint {
+    margin: 6px 0 12px;
+    font-size: 13px;
+    color: #6f7974;
+    line-height: 1.5;
+}
+
+.coach-credential-group input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d9dfdc;
+    border-radius: 8px;
+    background: #ffffff;
+    font-family: inherit;
+    cursor: pointer;
 }
 
 /* ==============================================
