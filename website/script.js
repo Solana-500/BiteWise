@@ -1152,7 +1152,7 @@ loginSwitchLink?.addEventListener(
 //
 // Users and health coaches are checked and then sent to the
 // download page (there is no web app for them). Admins are
-// checked too, but the admin portal is not built yet.
+// checked and then sent to the system admin web portal.
 
 const loginForm =
     document.getElementById(
@@ -1286,7 +1286,7 @@ loginForm?.addEventListener(
                 await supabaseClient
                     .from("profiles")
                     .select(
-                        "app_role, approval_status"
+                        "app_role, approval_status, is_suspended"
                     )
                     .eq("id", authData.user.id)
                     .single();
@@ -1307,6 +1307,21 @@ loginForm?.addEventListener(
 
                 return;
 
+            }
+
+            // ==================================
+            // CHECK ACCOUNT SUSPENSION
+            // ==================================
+
+            if (profile.is_suspended === true) {
+
+                await supabaseClient.auth.signOut();
+
+                showLoginMessage(
+                    "Your account has been suspended and access is currently unavailable."
+                );
+
+                return;
             }
 
 
