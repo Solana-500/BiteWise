@@ -1138,29 +1138,50 @@ button {
 
 /* Credentials */
 
-.credentials-placeholder {
+.credential-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
     padding: 16px;
-
-    background: #f8faf8;
-
-    border: 1px dashed #ccd7cf;
-    border-radius: 8px;
+    margin-top: 12px;
+    border: 1px solid #e1e6e3;
+    border-radius: 10px;
+    background: #fafbfa;
 }
 
-.credentials-placeholder strong {
-    color: #626b65;
+.credential-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
 
+.credential-info strong {
+    color: #27312c;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.credential-status {
+    width: fit-content;
+    padding: 4px 9px;
+    border-radius: 12px;
+    background: #fff4d6;
+    color: #8a6418;
     font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
 }
 
-.credentials-placeholder p {
-    margin: 5px 0 0;
-
-    color: #929a95;
-
-    font-size: 11px;
+.credential-empty-state {
+    padding: 18px;
+    margin-top: 12px;
+    border: 1px dashed #d5dbd7;
+    border-radius: 10px;
+    color: #737d78;
+    font-size: 14px;
 }
-
 
 /* Actions */
 

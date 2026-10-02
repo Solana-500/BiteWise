@@ -588,7 +588,7 @@ function openCoachReviewModal(coachId) {
             coach.years_experience
         );
 
-
+    loadCoachCredentials(coachId);
     coachReviewModal.classList.add("show");
 }
 
@@ -621,6 +621,168 @@ function closeRejectConfirmation() {
 }
 
 
+async function loadCoachCredentials(coachId) {
+
+    const container =
+        document.getElementById(
+            "coach-credentials-container"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="credential-empty-state">
+            Loading credentials...
+        </div>
+    `;
+
+    try {
+
+        const { data: documents, error } =
+            await supabaseClient
+                .from("coach_documents")
+                .select(`
+                    id,
+                    file_name,
+                    file_path,
+                    file_type,
+                    verification_status,
+                    uploaded_at
+                `)
+                .eq("coach_id", coachId)
+                .order("uploaded_at", {
+                    ascending: false
+                });
+
+        if (error) {
+            throw error;
+        }
+
+        if (!documents || documents.length === 0) {
+
+            container.innerHTML = `
+                <div class="credential-empty-state">
+                    No credential documents submitted.
+                </div>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = documents
+            .map((document) => `
+
+                <div class="credential-card">
+
+                    <div class="credential-info">
+
+                        <strong>
+                            ${escapeHTML(
+                                document.file_name
+                            )}
+                        </strong>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="coach-action-button credential-view-button"
+                        data-file-path="${escapeHTML(
+                            document.file_path
+                        )}"
+                    >
+                        View Document
+                    </button>
+
+                </div>
+
+            `)
+            .join("");
+
+    } catch (error) {
+
+        console.error(
+            "Error loading coach credentials:",
+            error
+        );
+
+        container.innerHTML = `
+            <div class="credential-empty-state">
+                Unable to load credential documents.
+            </div>
+        `;
+    }
+}
+
+
+async function openCoachCredential(filePath) {
+
+    if (!filePath) {
+        return;
+    }
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.storage
+                .from("coach-certificates")
+                .createSignedUrl(
+                    filePath,
+                    60
+                );
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data?.signedUrl) {
+            throw new Error(
+                "No signed URL was returned."
+            );
+        }
+
+        window.open(
+            data.signedUrl,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error opening coach credential:",
+            error
+        );
+
+        alert(
+            "Unable to open the credential document. " +
+            "Please try again."
+        );
+    }
+}
+
+document
+    .getElementById("coach-credentials-container")
+    ?.addEventListener("click", (event) => {
+
+        const button =
+            event.target.closest(
+                ".credential-view-button"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        const filePath =
+            button.dataset.filePath;
+
+        openCoachCredential(filePath);
+    });
+
+
 async function approveCoachApplication() {
 
     if (!selectedCoachApplication) {
@@ -651,11 +813,23 @@ async function approveCoachApplication() {
                 .eq("app_role", "coach")
                 .eq("approval_status", "pending");
 
-
         if (error) {
             throw error;
         }
 
+        const {
+            error: documentError
+        } =
+            await supabaseClient
+                .from("coach_documents")
+                .update({
+                    verification_status: "approved"
+                })
+                .eq("coach_id", coachId);
+
+        if (documentError) {
+            throw documentError;
+        }
 
         closeCoachReviewModal();
 
@@ -721,6 +895,20 @@ async function rejectCoachApplication() {
 
         if (error) {
             throw error;
+        }
+
+        const {
+            error: documentError
+        } =
+            await supabaseClient
+                .from("coach_documents")
+                .update({
+                    verification_status: "rejected"
+                })
+                .eq("coach_id", coachId);
+
+        if (documentError) {
+            throw documentError;
         }
 
 
