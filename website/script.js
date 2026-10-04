@@ -1235,8 +1235,7 @@ loginForm?.addEventListener(
 
             submitButton.disabled = true;
 
-            submitButton.textContent =
-                "Logging in...";
+            submitButton.innerHTML = '<span class="button-spinner"></span>';
 
         }
 
@@ -2088,8 +2087,7 @@ forgotPasswordForm?.addEventListener(
 
         if (submitButton) {
             submitButton.disabled = true;
-            submitButton.textContent =
-                "Sending...";
+            submitButton.innerHTML = '<span class="button-spinner"></span>';
         }
 
         try {
@@ -2914,8 +2912,7 @@ resetPasswordForm?.addEventListener(
 
             submitButton.disabled = true;
 
-            submitButton.textContent =
-                "Resetting Password...";
+            submitButton.innerHTML = '<span class="button-spinner"></span>';
         }
 
 
@@ -2930,15 +2927,22 @@ resetPasswordForm?.addEventListener(
             if (error) {
 
                 console.error(
-                    "Password reset error:",
-                    error
-                );
+                "Password reset error:",
+                error
+            );
 
+            if (
+                error.message ===
+                "New password should be different from the old password."
+            ) {
                 resetPasswordMessage.textContent =
-                    "Unable to reset your password. " +
-                    "Please request a new reset link.";
+                    "Your new password must be different from your current password.";
+            } else {
+                resetPasswordMessage.textContent =
+                    "Unable to reset password. Please request a new reset link.";
+            }
 
-                return;
+            return;
             }
 
 
@@ -2946,10 +2950,29 @@ resetPasswordForm?.addEventListener(
             // SUCCESS
             // ======================================
 
-            resetPasswordMessage.textContent =
-                "Password successfully reset!";
-
             resetPasswordForm.reset();
+
+            resetPasswordForm.hidden = true;
+
+            document
+                .getElementById("reset-password-icon")
+                ?.setAttribute("hidden", "");
+
+            document
+                .querySelector(".reset-password-card > h1")
+                ?.setAttribute("hidden", "");
+
+            document
+                .querySelector(".reset-password-description")
+                ?.setAttribute("hidden", "");
+
+            document
+                .getElementById("reset-return-login")
+                ?.setAttribute("hidden", "");
+
+            document
+                .getElementById("reset-password-success")
+                ?.removeAttribute("hidden");
 
 
         } catch (error) {
@@ -2976,3 +2999,24 @@ resetPasswordForm?.addEventListener(
 
     }
 );
+
+// ==============================================
+// OPEN LOGIN MODAL FROM URL
+// ==============================================
+
+const pageParams =
+    new URLSearchParams(
+        window.location.search
+    );
+
+if (pageParams.get("login") === "1") {
+
+    openLoginModal();
+
+    // Remove ?login=1 from the URL after opening
+    window.history.replaceState(
+        {},
+        "",
+        window.location.pathname
+    );
+}

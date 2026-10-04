@@ -139,6 +139,24 @@ select {
     background-color: #edf5f0;
 }
 
+.button-spinner {
+    width: 18px;
+    height: 18px;
+
+    display: inline-block;
+
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+
+    animation: button-spin 0.7s linear infinite;
+}
+
+@keyframes button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 /* ==============================================
    HERO
@@ -2124,94 +2142,152 @@ body.modal-open {
     border-color: #185d35;
 }
 
-/* =========================================
+/* ==============================================
    RESET PASSWORD PAGE
-========================================= */
+============================================== */
 
 .reset-password-page {
-    margin: 0;
     min-height: 100vh;
-    background: #f5f8f6;
+    background-color: #f1f7f3;
 }
 
 .reset-password-container {
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     padding: 40px 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .reset-password-card {
     width: 100%;
-    max-width: 420px;
-    background: white;
-    border: 1px solid #dce7df;
-    border-radius: 18px;
-    padding: 42px 40px;
-    box-sizing: border-box;
+    max-width: 460px;
+    padding: 42px 40px 36px;
+
+    background-color: #ffffff;
+
+    border: 1px solid #e0e7e2;
+    border-radius: 26px;
+
+    box-shadow: 0 12px 30px rgba(23, 97, 54, 0.08);
+}
+
+.reset-password-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #dff1e5;
+    border-radius: 50%;
+
+    font-size: 23px;
 }
 
 .reset-password-card h1 {
-    margin: 0 0 12px;
+    margin-bottom: 7px;
+
+    color: #185d35;
+
     text-align: center;
-    font-size: 28px;
-    color: #202522;
+
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 800;
 }
 
 .reset-password-description {
-    margin: 0 0 32px;
+    max-width: 330px;
+    margin: 0 auto 30px;
+
+    color: #718078;
+
     text-align: center;
-    color: #6b746e;
-    line-height: 1.5;
+
+    font-size: 14px;
+    line-height: 1.6;
 }
 
 .reset-password-card .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .reset-password-card .form-group label {
-    display: block;
-    margin-bottom: 8px;
+    color: #17251d;
+
     font-size: 14px;
-    font-weight: 600;
-    color: #555f59;
+    font-weight: 700;
 }
 
 .reset-password-card .form-group input {
     width: 100%;
-    box-sizing: border-box;
-    padding: 13px 14px;
-    border: 1px solid #cbd5ce;
-    border-radius: 7px;
+    height: 50px;
+    padding: 0 16px;
+
+    background-color: #ffffff;
+    color: #17251d;
+
+    border: 1px solid #d8e1db;
+    border-radius: 11px;
+
     font-size: 14px;
+
     outline: none;
 }
 
+.reset-password-card .form-group input::placeholder {
+    color: #a1aaa4;
+}
+
 .reset-password-card .form-group input:focus {
-    border-color: #21663d;
+    border-color: #185d35;
 }
 
 .reset-password-message {
-    min-height: 20px;
-    margin: 4px 0 14px;
-    font-size: 14px;
+    min-height: 0;
+    margin: 0 0 14px;
+
+    color: #b34b4b;
+
+    text-align: center;
+
+    font-size: 13px;
 }
 
-.reset-password-button {
+.reset-password-message:empty {
+    display: none;
+}
+
+.reset-password-button,
+.reset-login-button {
     width: 100%;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     border: none;
-    border-radius: 7px;
-    padding: 14px;
-    background: #21663d;
-    color: white;
+    border-radius: 999px;
+
+    background-color: #185d35;
+    color: #ffffff;
+
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 800;
+
     cursor: pointer;
+
+    transition: background-color 0.2s ease;
 }
 
-.reset-password-button:hover {
-    opacity: 0.9;
+.reset-password-button:hover,
+.reset-login-button:hover {
+    background-color: #104c2a;
 }
 
 .reset-password-button:disabled {
@@ -2221,14 +2297,86 @@ body.modal-open {
 
 .return-login-link {
     display: block;
-    margin-top: 30px;
+    margin-top: 23px;
+
+    color: #185d35;
+
     text-align: center;
-    color: #21663d;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .return-login-link:hover {
     text-decoration: underline;
+}
+
+.reset-password-icon[hidden],
+.return-login-link[hidden] {
+    display: none;
+}
+
+
+/* Success state */
+
+.reset-password-success {
+    text-align: center;
+}
+
+.reset-password-success[hidden] {
+    display: none;
+}
+
+.reset-success-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #185d35;
+    color: #ffffff;
+
+    border-radius: 50%;
+
+    font-size: 27px;
+    font-weight: 800;
+}
+
+.reset-password-success h2 {
+    margin-bottom: 10px;
+
+    color: #17251d;
+
+    font-size: 27px;
+    font-weight: 800;
+}
+
+.reset-password-success p {
+    margin-bottom: 25px;
+
+    color: #718078;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Mobile */
+
+@media (max-width: 550px) {
+
+    .reset-password-container {
+        padding: 25px 15px;
+    }
+
+    .reset-password-card {
+        padding: 36px 24px 30px;
+        border-radius: 22px;
+    }
+
+    .reset-password-card h1 {
+        font-size: 27px;
+    }
 }
