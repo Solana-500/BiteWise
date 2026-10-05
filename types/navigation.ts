@@ -81,7 +81,7 @@ export type RootStackParamList = {
   CoachContent: undefined
   CoachProfile: undefined
   CoachChat: undefined
-
+  CoachWorkoutPlans: undefined
   CoachMealPlans: undefined
   CoachCreateMealPlan: undefined
   CoachMealPlanBuilder: {
@@ -96,6 +96,26 @@ export type RootStackParamList = {
     duration: string
     calorieTarget: number
     coachNotes: string
+  }
+}
+
+CoachCreateWorkoutPlan: undefined
+CoachWorkoutPlanBuilder: {
+  workoutPlanDraft: {
+    clientId: string
+    clientName: string
+    title: string
+    goal: string
+    durationWeeks: number
+    sessionsPerWeek: number
+    sessionLengthMinutes: number
+    trainingLocation: string
+    experienceLevel: string
+    equipment: string[]
+    preferredDays: string[]
+    healthNotes: string
+    coachNotes: string
+    status: 'draft'
   }
 }
 
