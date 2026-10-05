@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
@@ -49,7 +48,6 @@ const [loadError, setLoadError] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<
     'all' | MealPlanStatus
   >('all')
-  const [searchText, setSearchText] = useState('')
 
   const loadMealPlans = useCallback(async () => {
   try {
@@ -142,20 +140,10 @@ useEffect(() => {
 }, [loadMealPlans])
 
   const filteredPlans = useMemo(() => {
-    const query = searchText.trim().toLowerCase()
-
-    return plans.filter((plan) => {
-      const matchesFilter =
-        selectedFilter === 'all' || plan.status === selectedFilter
-
-      const matchesSearch =
-        !query ||
-        plan.title.toLowerCase().includes(query) ||
-        plan.clientName.toLowerCase().includes(query)
-
-      return matchesFilter && matchesSearch
-    })
-  }, [plans, searchText, selectedFilter])
+  return plans.filter((plan) => {
+    return selectedFilter === 'all' || plan.status === selectedFilter
+  })
+}, [plans, selectedFilter])
 
   const counts = useMemo(() => {
     return {
@@ -274,16 +262,6 @@ function formatRelativeDate(dateString: string) {
               </Text>
             </View>
           </View>
-
-          <TextInput
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Search plan or client"
-            placeholderTextColor="#8B9D92"
-            style={styles.searchInput}
-            autoCapitalize="none"
-            accessibilityLabel="Search meal plans"
-          />
 
           <ScrollView
             horizontal
@@ -697,19 +675,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
-
-  searchInput: {
-    height: 48,
-    marginTop: 22,
-    paddingHorizontal: 15,
-    color: '#16281D',
-    fontSize: 14,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DDE9E1',
-  },
-
   filterRow: {
     paddingTop: 14,
     paddingRight: 20,

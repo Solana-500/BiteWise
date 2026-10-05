@@ -38,6 +38,9 @@ import CoachMealPlansScreen from './screens/CoachMealPlansScreen'
 import CoachCreateMealPlanScreen from './screens/CoachCreateMealPlanScreen'
 import CoachMealPlanBuilderScreen from './screens/CoachMealPlanBuilderScreen'
 import CoachMealPlanReviewScreen from './screens/CoachMealPlanReviewScreen'
+import CoachWorkoutPlansScreen from './screens/CoachWorkoutPlansScreen'
+import CoachCreateWorkoutPlanScreen from './screens/CoachCreateWorkoutPlanScreen'
+import CoachWorkoutPlanBuilderScreen from './screens/CoachWorkoutPlanBuilderScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -500,6 +503,21 @@ export default function App() {
             <Stack.Screen
               name="CoachMealPlanReview"
               component={CoachMealPlanReviewScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachWorkoutPlans"
+              component={CoachWorkoutPlansScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachCreateWorkoutPlan"
+              component={CoachCreateWorkoutPlanScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachWorkoutPlanBuilder"
+              component={CoachWorkoutPlanBuilderScreen}
               options={{ headerShown: false }}
             />
           </>
