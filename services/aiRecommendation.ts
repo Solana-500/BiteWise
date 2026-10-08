@@ -1,6 +1,4 @@
-
-import { supabase } from '../lib/supabase';
-
+import { supabase } from './supabase'
 export async function getAiMealRecommendation() {
   const { data, error } = await supabase.functions.invoke(
     'ai-recommend-meal',
