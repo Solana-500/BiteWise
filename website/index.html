@@ -884,6 +884,14 @@
             >
 
 
+                <!-- SECTION TITLE -->
+
+                <h2 class="register-section-title">
+                    Account Information
+                </h2>
+
+
+
                 <!-- ACCOUNT TYPE -->
 
                 <input
@@ -895,9 +903,9 @@
 
 
 
-                <!-- FULL NAME -->
+                <!-- FULL NAME (health coach only; users give it in the profile step) -->
 
-                <div class="form-group">
+                <div class="form-group hidden" id="register-full-name-group">
 
                     <label for="register-full-name">
                         Full Name
@@ -908,7 +916,6 @@
                         id="register-full-name"
                         name="full-name"
                         placeholder="Jamie Lee"
-                        required
                     >
 
                 </div>
@@ -977,59 +984,12 @@
 
 
 
-                <!-- USER HEALTH GOAL -->
+                <!-- REGISTRATION MESSAGE -->
 
-                <div
-                    class="form-group"
-                    id="health-goal-group"
-                >
-
-                    <label for="health-goal">
-                        Health Goal
-                    </label>
-
-                    <select
-                        id="health-goal"
-                        name="health-goal"
-                        required
-                    >
-
-                        <option
-                            value=""
-                            disabled
-                            selected
-                        >
-                            Select your goal
-                        </option>
-
-                        <option value="BodyBuilding">
-                            Body Building
-                        </option>
-
-                        <option value="WeightLoss">
-                            Weight Loss
-                        </option>
-
-                        <option value="MuscleGain">
-                            Muscle Gain
-                        </option>
-
-                        <option value="Maintenance">
-                            Maintenance
-                        </option>
-
-                        <option value="FatLoss">
-                            Fat Loss
-                        </option>
-
-                        <option value="StayFit">
-                            Stay Fit
-                        </option>
-
-                    </select>
-
-                </div>
-
+            <p
+                class="form-message"
+                id="register-message"
+            ></p>
 
 
                 <!-- MAIN BUTTON -->
@@ -1067,19 +1027,19 @@
 
 
         <!-- ====================================
-             STEP 2: COACH SPECIALTY
+             STEP 2: COACH REGISTRATION
+             (personal + coaching details)
         ===================================== -->
 
         <div
             class="register-step hidden"
-            id="register-step-specialty"
+            id="register-step-coach-details"
         >
-
 
             <button
                 type="button"
                 class="register-back"
-                id="specialty-back"
+                id="coach-details-back"
             >
                 ← Back
             </button>
@@ -1088,62 +1048,273 @@
             <div class="register-heading coach-step-heading">
 
                 <h1>
-                    Select your specialty
+                    Coach Registration
                 </h1>
 
                 <p>
-                    Select exactly one area of your expertise.
+                    Complete your profile to submit your coach application.
+                    Your application will be reviewed by a system administrator
+                    before your coach account is approved.
                 </p>
 
             </div>
 
 
-
-            <div class="coach-specialty-section">
-
-                <p class="account-type-label">
-                    Coaching Specialty
-                </p>
+            <div class="coach-details-section">
 
 
-                <div class="specialty-options">
+                <!-- ====== PERSONAL INFORMATION ====== -->
+
+                <h2 class="register-section-title">
+                    Personal Information
+                </h2>
 
 
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Fat Loss"
+                <!-- AGE + GENDER -->
+
+                <div class="coach-measurement-grid coach-age-gender-grid">
+
+                    <div class="form-group">
+
+                        <label for="coach-age">
+                            Age (optional)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-age"
+                            name="coach-age"
+                            placeholder="e.g. 28"
+                            min="18"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Gender
+                        </label>
+
+                        <div class="coach-gender-options">
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Male"
+                                >
+                                <span>Male</span>
+                            </label>
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Female"
+                                >
+                                <span>Female</span>
+                            </label>
+
+                            <label class="coach-radio-option">
+                                <input
+                                    type="radio"
+                                    name="coach-gender"
+                                    value="Other"
+                                >
+                                <span>Other</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HEIGHT + WEIGHT -->
+
+                <div class="coach-measurement-grid">
+
+                    <div class="form-group">
+
+                        <label for="coach-height">
+                            Height (cm)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-height"
+                            name="coach-height"
+                            placeholder="e.g. 175"
+                            min="1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="coach-weight">
+                            Weight (kg)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coach-weight"
+                            name="coach-weight"
+                            placeholder="e.g. 72"
+                            min="1"
+                            step="0.1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- ====== COACHING DETAILS ====== -->
+
+                <h2 class="register-section-title">
+                    Professional Information
+                </h2>
+
+
+                <!-- SPECIALTIES -->
+
+                <div class="coach-specialty-section">
+
+                    <p class="account-type-label">
+                        Coaching specialties
+                    </p>
+
+                    <p class="specialty-hint">
+                        Select up to 3 specialties
+                    </p>
+
+
+                    <div class="specialty-options">
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Bodybuilding"
+                        >
+                            Bodybuilding
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Weight Loss Management"
+                        >
+                            Weight Loss Management
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Nutritionist"
+                        >
+                            Nutritionist
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Powerlifting"
+                        >
+                            Powerlifting
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Hyrox"
+                        >
+                            Hyrox
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="CrossFit"
+                        >
+                            CrossFit
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Marathon"
+                        >
+                            Marathon
+                        </button>
+
+                        <button
+                            type="button"
+                            class="specialty-option"
+                            data-specialty="Running"
+                        >
+                            Running
+                        </button>
+
+                    </div>
+
+
+                    <span
+                        class="specialty-count"
+                        id="specialty-count"
                     >
-                        Fat Loss
-                    </button>
+                        0/3 selected
+                    </span>
+
+                </div>
 
 
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Body Building"
+                <!-- YEARS OF EXPERIENCE -->
+
+                <div class="form-group coach-experience-group">
+
+                    <label for="coach-years-experience">
+                        Years of experience
+                    </label>
+
+                    <input
+                        type="number"
+                        id="coach-years-experience"
+                        name="coach-years-experience"
+                        placeholder="e.g. 4"
+                        min="0"
                     >
-                        Body Building
-                    </button>
 
+                </div>
 
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Power Lifting"
+                <!-- COACH CREDENTIAL -->
+
+                <div class="form-group coach-credential-group">
+
+                    <label for="coach-credential">
+                        Credential
+                    </label>
+
+                    <p class="credential-hint">
+                        Upload a supporting credential or certification document.
+                        Accepted formats: PDF, JPG, PNG.
+                    </p>
+
+                    <input
+                        type="file"
+                        id="coach-credential"
+                        name="coach-credential"
+                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                     >
-                        Power Lifting
-                    </button>
 
-
-                    <button
-                        type="button"
-                        class="specialty-option"
-                        data-specialty="Hyrox"
-                    >
-                        Hyrox
-                    </button>
-
+                    <p
+                        class="form-message"
+                        id="credential-message"
+                    ></p>
 
                 </div>
 
@@ -1157,9 +1328,9 @@
                 <button
                     type="button"
                     class="register-button"
-                    id="specialty-continue"
+                    id="submit-coach-registration"
                 >
-                    Continue →
+                    Register as Coach
                 </button>
 
             </div>
@@ -1167,117 +1338,312 @@
         </div>
 
 
-
         <!-- ====================================
-             STEP 3: COACH CREDENTIALS
+             STEP 3: USER PROFILE SETUP (ONBOARDING)
+             The auth account already exists at this point.
         ===================================== -->
 
         <div
             class="register-step hidden"
-            id="register-step-credentials"
+            id="register-step-onboarding"
         >
-
-
-            <button
-                type="button"
-                class="register-back"
-                id="credentials-back"
-            >
-                ← Back
-            </button>
-
 
             <div class="register-heading coach-step-heading">
 
                 <h1>
-                    Submit your credentials
+                    Set up your profile
                 </h1>
 
                 <p>
-                    Upload your coaching credentials to verify
-                    your expertise.
+                    We will use this information to create an
+                    estimated nutrition target.
                 </p>
 
             </div>
 
 
+            <form
+                class="register-form"
+                id="onboarding-form"
+                novalidate
+            >
 
-            <div class="credentials-section">
+                <!-- FULL NAME -->
+
+                <div class="form-group">
+
+                    <label for="onboarding-full-name">
+                        Full name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="onboarding-full-name"
+                        name="onboarding-full-name"
+                        placeholder="e.g. Edmund Koh"
+                    >
+
+                </div>
 
 
-                <p class="account-type-label">
-                    Upload Document
-                </p>
+                <!-- AGE + SEX -->
 
+                <div class="coach-measurement-grid coach-age-gender-grid">
 
+                    <div class="form-group">
 
-                <label
-                    for="coach-credentials"
-                    class="credential-upload"
-                >
+                        <label for="onboarding-age">
+                            Age
+                        </label>
 
+                        <input
+                            type="number"
+                            id="onboarding-age"
+                            name="onboarding-age"
+                            placeholder="e.g. 22"
+                            min="1"
+                        >
 
-                    <div class="upload-icon">
-                        ↑
                     </div>
 
 
-                    <strong>
-                        Choose credential file
-                    </strong>
+                    <div class="form-group">
+
+                        <label>
+                            Sex
+                        </label>
+
+                        <div class="choice-options sex-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="sex"
+                            data-value="Male"
+                            aria-pressed="false"
+                        >
+                            Male
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="sex"
+                            data-value="Female"
+                            aria-pressed="false"
+                        >
+                            Female
+                        </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
 
-                    <span>
-                        Acceptable file formats: .pdf, .docx
-                    </span>
+                <!-- HEIGHT + WEIGHT -->
+
+                <div class="coach-measurement-grid">
+
+                    <div class="form-group">
+
+                        <label for="onboarding-height">
+                            Height (cm)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="onboarding-height"
+                            name="onboarding-height"
+                            placeholder="e.g. 171"
+                            min="1"
+                        >
+
+                    </div>
 
 
-                    <span
-                        class="selected-file-name"
-                        id="selected-file-name"
-                    >
-                        No file selected
-                    </span>
+                    <div class="form-group">
+
+                        <label for="onboarding-weight">
+                            Weight (kg)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="onboarding-weight"
+                            name="onboarding-weight"
+                            placeholder="e.g. 68"
+                            min="1"
+                            step="0.1"
+                        >
+
+                    </div>
+
+                </div>
 
 
-                </label>
+                <!-- ACTIVITY LEVEL -->
+
+                <div class="form-group">
+
+                    <label>
+                        Activity level
+                    </label>
+
+                    <div class="choice-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Sedentary"
+                            aria-pressed="false"
+                        >
+                            Sedentary
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Lightly Active"
+                            aria-pressed="false"
+                        >
+                            Lightly Active
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Moderately Active"
+                            aria-pressed="false"
+                        >
+                            Moderately Active
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="activity"
+                            data-value="Very Active"
+                            aria-pressed="false"
+                        >
+                            Very Active
+                        </button>
+
+                    </div>
+
+                </div>
 
 
+                <!-- FITNESS GOAL -->
 
-                <input
-                    type="file"
-                    id="coach-credentials"
-                    class="credential-file-input"
-                    accept=".pdf,.docx"
-                >
+                <div class="form-group">
 
+                    <label>
+                        Fitness goal
+                    </label>
+
+                    <div class="choice-options">
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Bodybuilding"
+                            aria-pressed="false"
+                        >
+                            Bodybuilding
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Power Lifting"
+                            aria-pressed="false"
+                        >
+                            Power Lifting
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Hyrox"
+                            aria-pressed="false"
+                        >
+                            Hyrox
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Fat Loss"
+                            aria-pressed="false"
+                        >
+                            Fat Loss
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Weight Gain"
+                            aria-pressed="false"
+                        >
+                            Weight Gain
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Maintenance"
+                            aria-pressed="false"
+                        >
+                            Maintenance
+                        </button>
+
+                        <button
+                            type="button"
+                            class="choice-chip"
+                            data-group="goal"
+                            data-value="Weight Loss"
+                            aria-pressed="false"
+                        >
+                            Weight Loss
+                        </button>
+
+                    </div>
+
+                </div>
 
 
                 <p
-                    class="form-message"
-                    id="credential-message"
+                    class="form-message login-message"
+                    id="onboarding-message"
                 ></p>
 
 
-
                 <button
-                    type="button"
+                    type="submit"
                     class="register-button"
-                    id="submit-coach-registration"
+                    id="onboarding-save-button"
                 >
-                    Submit Registration
+                    Save Profile
                 </button>
 
-
-            </div>
+            </form>
 
         </div>
-
-
+    
     </div>
 
 </div>
-
 
 
 <!-- ========================================
@@ -1362,7 +1728,7 @@
 
         <!-- LOGIN FORM -->
 
-        <form class="login-form">
+        <form class="login-form" id="login-form">
 
 
             <input
@@ -1384,7 +1750,7 @@
                     type="email"
                     id="login-email"
                     name="login-email"
-                    placeholder="Enter your email"
+                    placeholder="you@email.com"
                     required
                 >
 
@@ -1410,6 +1776,15 @@
 
 
 
+            <!-- LOGIN MESSAGE -->
+
+            <p
+                class="form-message login-message"
+                id="login-message"
+            ></p>
+
+
+
             <button
                 type="submit"
                 class="login-submit-button"
@@ -1419,9 +1794,31 @@
 
 
 
+            <!-- SWITCH TO REGISTER (text changes per account type) -->
+
+            <a
+                href="#"
+                class="login-switch-link"
+                id="login-switch-link"
+                data-register-as="User"
+            >
+                Don't have a user account? Sign Up
+            </a>
+
+            <p
+                class="login-admin-note"
+                id="login-admin-note"
+                hidden
+            >
+                System administrator accounts are created by BiteWise.
+            </p>
+
+
+
             <a
                 href="#"
                 class="forgot-password-link"
+                id="forgot-password-link"
             >
                 Forgot password?
             </a>
@@ -1433,6 +1830,142 @@
 
 </div>
 
+
+<!-- ========================================
+     FORGOT PASSWORD POPUP
+========================================= -->
+
+<div
+    class="login-modal"
+    id="forgot-password-modal"
+    aria-hidden="true"
+>
+    <div
+        class="login-modal-overlay"
+        id="forgot-password-overlay"
+    ></div>
+
+    <div class="login-card">
+
+        <button
+            type="button"
+            class="login-close"
+            id="forgot-password-close"
+            aria-label="Close"
+        >
+            &times;
+        </button>
+
+        <div class="login-heading">
+            <h1>Reset Password</h1>
+
+            <p>
+                Enter the email associated with your BiteWise account.
+            </p>
+        </div>
+
+        <form
+            class="login-form"
+            id="forgot-password-form"
+        >
+
+            <div class="form-group">
+                <label for="forgot-password-email">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="forgot-password-email"
+                    placeholder="you@email.com"
+                    required
+                >
+            </div>
+
+            <p
+                class="form-message login-message"
+                id="forgot-password-message"
+            ></p>
+
+            <button
+                type="submit"
+                class="login-submit-button"
+            >
+                Send Reset Link
+            </button>
+
+            <a
+                href="#"
+                class="login-switch-link"
+                id="back-to-login"
+            >
+                ← Back to Log In
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+
+
+<!-- ========================================
+     COACH SUCCESS POPUP
+========================================= -->
+
+<div
+    class="coach-success-modal"
+    id="coach-success-modal"
+    aria-hidden="true"
+>
+
+    <div
+        class="coach-success-overlay"
+        id="coach-success-overlay"
+    ></div>
+
+
+    <div
+        class="coach-success-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="coach-success-title"
+    >
+
+        <button
+            type="button"
+            class="coach-success-close"
+            id="coach-success-close"
+            aria-label="Close"
+        >
+            &times;
+        </button>
+
+        <div class="success-icon">
+            &#10003;
+        </div>
+
+        <h1 id="coach-success-title">
+            Application submitted
+        </h1>
+
+        <p>
+            Thanks for registering as a health coach. Your account is
+            now pending approval, and you will be able to log in once
+            an admin has reviewed it.
+        </p>
+
+        <button
+            type="button"
+            class="register-button"
+            id="coach-success-later"
+        >
+            Got it
+        </button>
+
+    </div>
+
+</div>
 
 
 <!-- ========================================

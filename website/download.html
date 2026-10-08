@@ -41,17 +41,17 @@
                     ✓
                 </div>
 
-                <p class="success-label">
-                    ACCOUNT CREATED
+                <p class="success-label" id="download-label">
+                    GET THE APP
                 </p>
 
-                <h1>
-                    You're ready to start with BiteWise!
+                <h1 id="download-heading">
+                    Download the BiteWise app
                 </h1>
 
-                <p class="download-description">
-                    Download the BiteWise mobile app and log in with
-                    your new account to start your nutrition journey.
+                <p class="download-description" id="download-description">
+                    BiteWise is available on mobile. Download the app
+                    and log in with your account to continue.
                 </p>
 
 
@@ -140,6 +140,27 @@
 
     </main>
 
+    <script>
+        // Signup sends people here with ?welcome=1, so only they
+        // see the "account created" wording. Anyone arriving from
+        // login (or opening the page directly) sees the neutral text.
+
+        if (new URLSearchParams(window.location.search).get("welcome") === "1") {
+
+            document.getElementById("download-label").textContent =
+                "ACCOUNT CREATED";
+
+            document.getElementById("download-heading").textContent =
+                "You're ready to start with BiteWise!";
+
+            document.getElementById("download-description").textContent =
+                "Download the BiteWise mobile app and log in with " +
+                "your new account to start your nutrition journey.";
+
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 
