@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { supabase } from '../services/supabase'
+import { getAiMealRecommendation } from '../services/aiRecommendations'
 
 type Props = {
   navigation: any
