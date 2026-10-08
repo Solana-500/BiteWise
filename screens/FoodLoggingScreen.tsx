@@ -800,6 +800,105 @@ function openEditFood() {
       </Modal>
 
       <Modal
+        visible={showEditFood}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditFood(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.quickAddKeyboard}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.quickAddBackdrop}>
+            <View style={styles.quickAddModal}>
+              <Text style={styles.quickAddTitle}>
+                Edit Food Details
+              </Text>
+      
+              <Text style={styles.quickAddSubtitle}>
+                Review and correct AI nutritional estimates
+              </Text>
+      
+              <ScrollView keyboardShouldPersistTaps="handled">
+                {[
+                  { label: 'Food Name', value: editFoodName, setter: setEditFoodName },
+                  { label: 'Serving Size', value: editServing, setter: setEditServing },
+                  { label: 'Calories (kcal)', value: editCalories, setter: setEditCalories },
+                  { label: 'Protein (g)', value: editProtein, setter: setEditProtein },
+                  { label: 'Carbs (g)', value: editCarbs, setter: setEditCarbs },
+                  { label: 'Fat (g)', value: editFat, setter: setEditFat },
+                ].map((field, index) => (
+                  <View key={field.label}>
+                    <Text style={styles.quickAddLabel}>
+                      {field.label}
+                    </Text>
+      
+                    <TextInput
+                      style={styles.quickAddInput}
+                      value={field.value}
+                      onChangeText={field.setter}
+                      keyboardType={index >= 2 ? 'decimal-pad' : 'default'}
+                    />
+                  </View>
+                ))}
+      
+                <TouchableOpacity
+                  style={styles.quickAddSaveButton}
+                  onPress={() => {
+                    const calories = Number(editCalories)
+                    const protein = Number(editProtein)
+                    const carbs = Number(editCarbs)
+                    const fat = Number(editFat)
+      
+                    const validNumbers = [calories, protein, carbs, fat]
+                      .every(value => Number.isFinite(value) && value >= 0)
+      
+                    if (
+                      !editFoodName.trim() ||
+                      !editServing.trim() ||
+                      !validNumbers ||
+                      [editCalories, editProtein, editCarbs, editFat]
+                        .some(value => value.trim() === '')
+                    ) {
+                      Alert.alert(
+                        'Invalid food details',
+                        'Please enter a name, serving size and valid non-negative nutritional values.'
+                      )
+                      return
+                    }
+      
+                    setSelectedFood({
+                      name: editFoodName.trim(),
+                      serving: editServing.trim(),
+                      calories,
+                      protein,
+                      carbs,
+                      fat,
+                    })
+      
+                    setShowEditFood(false)
+                  }}
+                >
+                  <Text style={styles.quickAddSaveText}>
+                    Save Changes
+                  </Text>
+                </TouchableOpacity>
+      
+                <TouchableOpacity
+                  style={styles.cancelMealButton}
+                  onPress={() => setShowEditFood(false)}
+                >
+                  <Text style={styles.cancelMealText}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
         visible={showQuickAdd}
         transparent
         animationType="slide"
