@@ -99,6 +99,13 @@ export default function FoodLoggingScreen() {
 
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
+  const [showEditFood, setShowEditFood] = useState(false)
+  const [editFoodName, setEditFoodName] = useState('')
+  const [editServing, setEditServing] = useState('')
+  const [editCalories, setEditCalories] = useState('')
+  const [editProtein, setEditProtein] = useState('')
+  const [editCarbs, setEditCarbs] = useState('')
+  const [editFat, setEditFat] = useState('')
   const [showScanner, setShowScanner] = useState(false)
   const [scanned, setScanned] = useState(false)
   const barcodeScanLock = useRef(false)
