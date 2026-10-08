@@ -1,6 +1,7 @@
 import { File } from 'expo-file-system'
 import { supabase } from './supabase'
 
+
 export async function analyzeFoodImage(imageUri: string) {
   // Read the photo and convert it to Base64.
   const image = new File(imageUri)
@@ -20,7 +21,6 @@ export async function analyzeFoodImage(imageUri: string) {
         mimeType,
       },
     }
-  }
   )
 
   if (error) {
@@ -28,42 +28,42 @@ export async function analyzeFoodImage(imageUri: string) {
     throw error
   }
 
-  
-if (typeof data?.analysis !== 'string') {
-  throw new Error('Invalid AI food analysis response')
-}
+  if (typeof data?.analysis !== 'string') {
+    throw new Error('Invalid AI food analysis response')
+  }
 
-const cleaned = data.analysis
-  .replace(/```json\s*/gi, '')
-  .replace(/```\s*/g, '')
-  .trim()
+  const cleaned = data.analysis
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim()
 
-const food = JSON.parse(cleaned)
+  const food = JSON.parse(cleaned)
 
-if (food.isFood !== true) {
-  throw new Error('No recognizable food found in the image')
-}
+  if (food.isFood !== true) {
+    throw new Error('No recognizable food found in the image')
+  }
 
-if (
-  typeof food.name !== 'string' ||
-  !food.name.trim() ||
-  typeof food.serving !== 'string' ||
-  !['calories', 'protein', 'carbs', 'fat'].every(
-    (key) =>
-      typeof food[key] === 'number' &&
-      Number.isFinite(food[key]) &&
-      food[key] >= 0
-  )
-) {
-  throw new Error('Invalid nutritional information returned by AI')
-}
+  if (
+    typeof food.name !== 'string' ||
+    !food.name.trim() ||
+    typeof food.serving !== 'string' ||
+    !['calories', 'protein', 'carbs', 'fat'].every(
+      (key) =>
+        typeof food[key] === 'number' &&
+        Number.isFinite(food[key]) &&
+        food[key] >= 0
+    )
+  ) {
+    throw new Error('Invalid nutritional information returned by AI')
+  }
 
-return {
-  name: food.name,
-  calories: food.calories,
-  protein: food.protein,
-  carbs: food.carbs,
-  fat: food.fat,
-  serving: food.serving,
+  return {
+    name: food.name,
+    calories: food.calories,
+    protein: food.protein,
+    carbs: food.carbs,
+    fat: food.fat,
+    serving: food.serving,
+  }
 }
 
