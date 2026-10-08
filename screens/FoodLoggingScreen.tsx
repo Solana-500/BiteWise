@@ -20,6 +20,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import { supabase } from '../services/supabase'
+import { analyzeFoodImage } from '../services/aiFoodAnalysis'
 import {
   getFoodByBarcode,
   type BarcodeFood,
@@ -106,28 +107,40 @@ export default function FoodLoggingScreen() {
   const [permission, requestPermission] = useCameraPermissions()
   
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [analyzingImage, setAnalyzingImage] = useState(false)
+  
+async function pickFoodImage() {
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.5,
+      base64: false,
+    })
 
-  async function pickFoodImage() {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        quality: 0.7,
-      })
+    if (result.canceled || result.assets.length === 0) {
+      return
+    }
 
-      if (!result.canceled && result.assets.length > 0) {
-        setSelectedImage(result.assets[0].uri)
+    const imageUri = result.assets[0].uri
+    setSelectedImage(imageUri)
+    setAnalyzingImage(true)
 
-        Alert.alert(
-          'Photo selected',
-          'Your food photo is ready for AI analysis.'
-        )
-      }
-    } catch (error) {
-      console.error('Image picker error:', error)
-      Alert.alert('Error', 'Unable to select a photo.')
+    const analysis = await analyzeFoodImage(imageUri)
+
+    Alert.alert('Gemini Food Analysis', analysis)
+  } catch (error) {
+    console.error('Food image analysis failed:', error)
+
+    Alert.alert(
+      'AI Analysis Failed',
+      'Unable to analyze this photo. Please try again.'
+    )
+  } finally {
+    setAnalyzingImage(false)
   }
 }
+
 
   
 
@@ -586,13 +599,23 @@ export default function FoodLoggingScreen() {
               <Text style={styles.actionText}>Quick add</Text>
             </TouchableOpacity>
             
+            
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => void pickFoodImage()}
+              disabled={analyzingImage}
             >
-              <Text style={styles.actionIcon}>📷</Text>
-              <Text style={styles.actionText}>AI Photo</Text>
+              {analyzingImage ? (
+                <ActivityIndicator color="#1E5C35" />
+              ) : (
+                <Text style={styles.actionIcon}>📷</Text>
+              )}
+            
+              <Text style={styles.actionText}>
+                {analyzingImage ? 'Analyzing...' : 'AI Photo'}
+              </Text>
             </TouchableOpacity>
+
 
           </View>
 
