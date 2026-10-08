@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
+import * as ImagePicker from 'expo-image-picker'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
@@ -103,6 +104,32 @@ export default function FoodLoggingScreen() {
   const [lookingUpBarcode, setLookingUpBarcode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [permission, requestPermission] = useCameraPermissions()
+  
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+
+  async function pickFoodImage() {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.7,
+      })
+
+      if (!result.canceled && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri)
+
+        Alert.alert(
+          'Photo selected',
+          'Your food photo is ready for AI analysis.'
+        )
+      }
+    } catch (error) {
+      console.error('Image picker error:', error)
+      Alert.alert('Error', 'Unable to select a photo.')
+  }
+}
+
+  
 
   const [selectedMeal, setSelectedMeal] = useState<MealType>('Breakfast')
   const [showMealMenu, setShowMealMenu] = useState(false)
@@ -558,6 +585,15 @@ export default function FoodLoggingScreen() {
               <Text style={styles.actionIcon}>⊕</Text>
               <Text style={styles.actionText}>Quick add</Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => void pickFoodImage()}
+            >
+              <Text style={styles.actionIcon}>📷</Text>
+              <Text style={styles.actionText}>AI Photo</Text>
+            </TouchableOpacity>
+
           </View>
 
           {selectedFood ? (
