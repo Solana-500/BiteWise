@@ -166,10 +166,7 @@ async function fetchAiRecommendation() {
         fat: { value: 0, goal: 0 },
         fiber: { value: 0, goal: 0 },
       })
-      setRecommendation({
-        name: 'Suggested meal name',
-        kcal: 0,
-      })
+     
     } catch (error) {
       console.error('Unable to load premium user dashboard:', error)
     } finally {
