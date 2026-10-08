@@ -494,7 +494,7 @@ function getTodayRange() {
   }
 
   function goHome() {
-    const routeNames = navigation.getState().routeNames
+    const routeNames: string[] = navigation.getState().routeNames
 
     if (routeNames.includes('PremiumTabs') || routeNames.includes('PuHome')) {
       navigation.navigate('PremiumTabs', {
