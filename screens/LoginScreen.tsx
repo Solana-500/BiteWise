@@ -2,6 +2,9 @@ import { useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,254 +16,253 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { supabase } from '../services/supabase'
 import type { RootStackParamList } from '../types/navigation'
 
-type AppRole = 'user' | 'coach' | 'admin'
-
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
 
-const ROLE_COPY: Record<AppRole, string> = {
-  user: 'Registered User Sign In',
-  coach: 'Health Coach Sign In',
-  admin: 'System Admin Sign In',
-}
+// Replace with your allowlisted web recovery URL when web recovery is configured.
+// A web URL must open a screen that handles the Supabase recovery session.
+const WEB_PASSWORD_RESET_REDIRECT: string = ''
+const MOBILE_PASSWORD_RESET_REDIRECT = 'bitewise://reset-password'
 
 export default function LoginScreen({ navigation }: Props) {
-  const [selectedRole, setSelectedRole] = useState<AppRole>('user')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sendingResetEmail, setSendingResetEmail] = useState(false)
+  const [feedback, setFeedback] = useState('')
 
-  async function handleLogin() {
-  if (!email.trim() || !password) {
-    Alert.alert('Missing information', 'Enter your email and password.')
-    return
+  const busy = loading || sendingResetEmail
+
+  function showMessage(title: string, message: string) {
+    setFeedback(`${title}: ${message}`)
+
+    if (Platform.OS !== 'web') {
+      Alert.alert(title, message)
+    }
   }
 
-  setLoading(true)
+  async function handleLogin() {
+    if (busy) return
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    })
+    if (!email.trim() || !password) {
+      showMessage('Missing information', 'Enter your email and password.')
+      return
+    }
 
-    if (error || !data.user) {
-      Alert.alert(
+    setFeedback('')
+    setLoading(true)
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+
+      if (error || !data.user) {
+        showMessage(
+          'Login failed',
+          error?.message || 'Unable to sign in. Please try again.'
+        )
+        return
+      }
+
+      // App.tsx must validate profiles.app_role and coach approval before
+      // rendering any authenticated navigator. Do not navigate manually here.
+    } catch (error: any) {
+      console.error('Login error:', error)
+
+      showMessage(
         'Login failed',
         error?.message || 'Unable to sign in. Please try again.'
       )
-      return
+    } finally {
+      setLoading(false)
     }
-
-    // Fetch profile to verify role alignment before letting App.tsx navigate
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('app_role, approval_status')
-      .eq('id', data.user.id)
-      .maybeSingle()
-
-    if (profileError) {
-      await supabase.auth.signOut()
-      Alert.alert('Role check failed', profileError.message)
-      return
-    }
-
-    const actualRole = (profile?.app_role ?? 'user') as AppRole
-
-    // Reject if selected login tab doesn't match DB role
-    if (actualRole !== selectedRole) {
-      await supabase.auth.signOut()
-      Alert.alert(
-        'Incorrect account type',
-        `This account is registered as a ${actualRole}. Please select the ${actualRole} login tab.`
-      )
-      return
-    }
-
-    // Block pending coaches
-    if (actualRole === 'coach' && profile?.approval_status !== 'approved') {
-      await supabase.auth.signOut()
-      Alert.alert(
-        'Registration pending',
-        'Your Coach registration is pending administrator approval.'
-      )
-      return
-    }
-
-    // DO NOT call navigation.replace() here!
-    // App.tsx's onAuthStateChange listener handles rendering CoachHome automatically.
-
-  } catch (error: any) {
-    console.error('Login error:', error)
-    Alert.alert(
-      'Login failed',
-      error?.message || 'Unable to sign in. Please try again.'
-    )
-  } finally {
-    setLoading(false)
   }
-}
 
-  function openRegistration() {
-    if (selectedRole === 'user') {
-      navigation.navigate('SignUp')
+  async function handleForgotPassword() {
+    if (busy) return
+
+    const recoveryEmail = email.trim().toLowerCase()
+
+    if (!recoveryEmail) {
+      showMessage(
+        'Email required',
+        'Enter your registered email address above, then tap Forgot password.'
+      )
       return
     }
 
-    if (selectedRole === 'coach') {
-      navigation.navigate('CoachSignUp')
+    const redirectTo =
+      Platform.OS === 'web'
+        ? WEB_PASSWORD_RESET_REDIRECT
+        : MOBILE_PASSWORD_RESET_REDIRECT
+
+    if (!redirectTo) {
+      showMessage(
+        'Web password reset not configured',
+        'The web recovery URL must be configured before sending a reset link from the browser. Use the mobile app in the meantime.'
+      )
+      return
+    }
+
+    setFeedback('')
+    setSendingResetEmail(true)
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        recoveryEmail,
+        { redirectTo }
+      )
+
+      if (error) throw error
+
+      showMessage(
+        'Check your email',
+        'If an account exists for this email address, a password-reset link will be sent. Check your inbox and spam folder.'
+      )
+    } catch (error: any) {
+      console.error('Password reset email error:', error)
+
+      showMessage(
+        'Unable to send reset email',
+        error?.message || 'Please try again later.'
+      )
+    } finally {
+      setSendingResetEmail(false)
     }
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.brandBlock}>
-        <Text style={styles.logo}>BiteWise</Text>
-        <Text style={styles.subtitle}>{ROLE_COPY[selectedRole]}</Text>
-      </View>
-
-      <View style={styles.roleToggle}>
-        <TouchableOpacity
-          style={[
-            styles.roleButton,
-            selectedRole === 'user' && styles.roleButtonSelected,
-          ]}
-          onPress={() => setSelectedRole('user')}
-          activeOpacity={0.85}
-        >
-          <Text
-            style={[
-              styles.roleButtonText,
-              selectedRole === 'user' && styles.roleButtonTextSelected,
-            ]}
-          >
-            User
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.roleButton,
-            selectedRole === 'coach' && styles.roleButtonSelected,
-          ]}
-          onPress={() => setSelectedRole('coach')}
-          activeOpacity={0.85}
-        >
-          <Text
-            style={[
-              styles.roleButtonText,
-              selectedRole === 'coach' && styles.roleButtonTextSelected,
-            ]}
-          >
-            Coach
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.roleButton,
-            selectedRole === 'admin' && styles.roleButtonSelected,
-          ]}
-          onPress={() => setSelectedRole('admin')}
-          activeOpacity={0.85}
-        >
-          <Text
-            style={[
-              styles.roleButtonText,
-              selectedRole === 'admin' && styles.roleButtonTextSelected,
-            ]}
-          >
-            Admin
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.label}>Email</Text>
-
-      <TextInput
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        onChangeText={setEmail}
-        placeholder="you@email.com"
-        placeholderTextColor="#9AAEA1"
-        style={styles.input}
-        value={email}
-      />
-
-      <Text style={styles.label}>Password</Text>
-
-      <TextInput
-        onChangeText={setPassword}
-        placeholder="Enter your password"
-        placeholderTextColor="#9AAEA1"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-      />
-
-      <TouchableOpacity
-        disabled={loading}
-        onPress={handleLogin}
-        style={[styles.button, loading && styles.disabledButton]}
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
       >
-        {loading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.buttonText}>Log In</Text>
-        )}
-      </TouchableOpacity>
+        <View style={styles.form}>
+          <View style={styles.brandBlock}>
+            <Text style={styles.logo}>BiteWise</Text>
+            <Text style={styles.subtitle}>
+              Sign in to your BiteWise account
+            </Text>
+          </View>
 
-      {selectedRole === 'user' && (
-        <TouchableOpacity
-          disabled={loading}
-          onPress={openRegistration}
-          style={styles.linkButton}
-        >
-          <Text style={styles.linkText}>
-            Don&apos;t have a user account? Sign Up
-          </Text>
-        </TouchableOpacity>
-      )}
+          <Text style={styles.label}>Email</Text>
 
-      {selectedRole === 'coach' && (
-        <TouchableOpacity
-          disabled={loading}
-          onPress={openRegistration}
-          style={styles.linkButton}
-        >
-          <Text style={styles.linkText}>
-            New coach? Register as a Coach
-          </Text>
-        </TouchableOpacity>
-      )}
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            onChangeText={setEmail}
+            placeholder="you@email.com"
+            placeholderTextColor="#9AAEA1"
+            style={styles.input}
+            value={email}
+            editable={!busy}
+            autoComplete="email"
+            accessibilityLabel="Email address"
+          />
 
-      {selectedRole === 'admin' && (
-        <Text style={styles.adminNote}>
-          System administrator accounts are created by BiteWise.
-        </Text>
-      )}
+          <Text style={styles.label}>Password</Text>
 
-      <TouchableOpacity
-        style={styles.forgotButton}
-        onPress={() =>
-          Alert.alert(
-            'Forgot password',
-            'Password reset can be connected to Supabase Auth next.'
-          )
-        }
-      >
-        <Text style={styles.forgotText}>Forgot password?</Text>
-      </TouchableOpacity>
-    </View>
+          <TextInput
+            onChangeText={setPassword}
+            placeholder="Enter your password"
+            placeholderTextColor="#9AAEA1"
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={styles.input}
+            value={password}
+            editable={!busy}
+            autoComplete="current-password"
+            returnKeyType="go"
+            onSubmitEditing={() => void handleLogin()}
+            accessibilityLabel="Password"
+          />
+
+          {feedback ? (
+            <Text
+              style={styles.feedback}
+              accessibilityLiveRegion="polite"
+            >
+              {feedback}
+            </Text>
+          ) : null}
+
+          <TouchableOpacity
+            disabled={busy}
+            onPress={() => void handleLogin()}
+            style={[styles.button, busy && styles.disabledButton]}
+            accessibilityRole="button"
+            accessibilityLabel="Log in"
+            accessibilityState={{ disabled: busy }}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Log In</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={busy}
+            onPress={() => navigation.navigate('SignUp')}
+            style={styles.linkButton}
+            accessibilityRole="button"
+          >
+            <Text style={styles.linkText}>
+              Don&apos;t have an account? Sign Up
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={busy}
+            onPress={() => navigation.navigate('CoachSignUp')}
+            style={styles.coachLinkButton}
+            accessibilityRole="button"
+          >
+            <Text style={styles.linkText}>
+              Want to join as a coach? Apply here
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.forgotButton}
+            disabled={busy}
+            onPress={() => void handleForgotPassword()}
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password"
+            accessibilityState={{ disabled: busy }}
+          >
+            {sendingResetEmail ? (
+              <ActivityIndicator color="#1E5C35" />
+            ) : (
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#F5FAF6',
+  screen: {
     flex: 1,
+    backgroundColor: '#F5FAF6',
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
   },
   brandBlock: {
     alignItems: 'center',
@@ -277,38 +279,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
     textAlign: 'center',
-  },
-  roleToggle: {
-    backgroundColor: '#D9ECDF',
-    borderRadius: 999,
-    flexDirection: 'row',
-    marginBottom: 26,
-    padding: 5,
-  },
-  roleButton: {
-    alignItems: 'center',
-    borderRadius: 999,
-    flex: 1,
-    paddingVertical: 11,
-  },
-  roleButtonSelected: {
-    backgroundColor: '#1E5C35',
-    elevation: 4,
-    shadowColor: '#1E5C35',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 7,
-  },
-  roleButtonText: {
-    color: '#42634D',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  roleButtonTextSelected: {
-    color: '#FFFFFF',
   },
   label: {
     color: '#16281D',
@@ -349,27 +319,31 @@ const styles = StyleSheet.create({
     marginTop: 14,
     padding: 8,
   },
+  coachLinkButton: {
+    alignItems: 'center',
+    padding: 8,
+  },
   linkText: {
     color: '#1E5C35',
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
   },
-  adminNote: {
-    color: '#7C8F83',
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 16,
-    textAlign: 'center',
-  },
   forgotButton: {
     alignItems: 'center',
     marginTop: 4,
     padding: 8,
+    minHeight: 36,
   },
   forgotText: {
     color: '#1E5C35',
     fontSize: 13,
     fontWeight: '700',
+  },
+  feedback: {
+    color: '#355244',
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 12,
   },
 })

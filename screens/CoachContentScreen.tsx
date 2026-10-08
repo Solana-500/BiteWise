@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from '@react-navigation/native'
 import { supabase } from '../services/supabase'
@@ -27,75 +26,167 @@ type ContentCardProps = {
 }
 
 export default function CoachContentScreen({ navigation }: Props) {
- 
   const [mealPlanCounts, setMealPlanCounts] = useState({
-  drafts: 0,
-  pending: 0,
-  approved: 0,
-})
+    drafts: 0,
+    pending: 0,
+    approved: 0,
+  })
 
-const loadMealPlanCounts = useCallback(async () => {
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+  const [workoutPlanCounts, setWorkoutPlanCounts] = useState({
+    drafts: 0,
+    pending: 0,
+    approved: 0,
+  })
 
-    if (userError) {
-      throw userError
+  const loadMealPlanCounts = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) {
+        throw userError
+      }
+
+      if (!user) {
+        setMealPlanCounts({
+          drafts: 0,
+          pending: 0,
+          approved: 0,
+        })
+        return
+      }
+
+      const [draftResult, pendingResult, approvedResult] =
+        await Promise.all([
+          supabase
+            .from('meal_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'draft'),
+
+          supabase
+            .from('meal_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'pending_review'),
+
+          supabase
+            .from('meal_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .in('status', ['approved', 'active']),
+        ])
+
+      if (draftResult.error) {
+        throw draftResult.error
+      }
+      if (pendingResult.error) {
+        throw pendingResult.error
+      }
+      if (approvedResult.error) {
+        throw approvedResult.error
+      }
+
+      setMealPlanCounts({
+        drafts: draftResult.count ?? 0,
+        pending: pendingResult.count ?? 0,
+        approved: approvedResult.count ?? 0,
+      })
+    } catch (error) {
+      console.error('Unable to load meal plan counts:', error)
     }
+  }, [])
 
-    if (!user) {
-      return
+  const loadWorkoutPlanCounts = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) {
+        throw userError
+      }
+
+      if (!user) {
+        setWorkoutPlanCounts({
+          drafts: 0,
+          pending: 0,
+          approved: 0,
+        })
+        return
+      }
+
+      const [draftResult, pendingResult, approvedResult] =
+        await Promise.all([
+          supabase
+            .from('workout_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'draft'),
+
+          supabase
+            .from('workout_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'pending_review'),
+
+          supabase
+            .from('workout_plans')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .in('status', ['approved', 'active']),
+        ])
+
+      if (draftResult.error) {
+        throw draftResult.error
+      }
+      if (pendingResult.error) {
+        throw pendingResult.error
+      }
+      if (approvedResult.error) {
+        throw approvedResult.error
+      }
+
+      setWorkoutPlanCounts({
+        drafts: draftResult.count ?? 0,
+        pending: pendingResult.count ?? 0,
+        approved: approvedResult.count ?? 0,
+      })
+    } catch (error) {
+      console.error('Unable to load workout plan counts:', error)
     }
+  }, [])
 
-    const [draftResult, pendingResult, approvedResult] = await Promise.all([
-      supabase
-        .from('meal_plans')
-        .select('*', { count: 'exact', head: true })
-        .eq('coach_id', user.id)
-        .eq('status', 'draft'),
-
-      supabase
-        .from('meal_plans')
-        .select('*', { count: 'exact', head: true })
-        .eq('coach_id', user.id)
-        .eq('status', 'pending_review'),
-
-      supabase
-        .from('meal_plans')
-        .select('*', { count: 'exact', head: true })
-        .eq('coach_id', user.id)
-        .in('status', ['approved', 'active']),
+  useFocusEffect(
+    useCallback(() => {
+      void loadMealPlanCounts()
+      void loadWorkoutPlanCounts()
+    }, [
+      loadMealPlanCounts,
+      loadWorkoutPlanCounts,
     ])
-
-    if (draftResult.error) {
-      throw draftResult.error
-    }
-
-    if (pendingResult.error) {
-      throw pendingResult.error
-    }
-
-    if (approvedResult.error) {
-      throw approvedResult.error
-    }
-
-    setMealPlanCounts({
-      drafts: draftResult.count ?? 0,
-      pending: pendingResult.count ?? 0,
-      approved: approvedResult.count ?? 0,
-    })
-  } catch (error) {
-    console.error('Unable to load meal plan counts:', error)
-  }
-}, [])
-
-useFocusEffect(
-  useCallback(() => {
-    loadMealPlanCounts()
-  }, [loadMealPlanCounts])
-)
+  )
 
   return (
     <View style={styles.screen}>
@@ -114,7 +205,6 @@ useFocusEffect(
           </TouchableOpacity>
 
           <Text style={styles.pageHeading}>Content Management</Text>
-
           <Text style={styles.pageSubtitle}>
             Create personalised content, then submit it for system admin
             approval before it is released to clients.
@@ -122,7 +212,6 @@ useFocusEffect(
 
           <View style={styles.workflowCard}>
             <Text style={styles.workflowTitle}>How content is released</Text>
-
             <View style={styles.workflowRow}>
               <WorkflowStep number="1" label="Create" />
               <Text style={styles.workflowArrow}>→</Text>
@@ -130,7 +219,6 @@ useFocusEffect(
               <Text style={styles.workflowArrow}>→</Text>
               <WorkflowStep number="3" label="Admin approves" />
             </View>
-
             <Text style={styles.workflowNote}>
               Clients only receive content after approval.
             </Text>
@@ -138,7 +226,6 @@ useFocusEffect(
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your content</Text>
-
             <Pressable
               onPress={() => navigation.navigate('CoachContentStatus')}
               accessibilityRole="button"
@@ -162,9 +249,9 @@ useFocusEffect(
             title="Workout Plans"
             description="Build structured workouts based on client goals."
             icon="🏋️"
-            draftCount={0}
-            pendingCount={0}
-            approvedCount={0}
+            draftCount={workoutPlanCounts.drafts}
+            pendingCount={workoutPlanCounts.pending}
+            approvedCount={workoutPlanCounts.approved}
             onPress={() => navigation.navigate('CoachWorkoutPlans')}
           />
 
@@ -180,7 +267,6 @@ useFocusEffect(
 
           <View style={styles.reminderCard}>
             <Text style={styles.reminderIcon}>✓</Text>
-
             <View style={styles.reminderTextWrap}>
               <Text style={styles.reminderTitle}>Approval required</Text>
               <Text style={styles.reminderText}>
@@ -198,21 +284,22 @@ useFocusEffect(
           icon="🏠"
           onPress={() => navigation.navigate('CoachHome')}
         />
-
-        <CoachTab label="Content" icon="📋" active onPress={() => {}} />
-
+        <CoachTab
+          label="Content"
+          icon="📋"
+          active
+          onPress={() => {}}
+        />
         <CoachTab
           label="Clients"
           icon="👥"
           onPress={() => navigation.navigate('CoachClients')}
         />
-
         <CoachTab
           label="Messages"
           icon="💬"
           onPress={() => navigation.navigate('CoachChat')}
         />
-
         <CoachTab
           label="Profile"
           icon="👤"
@@ -243,17 +330,14 @@ function ContentCard({
         <View style={styles.contentIconWrap}>
           <Text style={styles.contentIcon}>{icon}</Text>
         </View>
-
         <View style={styles.contentCardTextWrap}>
           <Text style={styles.contentCardTitle}>{title}</Text>
           <Text style={styles.contentCardDescription}>{description}</Text>
         </View>
-
         <Text style={styles.chevron}>›</Text>
       </View>
 
       <View style={styles.statusDivider} />
-
       <View style={styles.statusRow}>
         <StatusPill label="Drafts" value={draftCount} color="#7C8F83" />
         <StatusPill label="Pending" value={pendingCount} color="#B97816" />
@@ -320,6 +404,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
+
   safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
@@ -337,6 +422,7 @@ const styles = StyleSheet.create({
     paddingRight: 14,
     paddingVertical: 8,
   },
+
   backHomeText: {
     color: '#1E5C35',
     fontSize: 15,
@@ -349,6 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.4,
   },
+
   pageSubtitle: {
     marginTop: 7,
     color: '#5C7267',
@@ -364,21 +451,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D7E8DC',
   },
+
   workflowTitle: {
     color: '#1E5C35',
     fontSize: 14,
     fontWeight: '800',
   },
+
   workflowRow: {
     marginTop: 14,
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
+
   workflowStep: {
     flex: 1,
     alignItems: 'center',
   },
+
   workflowNumber: {
     width: 27,
     height: 27,
@@ -387,11 +478,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#1E5C35',
   },
+
   workflowNumberText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
   },
+
   workflowStepLabel: {
     marginTop: 6,
     color: '#355244',
@@ -399,12 +492,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+
   workflowArrow: {
     marginTop: 3,
     color: '#7C8F83',
     fontSize: 18,
     fontWeight: '700',
   },
+
   workflowNote: {
     marginTop: 13,
     color: '#5C7267',
@@ -420,11 +515,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+
   sectionTitle: {
     color: '#16281D',
     fontSize: 18,
     fontWeight: '800',
   },
+
   viewStatusText: {
     color: '#1E5C35',
     fontSize: 13,
@@ -439,18 +536,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2ECE6',
     shadowColor: '#163020',
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
   },
+
   contentCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   contentIconWrap: {
     width: 52,
     height: 52,
@@ -459,24 +558,29 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#F0F7F2',
   },
+
   contentIcon: {
     fontSize: 27,
   },
+
   contentCardTextWrap: {
     flex: 1,
     marginLeft: 13,
   },
+
   contentCardTitle: {
     color: '#16281D',
     fontSize: 16,
     fontWeight: '800',
   },
+
   contentCardDescription: {
     marginTop: 4,
     color: '#5C7267',
     fontSize: 12,
     lineHeight: 17,
   },
+
   chevron: {
     marginLeft: 8,
     color: '#1E5C35',
@@ -490,18 +594,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#EDF3EF',
   },
+
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
   statusPill: {
     flex: 1,
     alignItems: 'center',
   },
+
   statusPillValue: {
     fontSize: 15,
     fontWeight: '800',
   },
+
   statusPillLabel: {
     marginTop: 2,
     color: '#7C8F83',
@@ -518,6 +626,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3DEAA',
   },
+
   reminderIcon: {
     width: 24,
     height: 24,
@@ -530,15 +639,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F7D98B',
   },
+
   reminderTextWrap: {
     flex: 1,
     marginLeft: 10,
   },
+
   reminderTitle: {
     color: '#704A08',
     fontSize: 13,
     fontWeight: '800',
   },
+
   reminderText: {
     marginTop: 3,
     color: '#7A6131',
@@ -556,17 +668,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E2ECE6',
   },
+
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   tabIcon: {
     fontSize: 19,
   },
+
   tabLabel: {
     marginTop: 3,
     fontSize: 11,
     fontWeight: '700',
   },
+
 })

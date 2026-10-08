@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Modal,
@@ -13,6 +14,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+
+import {
+  searchExercises,
+  type ExerciseSearchResult,
+} from '../services/exerciseSearch'
 
 type Props = {
   navigation: any
@@ -71,68 +77,6 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   'Cool-down',
 ]
 
-const STARTER_EXERCISES = [
-  {
-    name: 'Bodyweight squat',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Dumbbell goblet squat',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Dumbbells',
-  },
-  {
-    name: 'Push-up',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Dumbbell row',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Dumbbells',
-  },
-  {
-    name: 'Glute bridge',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Romanian deadlift',
-    category: 'Strength' as ExerciseCategory,
-    equipment: 'Dumbbells or barbell',
-  },
-  {
-    name: 'Dead bug',
-    category: 'Core' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Plank',
-    category: 'Core' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Brisk walk',
-    category: 'Cardio' as ExerciseCategory,
-    equipment: 'None',
-  },
-  {
-    name: 'Stationary cycling',
-    category: 'Cardio' as ExerciseCategory,
-    equipment: 'Exercise bike',
-  },
-  {
-    name: 'Cat-cow',
-    category: 'Mobility' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-  {
-    name: 'Hip flexor stretch',
-    category: 'Mobility' as ExerciseCategory,
-    equipment: 'Bodyweight',
-  },
-]
 
 function createEmptyWorkoutDay(day: string): WorkoutDay {
   return {
@@ -185,6 +129,13 @@ export default function CoachWorkoutPlanBuilderScreen({
 
   const [addExerciseVisible, setAddExerciseVisible] = useState(false)
   const [exerciseSearchText, setExerciseSearchText] = useState('')
+  const [exerciseResults, setExerciseResults] = useState<
+    ExerciseSearchResult[]
+  >([])
+  const [searchingExercises, setSearchingExercises] = useState(false)
+  const [exerciseSearchError, setExerciseSearchError] = useState('')
+  const searchRequestId = useRef(0)
+
   const [customExerciseName, setCustomExerciseName] = useState('')
   const [selectedCategory, setSelectedCategory] =
     useState<ExerciseCategory>('Strength')
@@ -203,24 +154,6 @@ export default function CoachWorkoutPlanBuilderScreen({
       return total + (workoutsByDay[day]?.exercises.length ?? 0)
     }, 0)
   }, [workoutDays, workoutsByDay])
-
-  const filteredStarterExercises = useMemo(() => {
-    const query = exerciseSearchText.trim().toLowerCase()
-
-    if (!query) {
-      return STARTER_EXERCISES.filter(
-        (exercise) => exercise.category === selectedCategory
-      )
-    }
-
-    return STARTER_EXERCISES.filter((exercise) => {
-      return (
-        exercise.name.toLowerCase().includes(query) ||
-        exercise.category.toLowerCase().includes(query) ||
-        exercise.equipment.toLowerCase().includes(query)
-      )
-    })
-  }, [exerciseSearchText, selectedCategory])
 
   const updateWorkoutDay = (
     day: string,
@@ -251,7 +184,11 @@ export default function CoachWorkoutPlanBuilderScreen({
   }
 
   const openAddExercise = () => {
+    searchRequestId.current += 1
+    setSearchingExercises(false)
     setExerciseSearchText('')
+    setExerciseResults([])
+    setExerciseSearchError('')
     setCustomExerciseName('')
     setSelectedCategory('Strength')
     setAddExerciseVisible(true)
@@ -260,7 +197,11 @@ export default function CoachWorkoutPlanBuilderScreen({
   const closeAddExercise = () => {
     if (savingExercise) return
 
+    searchRequestId.current += 1
+    setSearchingExercises(false)
     setExerciseSearchText('')
+    setExerciseResults([])
+    setExerciseSearchError('')
     setCustomExerciseName('')
     setAddExerciseVisible(false)
   }
@@ -268,7 +209,8 @@ export default function CoachWorkoutPlanBuilderScreen({
   const addExercise = (
     name: string,
     category: ExerciseCategory,
-    equipment: string
+    equipment: string,
+    notes = ''
   ) => {
     const trimmedName = name.trim()
 
@@ -295,7 +237,7 @@ export default function CoachWorkoutPlanBuilderScreen({
         category === 'Cardio' || category === 'Mobility' ? '0' : '90',
       load: '',
       equipment,
-      notes: '',
+      notes,
     }
 
     setSavingExercise(true)
@@ -307,6 +249,63 @@ export default function CoachWorkoutPlanBuilderScreen({
 
     setSavingExercise(false)
     closeAddExercise()
+  }
+
+  const searchExerciseLibrary = async () => {
+    if (searchingExercises) return
+
+    const query = exerciseSearchText.trim()
+
+    if (query.length < 2) {
+      setExerciseResults([])
+      setExerciseSearchError('Enter at least 2 characters to search exercises.')
+      return
+    }
+
+    const requestId = ++searchRequestId.current
+    setSearchingExercises(true)
+    setExerciseResults([])
+    setExerciseSearchError('')
+
+    try {
+      const results = await searchExercises(query)
+
+      if (requestId !== searchRequestId.current) return
+
+      setExerciseResults(results)
+
+      if (results.length === 0) {
+        setExerciseSearchError('No exercises found. Try a different search term.')
+      }
+    } catch (error: any) {
+      if (requestId !== searchRequestId.current) return
+
+      console.error('Exercise search error:', error)
+      setExerciseSearchError(
+        error?.message || 'Unable to search exercises. Please try again.'
+      )
+    } finally {
+      if (requestId === searchRequestId.current) {
+        setSearchingExercises(false)
+      }
+    }
+  }
+
+  const addLibraryExercise = (exercise: ExerciseSearchResult) => {
+    const type = exercise.type.trim().toLowerCase()
+    const category: ExerciseCategory =
+      type === 'cardio'
+        ? 'Cardio'
+        : type === 'stretching'
+        ? 'Mobility'
+        : 'Strength'
+
+    addExercise(
+      exercise.name,
+      category,
+      exercise.equipment,
+      exercise.instructions
+    )
   }
 
   const updateExercise = (
@@ -761,21 +760,92 @@ export default function CoachWorkoutPlanBuilderScreen({
                 <Text style={styles.modalTitle}>Add exercise</Text>
 
                 <Text style={styles.modalSubtitle}>
-                  Choose a starter exercise or create a custom one. You can
+                  Search the exercise library or create a custom exercise. You can
                   adjust sets, repetitions, rest, load, and instructions after
                   adding it.
                 </Text>
 
-                <TextInput
-                  value={exerciseSearchText}
-                  onChangeText={setExerciseSearchText}
-                  placeholder="Search exercises"
-                  placeholderTextColor="#8B9D92"
-                  style={styles.exerciseSearchInput}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  accessibilityLabel="Search starter exercises"
-                />
+                <View style={styles.exerciseSearchRow}>
+                  <TextInput
+                    value={exerciseSearchText}
+                    onChangeText={(text) => {
+                      setExerciseSearchText(text)
+                      setExerciseSearchError('')
+                      setExerciseResults([])
+                    }}
+                    placeholder="Search exercise, e.g. squat"
+                    placeholderTextColor="#8B9D92"
+                    style={styles.exerciseSearchInput}
+                    editable={!searchingExercises}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                    onSubmitEditing={() => void searchExerciseLibrary()}
+                    accessibilityLabel="Search exercise library"
+                  />
+                  <Pressable
+                    style={styles.exerciseSearchButton}
+                    onPress={() => void searchExerciseLibrary()}
+                    disabled={searchingExercises}
+                    accessibilityRole="button"
+                    accessibilityLabel="Search exercises"
+                    accessibilityState={{ disabled: searchingExercises }}
+                  >
+                    <Text style={styles.exerciseSearchButtonText}>
+                      {searchingExercises ? '...' : 'Search'}
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {searchingExercises ? (
+                  <View style={styles.searchStateCard}>
+                    <ActivityIndicator color="#1E5C35" />
+                    <Text style={styles.searchStateText}>
+                      Searching exercises...
+                    </Text>
+                  </View>
+                ) : exerciseSearchError ? (
+                  <View style={styles.searchStateCard}>
+                    <Text style={styles.searchStateError}>
+                      {exerciseSearchError}
+                    </Text>
+                  </View>
+                ) : exerciseResults.length > 0 ? (
+                  <View style={styles.suggestionsContainer}>
+                    {exerciseResults.map((exercise) => (
+                      <Pressable
+                        key={exercise.id}
+                        style={styles.suggestionCard}
+                        onPress={() => addLibraryExercise(exercise)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Add ${exercise.name}`}
+                      >
+                        <View style={styles.suggestionTextWrap}>
+                          <Text style={styles.suggestionName}>
+                            {exercise.name}
+                          </Text>
+                          <Text style={styles.suggestionMeta}>
+                            {exercise.type} · {exercise.muscle} · {exercise.difficulty}
+                          </Text>
+                          <Text style={styles.suggestionEquipment}>
+                            Equipment: {exercise.equipment}
+                          </Text>
+                        </View>
+                        <Text style={styles.addSuggestionIcon}>＋</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.searchStateCard}>
+                    <Text style={styles.searchStateText}>
+                      Search the exercise library to add an exercise.
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={styles.customExerciseTitle}>
+                  Custom exercise category
+                </Text>
 
                 <ScrollView
                   horizontal
@@ -795,7 +865,7 @@ export default function CoachWorkoutPlanBuilderScreen({
                         ]}
                         onPress={() => setSelectedCategory(category)}
                         accessibilityRole="tab"
-                        accessibilityLabel={`Show ${category} exercises`}
+                        accessibilityLabel={`Custom exercise category ${category}`}
                         accessibilityState={{ selected: isSelected }}
                       >
                         <Text
@@ -810,44 +880,6 @@ export default function CoachWorkoutPlanBuilderScreen({
                     )
                   })}
                 </ScrollView>
-
-                {filteredStarterExercises.length > 0 ? (
-                  <View style={styles.suggestionsContainer}>
-                    {filteredStarterExercises.map((exercise) => (
-                      <Pressable
-                        key={`${exercise.name}-${exercise.category}`}
-                        style={styles.suggestionCard}
-                        onPress={() =>
-                          addExercise(
-                            exercise.name,
-                            exercise.category,
-                            exercise.equipment
-                          )
-                        }
-                        accessibilityRole="button"
-                        accessibilityLabel={`Add ${exercise.name}`}
-                      >
-                        <View style={styles.suggestionTextWrap}>
-                          <Text style={styles.suggestionName}>
-                            {exercise.name}
-                          </Text>
-
-                          <Text style={styles.suggestionMeta}>
-                            {exercise.category} · {exercise.equipment}
-                          </Text>
-                        </View>
-
-                        <Text style={styles.addSuggestionIcon}>＋</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.searchStateCard}>
-                    <Text style={styles.searchStateText}>
-                      No starter exercises match this search.
-                    </Text>
-                  </View>
-                )}
 
                 <View style={styles.customExerciseSection}>
                   <Text style={styles.customExerciseTitle}>
@@ -957,12 +989,6 @@ function ExerciseCard({
                 {exercise.category}
               </Text>
             </View>
-
-            {exercise.equipment ? (
-              <Text style={styles.exerciseEquipmentText}>
-                {exercise.equipment}
-              </Text>
-            ) : null}
           </View>
         </View>
 
@@ -1034,34 +1060,6 @@ function ExerciseCard({
         placeholderTextColor="#8B9D92"
         maxLength={100}
         accessibilityLabel={`${exercise.name} load or intensity`}
-      />
-
-      <Text style={styles.exerciseFieldLabel}>Equipment</Text>
-
-      <TextInput
-        value={exercise.equipment}
-        onChangeText={(value) => onChange('equipment', value)}
-        style={styles.exerciseInput}
-        placeholder="Equipment needed"
-        placeholderTextColor="#8B9D92"
-        maxLength={100}
-        accessibilityLabel={`${exercise.name} equipment`}
-      />
-
-      <Text style={styles.exerciseFieldLabel}>
-        Coach instruction and modification
-      </Text>
-
-      <TextInput
-        value={exercise.notes}
-        onChangeText={(value) => onChange('notes', value)}
-        style={[styles.exerciseInput, styles.exerciseNotesInput]}
-        placeholder="Technique cue, range of motion, easier option, or when to stop."
-        placeholderTextColor="#8B9D92"
-        multiline
-        textAlignVertical="top"
-        maxLength={500}
-        accessibilityLabel={`${exercise.name} coach instruction and modification`}
       />
 
       <Pressable
@@ -1705,7 +1703,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#1E5C35',
     shadowColor: '#163020',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.16,
     shadowRadius: 5,
     elevation: 3,
@@ -1758,6 +1759,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   exerciseSearchInput: {
+    flex: 1,
     height: 47,
     paddingHorizontal: 13,
     color: '#16281D',
@@ -1891,4 +1893,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
+  exerciseSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  exerciseSearchButton: {
+    height: 47,
+    marginLeft: 8,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#1E5C35',
+  },
+  exerciseSearchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  searchStateError: {
+    color: '#A13D27',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  suggestionEquipment: {
+    marginTop: 4,
+    color: '#71857A',
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
 }) 

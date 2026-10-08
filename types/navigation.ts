@@ -43,6 +43,50 @@ export type ExerciseCategory =
   equipment: string
 }
 
+export type CoachWorkoutPlanDraft = {
+  clientId: string
+  clientName: string
+  title: string
+  goal: string
+  durationWeeks: number
+  sessionsPerWeek: number
+  sessionLengthMinutes: number
+  trainingLocation: string
+  experienceLevel: string
+  equipment: string[]
+  preferredDays: string[]
+  healthNotes: string
+  coachNotes: string
+  status: 'draft'
+}
+
+export type CoachExerciseCategory =
+  | 'Strength'
+  | 'Cardio'
+  | 'Mobility'
+  | 'Core'
+  | 'Warm-up'
+  | 'Cool-down'
+
+export type CoachWorkoutExercise = {
+  id: string
+  name: string
+  category: CoachExerciseCategory
+  sets: string
+  reps: string
+  restSeconds: string
+  load: string
+  equipment: string
+  notes: string
+}
+
+export type CoachWorkoutDay = {
+  title: string
+  focus: string
+  exercises: CoachWorkoutExercise[]
+}
+
+
 export type RootStackParamList = {
   Login: undefined
   SignUp: undefined
@@ -76,14 +120,17 @@ export type RootStackParamList = {
   RoutineExerciseSearch: {
     existingExercises: RoutineExerciseDraft[]
   }
+
   CoachTabs: undefined
   CoachHome: undefined
   CoachContent: undefined
+  CoachClients: undefined
   CoachProfile: undefined
   CoachChat: undefined
   CoachWorkoutPlans: undefined
   CoachMealPlans: undefined
   CoachCreateMealPlan: undefined
+  
   CoachMealPlanBuilder: {
   planBasics: {
     clientId: string
@@ -99,25 +146,16 @@ export type RootStackParamList = {
   }
 }
 
-CoachCreateWorkoutPlan: undefined
-CoachWorkoutPlanBuilder: {
-  workoutPlanDraft: {
-    clientId: string
-    clientName: string
-    title: string
-    goal: string
-    durationWeeks: number
-    sessionsPerWeek: number
-    sessionLengthMinutes: number
-    trainingLocation: string
-    experienceLevel: string
-    equipment: string[]
-    preferredDays: string[]
-    healthNotes: string
-    coachNotes: string
-    status: 'draft'
+  CoachCreateWorkoutPlan: undefined
+
+  CoachWorkoutPlanBuilder: {
+    workoutPlanDraft: CoachWorkoutPlanDraft
   }
-}
+
+  CoachWorkoutPlanReview: {
+    workoutPlanDraft: CoachWorkoutPlanDraft
+    workoutsByDay: Record<string, CoachWorkoutDay>
+  }
 
 CoachMealPlanReview: {
   planId?: string

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -216,8 +217,9 @@ export default function CoachChatScreen() {
     )
   }
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    return (
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.backButton}
@@ -304,13 +306,90 @@ export default function CoachChatScreen() {
             </TouchableOpacity>
           ))
         )}
-      </ScrollView>
-    </SafeAreaView>
+              </ScrollView>
+      </SafeAreaView>
+
+      <SafeAreaView
+        edges={['bottom']}
+        style={styles.bottomTabSafeArea}
+      >
+        <View style={styles.bottomTabBar}>
+          <CoachTab
+            label="Home"
+            icon="🏠"
+            onPress={() => navigation.navigate('CoachHome')}
+          />
+
+          <CoachTab
+            label="Content"
+            icon="📋"
+            onPress={() => navigation.navigate('CoachContent')}
+          />
+
+          <CoachTab
+            label="Clients"
+            icon="👥"
+            onPress={() => navigation.navigate('CoachClients')}
+          />
+
+          <CoachTab
+            label="Messages"
+            icon="💬"
+            active
+            onPress={() => {}}
+          />
+
+          <CoachTab
+            label="Profile"
+            icon="👤"
+            onPress={() => navigation.navigate('CoachProfile')}
+          />
+        </View>
+      </SafeAreaView>
+    </View>
+  )
+}
+
+type CoachTabProps = {
+  label: string
+  icon: string
+  active?: boolean
+  onPress: () => void
+}
+
+function CoachTab({
+  label,
+  icon,
+  active = false,
+  onPress,
+}: CoachTabProps) {
+  const color = active ? '#1E5C35' : '#7C8F83'
+
+  return (
+    <Pressable
+      style={styles.tabItem}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+    >
+      <Text style={[styles.tabIcon, { color }]}>
+        {icon}
+      </Text>
+
+      <Text style={[styles.tabLabel, { color }]}>
+        {label}
+      </Text>
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
   screen: {
+    backgroundColor: '#F5FAF6',
+    flex: 1,
+  },
+  safeArea: {
     backgroundColor: '#F5FAF6',
     flex: 1,
   },
@@ -453,5 +532,36 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 7,
     textAlign: 'center',
+  },
+    bottomTabSafeArea: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2ECE6',
+  },
+
+  bottomTabBar: {
+    minHeight: 60,
+    paddingTop: 8,
+    paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+
+  tabItem: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  tabIcon: {
+    fontSize: 19,
+  },
+
+  tabLabel: {
+    marginTop: 3,
+    fontSize: 11,
+    fontWeight: '700',
   },
 })
