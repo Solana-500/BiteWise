@@ -665,6 +665,15 @@ function openEditFood() {
                 P {selectedFood.protein}g · C {selectedFood.carbs}g · F{' '}
                 {selectedFood.fat}g
               </Text>
+              
+              <TouchableOpacity
+                style={styles.editFoodButton}
+                onPress={openEditFood}
+              >
+                <Text style={styles.editFoodButtonText}>
+                  Edit Food Details
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
@@ -1448,4 +1457,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
+  
+  editFoodButton: {
+    backgroundColor: '#EAF3EC',
+    borderColor: '#1E5C35',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  
+  editFoodButtonText: {
+    color: '#1E5C35',
+    fontSize: 14,
+    fontWeight: '800',
+},
+
 })
