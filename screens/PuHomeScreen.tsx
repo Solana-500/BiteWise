@@ -336,36 +336,34 @@ async function fetchAiRecommendation() {
         </Pressable>
 
         
-<View style={styles.recommendationSection}>
-  <View style={styles.summaryLinkCard}>
 
-    <View style={styles.summaryLinkHeaderRow}>
-      <Text style={styles.summaryLinkHeading}>
-        Personalized Recommendation
-      </Text>
-    </View>
+        <View style={styles.recommendationSection}>
+          <View style={styles.summaryLinkCard}>
+            <View style={styles.summaryLinkHeaderRow}>
+              <Text style={styles.summaryLinkHeading}>
+                Personalized Recommendation
+              </Text>
+            </View>
 
-    <Text style={styles.recommendationText}>
-      {recommendation.name === 'Suggested meal name'
-        ? 'No AI recommendation generated yet'
-        : recommendation.name}
-    </Text>
+            <Text style={styles.recommendationText}>
+              {recommendation.name === 'Suggested meal name'
+                ? 'No AI recommendation generated yet'
+                : recommendation.name}
+            </Text>
 
-    <Pressable
-      style={styles.logMealButton}
-      onPress={fetchAiRecommendation}
-      disabled={aiLoading}
-    >
-      <Text style={styles.logMealText}>
-        {aiLoading
-          ? 'Generating...'
-          : 'Generate AI Recommendation'}
-      </Text>
-    </Pressable>
-
-  </View>
-</View>
-
+            <Pressable
+              style={styles.logMealButton}
+              onPress={fetchAiRecommendation}
+              disabled={aiLoading}
+            >
+              <Text style={styles.logMealText}>
+                {aiLoading
+                  ? 'Generating...'
+                  : 'Generate AI Recommendation'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
