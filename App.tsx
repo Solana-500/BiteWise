@@ -41,6 +41,7 @@ import CoachMealPlanReviewScreen from './screens/CoachMealPlanReviewScreen'
 import CoachWorkoutPlansScreen from './screens/CoachWorkoutPlansScreen'
 import CoachCreateWorkoutPlanScreen from './screens/CoachCreateWorkoutPlanScreen'
 import CoachWorkoutPlanBuilderScreen from './screens/CoachWorkoutPlanBuilderScreen'
+import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -300,13 +301,33 @@ function CoachTabs() {
     <CoachTabNav.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, 
+        tabBarStyle: { display: 'none' },
       }}
     >
-      <CoachTabNav.Screen name="CoachHome" component={CoachHomeScreen} />
-      <CoachTabNav.Screen name="CoachContent" component={CoachContentScreen} />
-      <CoachTabNav.Screen name="CoachClients" component={CoachClientsScreen} />
-      <CoachTabNav.Screen name="CoachProfile" component={CoachProfileScreen} />
+      <CoachTabNav.Screen
+        name="CoachHome"
+        component={CoachHomeScreen}
+      />
+
+      <CoachTabNav.Screen
+        name="CoachContent"
+        component={CoachContentScreen}
+      />
+
+      <CoachTabNav.Screen
+        name="CoachClients"
+        component={CoachClientsScreen}
+      />
+
+      <CoachTabNav.Screen
+        name="CoachChat"
+        component={CoachChatScreen}
+      />
+
+      <CoachTabNav.Screen
+        name="CoachProfile"
+        component={CoachProfileScreen}
+      />
     </CoachTabNav.Navigator>
   )
 }
@@ -518,6 +539,11 @@ export default function App() {
             <Stack.Screen
               name="CoachWorkoutPlanBuilder"
               component={CoachWorkoutPlanBuilderScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachWorkoutPlanReview"
+              component={CoachWorkoutPlanReviewScreen}
               options={{ headerShown: false }}
             />
           </>

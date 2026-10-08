@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   SafeAreaView,
@@ -10,6 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import { useFocusEffect } from '@react-navigation/native'
+
+import { supabase } from '../services/supabase'
 
 type Props = {
   navigation: any
@@ -19,29 +23,20 @@ type Client = {
   id: string
   name: string
   goal: string
-  level: string
+  activityLevel: string
 }
 
-const TEMP_CLIENTS: Client[] = [
-  {
-    id: 'client-1',
-    name: 'Edmunddd',
-    goal: 'Build strength and improve consistency',
-    level: 'Beginner',
-  },
-  {
-    id: 'client-2',
-    name: 'Sarah Lim',
-    goal: 'General fitness and fat loss',
-    level: 'Intermediate',
-  },
-  {
-    id: 'client-3',
-    name: 'Daniel Tan',
-    goal: 'Improve mobility and build confidence',
-    level: 'Beginner',
-  },
-]
+type AssignmentRow = {
+  client_id: string
+  created_at: string
+}
+
+type ClientProfileRow = {
+  id: string
+  full_name: string | null
+  fitness_goal: string | null
+  activity_level: string | null
+}
 
 const GOALS = [
   'General fitness',
@@ -86,6 +81,9 @@ export default function CoachCreateWorkoutPlanScreen({
 }: Props) {
   const [selectedClientId, setSelectedClientId] = useState('')
   const [clientSearch, setClientSearch] = useState('')
+  const [clients, setClients] = useState<Client[]>([])
+  const [loadingClients, setLoadingClients] = useState(true)
+  const [clientLoadError, setClientLoadError] = useState('')
   const [title, setTitle] = useState('')
   const [goal, setGoal] = useState('')
   const [durationWeeks, setDurationWeeks] = useState('4')
@@ -100,24 +98,108 @@ export default function CoachCreateWorkoutPlanScreen({
   const [saving, setSaving] = useState(false)
 
   const selectedClient = useMemo(() => {
-    return TEMP_CLIENTS.find((client) => client.id === selectedClientId) ?? null
-  }, [selectedClientId])
+    return clients.find((client) => client.id === selectedClientId) ?? null
+  }, [clients, selectedClientId])
 
-const filteredClients = useMemo(() => {
-  const query = clientSearch.trim().toLowerCase()
+  const filteredClients = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase()
 
-  if (!query) {
-    return []
-  }
+    if (!query) {
+      return clients.slice(0, 5)
+    }
 
-  return TEMP_CLIENTS.filter((client) => {
-    return (
-      client.name.toLowerCase().includes(query) ||
-      client.goal.toLowerCase().includes(query) ||
-      client.level.toLowerCase().includes(query)
-    )
-  })
-}, [clientSearch])
+    return clients.filter((client) => {
+      return client.name.toLowerCase().includes(query)
+    })
+  }, [clients, clientSearch])
+
+  const loadAssignedClients = useCallback(async () => {
+    setLoadingClients(true)
+    setClientLoadError('')
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError) throw userError
+
+      if (!user) {
+        throw new Error('Please log in again to load your assigned clients.')
+      }
+
+      const { data: assignmentData, error: assignmentError } = await supabase
+        .from('coach_assignments')
+        .select('client_id, created_at')
+        .eq('coach_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (assignmentError) throw assignmentError
+
+      const assignments = (assignmentData ?? []) as AssignmentRow[]
+      const clientIds = [
+        ...new Set(assignments.map((assignment) => assignment.client_id)),
+      ]
+
+      if (clientIds.length === 0) {
+        setClients([])
+        setSelectedClientId('')
+        return
+      }
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, fitness_goal, activity_level')
+        .in('id', clientIds)
+
+      if (profileError) throw profileError
+
+      const profilesById = new Map(
+        ((profileData ?? []) as ClientProfileRow[]).map((profile) => [
+          profile.id,
+          profile,
+        ])
+      )
+
+      const assignedClients: Client[] = []
+
+      for (const clientId of clientIds) {
+        const profile = profilesById.get(clientId)
+
+        if (!profile) continue
+
+        assignedClients.push({
+          id: profile.id,
+          name: profile.full_name?.trim() || 'Premium member',
+          goal: profile.fitness_goal || 'Goal not set',
+          activityLevel: profile.activity_level || 'Activity level not set',
+        })
+      }
+
+      setClients(assignedClients)
+      setSelectedClientId((currentId) => {
+        return assignedClients.some((client) => client.id === currentId)
+          ? currentId
+          : ''
+      })
+    } catch (error: any) {
+      console.error('Unable to load assigned workout clients:', error)
+      setClients([])
+      setSelectedClientId('')
+      setClientLoadError(
+        error?.message || 'Unable to load assigned clients. Please try again.'
+      )
+    } finally {
+      setLoadingClients(false)
+    }
+  }, [])
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadAssignedClients()
+    }, [loadAssignedClients])
+  )
 
   const toggleEquipment = (item: string) => {
     setEquipment((current) =>
@@ -136,6 +218,8 @@ const filteredClients = useMemo(() => {
   }
 
   const handleContinue = async () => {
+    if (saving || loadingClients) return
+
     const parsedDuration = Number(durationWeeks)
     const parsedSessions = Number(sessionsPerWeek)
     const parsedSessionLength = Number(sessionLengthMinutes)
@@ -254,12 +338,12 @@ const filteredClients = useMemo(() => {
         status: 'draft' as const,
       }
 
+      // This passes the draft in memory; it does not save a database row.
       navigation.navigate('CoachWorkoutPlanBuilder', {
         workoutPlanDraft: draft,
       })
     } catch (error) {
       console.error('Unable to start workout plan:', error)
-
       Alert.alert(
         'Could not continue',
         'We could not start this workout plan. Please try again.'
@@ -283,7 +367,6 @@ const filteredClients = useMemo(() => {
           </TouchableOpacity>
 
           <Text style={styles.topBarTitle}>New workout plan</Text>
-
           <View style={styles.topBarSpacer} />
         </View>
 
@@ -320,7 +403,6 @@ const filteredClients = useMemo(() => {
           </View>
 
           <Text style={styles.pageHeading}>Set up the plan</Text>
-
           <Text style={styles.pageSubtitle}>
             Start with the client’s goal, schedule, available equipment, and
             relevant safety information. You will add workout days and exercises
@@ -329,7 +411,6 @@ const filteredClients = useMemo(() => {
 
           <View style={styles.safetyCard}>
             <Text style={styles.safetyIcon}>!</Text>
-
             <View style={styles.safetyTextWrap}>
               <Text style={styles.safetyTitle}>Coach safety check</Text>
               <Text style={styles.safetyText}>
@@ -342,141 +423,159 @@ const filteredClients = useMemo(() => {
           </View>
 
           <Text style={styles.sectionTitle}>Client</Text>
-
-<Text style={styles.sectionDescription}>
-  Search for the assigned client this workout plan is for.
-</Text>
-
-<View style={styles.clientSearchWrap}>
-  <Text style={styles.clientSearchIcon}>⌕</Text>
-
-  <TextInput
-    value={clientSearch}
-    onChangeText={(text) => {
-      setClientSearch(text)
-
-      if (selectedClientId) {
-        setSelectedClientId('')
-      }
-    }}
-    style={styles.clientSearchInput}
-    placeholder="Search client by name"
-    placeholderTextColor="#8B9D92"
-    autoCapitalize="words"
-    autoCorrect={false}
-    returnKeyType="search"
-    accessibilityLabel="Search assigned clients"
-  />
-
-  {clientSearch ? (
-    <Pressable
-      style={styles.clearSearchButton}
-      onPress={() => {
-        setClientSearch('')
-        setSelectedClientId('')
-      }}
-      accessibilityRole="button"
-      accessibilityLabel="Clear client search"
-    >
-      <Text style={styles.clearSearchText}>×</Text>
-    </Pressable>
-  ) : null}
-</View>
-
-{selectedClient ? (
-  <View style={styles.selectedClientCard}>
-    <View style={styles.selectedClientHeader}>
-      <Text style={styles.selectedClientLabel}>Selected client</Text>
-
-      <Pressable
-        onPress={() => {
-          setSelectedClientId('')
-          setClientSearch('')
-        }}
-        accessibilityRole="button"
-        accessibilityLabel="Change selected client"
-      >
-        <Text style={styles.changeClientText}>Change</Text>
-      </Pressable>
-    </View>
-
-    <View style={styles.selectedClientContent}>
-      <View style={styles.clientAvatar}>
-        <Text style={styles.clientAvatarText}>
-          {getInitials(selectedClient.name)}
-        </Text>
-      </View>
-
-      <View style={styles.clientTextWrap}>
-        <Text style={styles.clientName}>{selectedClient.name}</Text>
-
-        <Text style={styles.clientMeta}>
-          {selectedClient.goal} · {selectedClient.level}
-        </Text>
-      </View>
-
-      <Text style={styles.selectedClientCheck}>✓</Text>
-    </View>
-  </View>
-) : null}
-
-{clientSearch.trim() && !selectedClient ? (
-  <View style={styles.searchResultsWrap}>
-    <Text style={styles.searchResultsLabel}>
-      {filteredClients.length > 0
-        ? `${filteredClients.length} matching ${
-            filteredClients.length === 1 ? 'client' : 'clients'
-          }`
-        : 'No matching clients'}
-    </Text>
-
-    {filteredClients.map((client) => (
-      <Pressable
-        key={client.id}
-        style={styles.clientSearchResultCard}
-        onPress={() => {
-          setSelectedClientId(client.id)
-          setClientSearch(client.name)
-
-          if (!experienceLevel) {
-            setExperienceLevel(client.level)
-          }
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`Select ${client.name}`}
-      >
-        <View style={styles.clientAvatar}>
-          <Text style={styles.clientAvatarText}>
-            {getInitials(client.name)}
+          <Text style={styles.sectionDescription}>
+            Choose an assigned client below, or search by name to find another
+            client.
           </Text>
-        </View>
 
-        <View style={styles.clientTextWrap}>
-          <Text style={styles.clientName}>{client.name}</Text>
+          <View style={styles.clientSearchWrap}>
+            <Text style={styles.clientSearchIcon}>⌕</Text>
+            <TextInput
+              value={clientSearch}
+              onChangeText={(text) => {
+                setClientSearch(text)
+                setSelectedClientId('')
+              }}
+              style={styles.clientSearchInput}
+              placeholder="Search your assigned clients"
+              placeholderTextColor="#8B9D92"
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="search"
+              editable={!loadingClients && !saving}
+              accessibilityLabel="Search assigned clients"
+            />
 
-          <Text style={styles.clientMeta}>
-            {client.goal} · {client.level}
-          </Text>
-        </View>
+            {clientSearch ? (
+              <Pressable
+                style={styles.clearSearchButton}
+                disabled={saving}
+                onPress={() => {
+                  setClientSearch('')
+                  setSelectedClientId('')
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Clear client search"
+              >
+                <Text style={styles.clearSearchText}>×</Text>
+              </Pressable>
+            ) : null}
+          </View>
 
-        <Text style={styles.searchResultChevron}>›</Text>
-      </Pressable>
-    ))}
-  </View>
-) : null}
+          {loadingClients ? (
+            <View style={styles.clientSearchHint}>
+              <ActivityIndicator color="#1E5C35" />
+              <Text style={styles.clientSearchHintText}>
+                Loading your assigned clients...
+              </Text>
+            </View>
+          ) : clientLoadError ? (
+            <View style={styles.clientSearchHint}>
+              <Text style={styles.clientSearchHintText}>
+                {clientLoadError}
+              </Text>
+              <Pressable
+                onPress={() => void loadAssignedClients()}
+                accessibilityRole="button"
+                accessibilityLabel="Retry loading assigned clients"
+              >
+                <Text style={styles.changeClientText}>Try again</Text>
+              </Pressable>
+            </View>
+          ) : selectedClient ? (
+            <View style={styles.selectedClientCard}>
+              <View style={styles.selectedClientHeader}>
+                <Text style={styles.selectedClientLabel}>Selected client</Text>
+                <Pressable
+                  disabled={saving}
+                  onPress={() => {
+                    setSelectedClientId('')
+                    setClientSearch('')
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change selected client"
+                >
+                  <Text style={styles.changeClientText}>Change</Text>
+                </Pressable>
+              </View>
 
-{!clientSearch.trim() && !selectedClient ? (
-  <View style={styles.clientSearchHint}>
-    <Text style={styles.clientSearchHintText}>
-      Start typing a client name to search your assigned clients.
-    </Text>
-  </View>
-) : null}
+              <View style={styles.selectedClientContent}>
+                <View style={styles.clientAvatar}>
+                  <Text style={styles.clientAvatarText}>
+                    {getInitials(selectedClient.name)}
+                  </Text>
+                </View>
+                <View style={styles.clientTextWrap}>
+                  <Text style={styles.clientName}>{selectedClient.name}</Text>
+                  <Text style={styles.clientMeta}>
+                    {selectedClient.goal} · {selectedClient.activityLevel}
+                  </Text>
+                </View>
+                <Text style={styles.selectedClientCheck}>✓</Text>
+              </View>
+            </View>
+          ) : clients.length === 0 ? (
+            <View style={styles.clientSearchHint}>
+              <Text style={styles.clientSearchHintText}>
+                No assigned client profiles are available. Check your
+                assignments and profile access before creating a workout plan.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.searchResultsWrap}>
+              <Text style={styles.searchResultsLabel}>
+                {clientSearch.trim()
+                  ? `${filteredClients.length} matching ${
+                      filteredClients.length === 1 ? 'client' : 'clients'
+                    }`
+                  : `Showing ${filteredClients.length} of ${clients.length} assigned clients`}
+              </Text>
+
+              {filteredClients.length === 0 ? (
+                <View style={styles.clientSearchHint}>
+                  <Text style={styles.clientSearchHintText}>
+                    No matching clients. Try a different name.
+                  </Text>
+                </View>
+              ) : (
+                filteredClients.map((client) => (
+                  <Pressable
+                    key={client.id}
+                    style={styles.clientSearchResultCard}
+                    disabled={saving}
+                    onPress={() => {
+                      setSelectedClientId(client.id)
+                      setClientSearch(client.name)
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select ${client.name}`}
+                  >
+                    <View style={styles.clientAvatar}>
+                      <Text style={styles.clientAvatarText}>
+                        {getInitials(client.name)}
+                      </Text>
+                    </View>
+                    <View style={styles.clientTextWrap}>
+                      <Text style={styles.clientName}>{client.name}</Text>
+                      <Text style={styles.clientMeta}>
+                        {client.goal} · {client.activityLevel}
+                      </Text>
+                    </View>
+                    <Text style={styles.searchResultChevron}>›</Text>
+                  </Pressable>
+                ))
+              )}
+
+              {!clientSearch.trim() && clients.length > 5 ? (
+                <Text style={styles.clientSearchHintText}>
+                  Search above to find your other assigned clients.
+                </Text>
+              ) : null}
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Plan details</Text>
-
           <FieldLabel label="Plan title" required />
-
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -488,7 +587,6 @@ const filteredClients = useMemo(() => {
           />
 
           <FieldLabel label="Primary goal" required />
-
           <ChoiceGrid
             options={GOALS}
             selectedValue={goal}
@@ -496,7 +594,6 @@ const filteredClients = useMemo(() => {
           />
 
           <FieldLabel label="Plan duration" required />
-
           <View style={styles.numberFieldRow}>
             <TextInput
               value={durationWeeks}
@@ -508,14 +605,11 @@ const filteredClients = useMemo(() => {
               maxLength={2}
               accessibilityLabel="Plan duration in weeks"
             />
-
             <Text style={styles.numberFieldUnit}>weeks</Text>
           </View>
 
           <Text style={styles.sectionTitle}>Schedule</Text>
-
           <FieldLabel label="Sessions per week" required />
-
           <View style={styles.numberFieldRow}>
             <TextInput
               value={sessionsPerWeek}
@@ -527,12 +621,10 @@ const filteredClients = useMemo(() => {
               maxLength={1}
               accessibilityLabel="Number of sessions per week"
             />
-
             <Text style={styles.numberFieldUnit}>sessions</Text>
           </View>
 
           <FieldLabel label="Typical session length" required />
-
           <View style={styles.numberFieldRow}>
             <TextInput
               value={sessionLengthMinutes}
@@ -544,16 +636,13 @@ const filteredClients = useMemo(() => {
               maxLength={3}
               accessibilityLabel="Session length in minutes"
             />
-
             <Text style={styles.numberFieldUnit}>minutes</Text>
           </View>
 
           <FieldLabel label="Preferred workout days" required />
-
           <Text style={styles.fieldHint}>
             Select the same number of days as sessions per week.
           </Text>
-
           <View style={styles.dayRow}>
             {DAYS.map((day) => {
               const isSelected = preferredDays.includes(day)
@@ -561,7 +650,10 @@ const filteredClients = useMemo(() => {
               return (
                 <Pressable
                   key={day}
-                  style={[styles.dayButton, isSelected && styles.dayButtonActive]}
+                  style={[
+                    styles.dayButton,
+                    isSelected && styles.dayButtonActive,
+                  ]}
                   onPress={() => togglePreferredDay(day)}
                   accessibilityRole="checkbox"
                   accessibilityLabel={`Workout day ${day}`}
@@ -581,29 +673,22 @@ const filteredClients = useMemo(() => {
           </View>
 
           <Text style={styles.sectionTitle}>Training context</Text>
-
           <FieldLabel label="Training location" required />
-
           <ChoiceGrid
             options={TRAINING_LOCATIONS}
             selectedValue={trainingLocation}
             onSelect={setTrainingLocation}
           />
-
           <FieldLabel label="Current experience level" required />
-
           <ChoiceGrid
             options={EXPERIENCE_LEVELS}
             selectedValue={experienceLevel}
             onSelect={setExperienceLevel}
           />
-
           <FieldLabel label="Available equipment" required />
-
           <Text style={styles.fieldHint}>
             Select everything the client can access reliably.
           </Text>
-
           <View style={styles.multiChoiceWrap}>
             {EQUIPMENT_OPTIONS.map((item) => {
               const isSelected = equipment.includes(item)
@@ -635,14 +720,11 @@ const filteredClients = useMemo(() => {
           </View>
 
           <Text style={styles.sectionTitle}>Important notes</Text>
-
           <Text style={styles.sectionDescription}>
             Record only coaching-relevant context. The plan builder will display
             this information as a reminder while you select exercises.
           </Text>
-
           <FieldLabel label="Health, injury, or movement considerations" />
-
           <TextInput
             value={healthNotes}
             onChangeText={setHealthNotes}
@@ -654,9 +736,7 @@ const filteredClients = useMemo(() => {
             maxLength={500}
             accessibilityLabel="Health injury or movement considerations"
           />
-
           <FieldLabel label="Coach notes" />
-
           <TextInput
             value={coachNotes}
             onChangeText={setCoachNotes}
@@ -671,22 +751,23 @@ const filteredClients = useMemo(() => {
 
           <View style={styles.bottomNotice}>
             <Text style={styles.bottomNoticeText}>
-              This plan will be saved as a draft. It is not visible to the
-              client until it is submitted and approved.
+              Continue to build this draft. It is not saved to the database yet.
+              Saving and submission will be connected in the review step.
             </Text>
           </View>
-
           <TouchableOpacity
-            style={[styles.continueButton, saving && styles.continueButtonDisabled]}
-            disabled={saving}
+            style={[
+              styles.continueButton,
+              (saving || loadingClients) && styles.continueButtonDisabled,
+            ]}
+            disabled={saving || loadingClients}
             onPress={handleContinue}
             accessibilityRole="button"
             accessibilityLabel="Continue to build workout days"
           >
             <Text style={styles.continueButtonText}>
-              {saving ? 'Saving draft...' : 'Continue to Build Workouts'}
+              {saving ? 'Opening builder...' : 'Continue to Build Workouts'}
             </Text>
-
             <Text style={styles.continueButtonArrow}>›</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -727,7 +808,10 @@ function ChoiceGrid({
         return (
           <Pressable
             key={option}
-            style={[styles.choiceButton, isSelected && styles.choiceButtonActive]}
+            style={[
+              styles.choiceButton,
+              isSelected && styles.choiceButtonActive,
+            ]}
             onPress={() => onSelect(option)}
             accessibilityRole="radio"
             accessibilityLabel={option}
@@ -751,7 +835,7 @@ function ChoiceGrid({
 function getInitials(name: string) {
   return name
     .trim()
-    .split(' ')
+    .split(/\s+/)
     .map((part) => part[0])
     .join('')
     .slice(0, 2)
@@ -763,6 +847,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
+
   safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
@@ -778,20 +863,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E2ECE6',
   },
+
   backButton: {
     flex: 1,
     paddingVertical: 10,
   },
+
   backButtonText: {
     color: '#1E5C35',
     fontSize: 14,
     fontWeight: '800',
   },
+
   topBarTitle: {
     color: '#16281D',
     fontSize: 15,
     fontWeight: '800',
   },
+
   topBarSpacer: {
     flex: 1,
   },
@@ -807,10 +896,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
+
   progressItem: {
     width: 74,
     alignItems: 'center',
   },
+
   progressDot: {
     width: 28,
     height: 28,
@@ -819,19 +910,23 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#E2ECE6',
   },
+
   progressDotActive: {
     backgroundColor: '#1E5C35',
   },
+
   progressDotText: {
     color: '#6C8074',
     fontSize: 12,
     fontWeight: '800',
   },
+
   progressDotTextActive: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '800',
   },
+
   progressLabel: {
     marginTop: 6,
     color: '#7C8F83',
@@ -839,6 +934,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+
   progressLabelActive: {
     marginTop: 6,
     color: '#1E5C35',
@@ -846,6 +942,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
   },
+
   progressLine: {
     flex: 1,
     height: 2,
@@ -860,6 +957,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.4,
   },
+
   pageSubtitle: {
     marginTop: 7,
     color: '#5C7267',
@@ -876,6 +974,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3DEAA',
   },
+
   safetyIcon: {
     width: 24,
     height: 24,
@@ -888,15 +987,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F7D98B',
   },
+
   safetyTextWrap: {
     flex: 1,
     marginLeft: 10,
   },
+
   safetyTitle: {
     color: '#704A08',
     fontSize: 13,
     fontWeight: '800',
   },
+
   safetyText: {
     marginTop: 3,
     color: '#7A6131',
@@ -911,6 +1013,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
   },
+
   sectionDescription: {
     marginBottom: 12,
     color: '#5C7267',
@@ -918,22 +1021,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
 
-  clientCard: {
-    minHeight: 72,
-    marginBottom: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0EBE4',
-  },
-  clientCardSelected: {
-    borderColor: '#1E5C35',
-    backgroundColor: '#F0F8F2',
-  },
   clientAvatar: {
     width: 42,
     height: 42,
@@ -942,44 +1029,30 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: '#D8EADF',
   },
+
   clientAvatarText: {
     color: '#1E5C35',
     fontSize: 14,
     fontWeight: '800',
   },
+
   clientTextWrap: {
     flex: 1,
     marginLeft: 11,
     paddingRight: 8,
   },
+
   clientName: {
     color: '#16281D',
     fontSize: 14,
     fontWeight: '800',
   },
+
   clientMeta: {
     marginTop: 3,
     color: '#5C7267',
     fontSize: 11,
     lineHeight: 16,
-  },
-  radioOuter: {
-    width: 21,
-    height: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#B8C9BF',
-  },
-  radioOuterSelected: {
-    borderColor: '#1E5C35',
-  },
-  radioInner: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: '#1E5C35',
   },
 
   fieldLabel: {
@@ -989,9 +1062,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+
   requiredMark: {
     color: '#B3261E',
   },
+
   fieldHint: {
     marginTop: -3,
     marginBottom: 10,
@@ -999,6 +1074,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
   },
+
   textInput: {
     minHeight: 50,
     paddingHorizontal: 14,
@@ -1009,6 +1085,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D6E4DB',
   },
+
   multilineInput: {
     minHeight: 106,
     paddingTop: 13,
@@ -1020,6 +1097,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginRight: -8,
   },
+
   choiceButton: {
     marginRight: 8,
     marginBottom: 9,
@@ -1030,15 +1108,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D6E4DB',
   },
+
   choiceButtonActive: {
     backgroundColor: '#E6F2E9',
     borderColor: '#1E5C35',
   },
+
   choiceButtonText: {
     color: '#5C7267',
     fontSize: 12,
     fontWeight: '700',
   },
+
   choiceButtonTextActive: {
     color: '#1E5C35',
     fontWeight: '800',
@@ -1048,9 +1129,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   numberInput: {
     flex: 1,
   },
+
   numberFieldUnit: {
     width: 76,
     marginLeft: 10,
@@ -1063,6 +1146,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
   dayButton: {
     width: 42,
     height: 42,
@@ -1073,15 +1157,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D6E4DB',
   },
+
   dayButtonActive: {
     backgroundColor: '#1E5C35',
     borderColor: '#1E5C35',
   },
+
   dayButtonText: {
     color: '#5C7267',
     fontSize: 11,
     fontWeight: '800',
   },
+
   dayButtonTextActive: {
     color: '#FFFFFF',
   },
@@ -1091,6 +1178,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginRight: -8,
   },
+
   multiChoiceButton: {
     marginRight: 8,
     marginBottom: 9,
@@ -1101,15 +1189,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D6E4DB',
   },
+
   multiChoiceButtonActive: {
     backgroundColor: '#E6F2E9',
     borderColor: '#1E5C35',
   },
+
   multiChoiceText: {
     color: '#5C7267',
     fontSize: 12,
     fontWeight: '700',
   },
+
   multiChoiceTextActive: {
     color: '#1E5C35',
     fontWeight: '800',
@@ -1123,6 +1214,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D7E8DC',
   },
+
   bottomNoticeText: {
     color: '#426353',
     fontSize: 12,
@@ -1140,14 +1232,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#1E5C35',
   },
+
   continueButtonDisabled: {
     opacity: 0.65,
   },
+
   continueButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
+
   continueButtonArrow: {
     position: 'absolute',
     right: 18,
@@ -1155,124 +1250,139 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: '300',
   },
+
   clientSearchWrap: {
-  height: 50,
-  flexDirection: 'row',
-  alignItems: 'center',
-  paddingHorizontal: 13,
-  borderRadius: 13,
-  backgroundColor: '#FFFFFF',
-  borderWidth: 1,
-  borderColor: '#D6E4DB',
-},
-clientSearchIcon: {
-  marginRight: 8,
-  color: '#5C7267',
-  fontSize: 24,
-  fontWeight: '400',
-  lineHeight: 26,
-},
-clientSearchInput: {
-  flex: 1,
-  color: '#16281D',
-  fontSize: 14,
-},
-clearSearchButton: {
-  width: 30,
-  height: 30,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-clearSearchText: {
-  color: '#5C7267',
-  fontSize: 24,
-  fontWeight: '300',
-  lineHeight: 27,
-},
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 13,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D6E4DB',
+  },
 
-searchResultsWrap: {
-  marginTop: 10,
-},
-searchResultsLabel: {
-  marginBottom: 8,
-  color: '#71857A',
-  fontSize: 11,
-  fontWeight: '700',
-},
-clientSearchResultCard: {
-  minHeight: 70,
-  marginBottom: 9,
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  flexDirection: 'row',
-  alignItems: 'center',
-  borderRadius: 16,
-  backgroundColor: '#FFFFFF',
-  borderWidth: 1,
-  borderColor: '#E0EBE4',
-},
-searchResultChevron: {
-  marginLeft: 8,
-  color: '#1E5C35',
-  fontSize: 25,
-  fontWeight: '300',
-},
+  clientSearchIcon: {
+    marginRight: 8,
+    color: '#5C7267',
+    fontSize: 24,
+    fontWeight: '400',
+    lineHeight: 26,
+  },
 
-selectedClientCard: {
-  marginTop: 11,
-  padding: 14,
-  borderRadius: 16,
-  backgroundColor: '#F0F8F2',
-  borderWidth: 1,
-  borderColor: '#9CC8A9',
-},
-selectedClientHeader: {
-  marginBottom: 10,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-},
-selectedClientLabel: {
-  color: '#1E5C35',
-  fontSize: 11,
-  fontWeight: '800',
-  textTransform: 'uppercase',
-  letterSpacing: 0.4,
-},
-changeClientText: {
-  color: '#1E5C35',
-  fontSize: 12,
-  fontWeight: '800',
-  textDecorationLine: 'underline',
-},
-selectedClientContent: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-selectedClientCheck: {
-  width: 25,
-  height: 25,
-  marginLeft: 8,
-  overflow: 'hidden',
-  color: '#FFFFFF',
-  fontSize: 13,
-  fontWeight: '900',
-  lineHeight: 25,
-  textAlign: 'center',
-  borderRadius: 13,
-  backgroundColor: '#1E5C35',
-},
+  clientSearchInput: {
+    flex: 1,
+    color: '#16281D',
+    fontSize: 14,
+  },
 
-clientSearchHint: {
-  marginTop: 10,
-  paddingVertical: 12,
-  paddingHorizontal: 13,
-  borderRadius: 13,
-  backgroundColor: '#EDF5EF',
-},
-clientSearchHintText: {
-  color: '#5C7267',
-  fontSize: 12,
-  lineHeight: 17,
-},
+  clearSearchButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  clearSearchText: {
+    color: '#5C7267',
+    fontSize: 24,
+    fontWeight: '300',
+    lineHeight: 27,
+  },
+
+  searchResultsWrap: {
+    marginTop: 10,
+  },
+
+  searchResultsLabel: {
+    marginBottom: 8,
+    color: '#71857A',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  clientSearchResultCard: {
+    minHeight: 70,
+    marginBottom: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0EBE4',
+  },
+
+  searchResultChevron: {
+    marginLeft: 8,
+    color: '#1E5C35',
+    fontSize: 25,
+    fontWeight: '300',
+  },
+
+  selectedClientCard: {
+    marginTop: 11,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#F0F8F2',
+    borderWidth: 1,
+    borderColor: '#9CC8A9',
+  },
+
+  selectedClientHeader: {
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  selectedClientLabel: {
+    color: '#1E5C35',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+
+  changeClientText: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
+  },
+
+  selectedClientContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  selectedClientCheck: {
+    width: 25,
+    height: 25,
+    marginLeft: 8,
+    overflow: 'hidden',
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+    lineHeight: 25,
+    textAlign: 'center',
+    borderRadius: 13,
+    backgroundColor: '#1E5C35',
+  },
+
+  clientSearchHint: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    borderRadius: 13,
+    backgroundColor: '#EDF5EF',
+  },
+
+  clientSearchHintText: {
+    color: '#5C7267',
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
 })
