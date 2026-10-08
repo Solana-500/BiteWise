@@ -20,6 +20,7 @@ export async function analyzeFoodImage(imageUri: string) {
         mimeType,
       },
     }
+  }
   )
 
   if (error) {
