@@ -126,11 +126,22 @@ async function pickFoodImage() {
     setSelectedImage(imageUri)
     setAnalyzingImage(true)
 
+    
     const analysis = await analyzeFoodImage(imageUri)
+    
+    // Display the AI result in the existing food logging card.
+    setSelectedFood(analysis)
+    
+    Alert.alert(
+      'Food Identified!',
+      `${analysis.name}\n\n` +
+      `Estimated Calories: ${analysis.calories} kcal\n` +
+      `Protein: ${analysis.protein} g\n` +
+      `Carbs: ${analysis.carbs} g\n` +
+      `Fat: ${analysis.fat} g\n\n` +
+      `Please review these estimates before saving.`
+    )
 
-    Alert.alert('Gemini Food Analysis', analysis)
-  } catch (error) {
-    console.error('Food image analysis failed:', error)
 
     Alert.alert(
       'AI Analysis Failed',
