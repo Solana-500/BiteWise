@@ -351,10 +351,20 @@ async function fetchAiRecommendation() {
             <Text style={styles.chevron}>›</Text>
           </View>
 
-          <Text style={styles.recommendationText} numberOfLines={1}>
-            {recommendation.name} — {recommendation.kcal} kcal
+          <Text style={styles.recommendationText}>
+            {recommendation.name === 'Suggested meal name
+             ? 'No AI Recommendation generated yet'}
           </Text>
-        </Pressable>
+          
+        </Pressable
+          style={styles.logMealButton}
+          onPress={fetchAiRecommendation}
+          disabled={aiLoading}
+          >
+           <Text style={styles.logMealText}>
+              {aiLoading ? 'Generating...' : 'Generate AI Recommendation'}
+           </Text>
+</Pressable>
       </View>
       </ScrollView>
     </SafeAreaView>
