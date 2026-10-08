@@ -138,7 +138,7 @@ async function pickFoodImage() {
     
     // Display the AI result in the existing food logging card.
     setSelectedFood(analysis)
-    
+
     Alert.alert(
       'Food Identified!',
       `${analysis.name}\n\n` +
@@ -148,7 +148,8 @@ async function pickFoodImage() {
       `Fat: ${analysis.fat} g\n\n` +
       `Please review these estimates before saving.`
     )
-
+  } catch (error) {
+    console.error('Food image analysis failed:', error)
 
     Alert.alert(
       'AI Analysis Failed',
@@ -158,6 +159,7 @@ async function pickFoodImage() {
     setAnalyzingImage(false)
   }
 }
+
 
 
   
