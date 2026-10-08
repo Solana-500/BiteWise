@@ -63,7 +63,26 @@ export default function PuHomeScreen({ navigation }: Props) {
     name: 'Suggested meal name',
     kcal: 0,
   })
+  
+const [aiLoading, setAiLoading] = useState(false)
 
+async function fetchAiRecommendation() {
+  try {
+    setAiLoading(true)
+
+    const result = await getAiMealRecommendation()
+
+    setRecommendation({
+      name: result,
+      kcal: 0,
+    })
+  } catch (error) {
+    console.error('Failed to get AI recommendation:', error)
+  } finally {
+    setAiLoading(false)
+  }
+}
+  
   useFocusEffect(
   useCallback(() => {
     void loadPuHome()
