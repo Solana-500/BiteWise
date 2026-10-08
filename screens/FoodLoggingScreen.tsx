@@ -336,6 +336,19 @@ async function pickFoodImage() {
       : 0
   }
 
+function openEditFood() {
+  if (!selectedFood) return
+
+  setEditFoodName(selectedFood.name)
+  setEditServing(selectedFood.serving)
+  setEditCalories(String(selectedFood.calories))
+  setEditProtein(String(selectedFood.protein))
+  setEditCarbs(String(selectedFood.carbs))
+  setEditFat(String(selectedFood.fat))
+
+  setShowEditFood(true)
+}
+
   function openQuickAdd() {
     setQuickAddName('')
     setQuickAddCalories('')
