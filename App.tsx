@@ -451,14 +451,6 @@ export default function App() {
         headerBackButtonDisplayMode: 'minimal',
       }}
     >
-      <Stack.Screen
-        name="ResetPassword"
-        component={ResetPasswordScreen}
-        options={{
-          title: 'Reset Password',
-          headerShown: false,
-        }}
-      />
     
         {!session ? (
           <>
@@ -658,7 +650,15 @@ export default function App() {
             />
           </>
         )}
-      </Stack.Navigator>
+            <Stack.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{
+          title: 'Reset Password',
+          headerShown: false,
+        }}
+      />
+            </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaProvider>
   )
