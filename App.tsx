@@ -516,7 +516,16 @@ export default function App() {
       }}
     >
     
-        {!session ? (
+        {recoveryMode ? (
+  <Stack.Screen
+    name="ResetPassword"
+    component={ResetPasswordScreen}
+    options={{
+      title: 'Reset Password',
+      headerShown: false,
+    }}
+  />
+) : !session ? (
           <>
             <Stack.Screen
               name="Login"
@@ -714,14 +723,7 @@ export default function App() {
             />
           </>
         )}
-            <Stack.Screen
-        name="ResetPassword"
-        component={ResetPasswordScreen}
-        options={{
-          title: 'Reset Password',
-          headerShown: false,
-        }}
-      />
+           
             </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaProvider>
