@@ -73,10 +73,16 @@ export default function SubPremiumScreen() {
         'Welcome to BiteWise Premium!',
         'Your Premium access is now active.',
         [
-          {
-            text: 'Continue',
-            onPress: () => navigation.goBack(),
-          },
+          
+      {
+        text: 'Continue',
+        onPress: () => {
+          if (navigation.canGoBack()) {
+            navigation.goBack()
+          }
+        },
+      },
+
         ]
       )
     } catch (error: any) {
