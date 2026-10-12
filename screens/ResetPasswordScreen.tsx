@@ -62,9 +62,13 @@ export default function ResetPasswordScreen({ onComplete }: Props) {
       
       const { error: signOutError } = await supabase.auth.signOut()
       
+      
+      const { error: signOutError } = await supabase.auth.signOut()
+      
       if (signOutError) {
-        throw signOutError
+        console.warn('Password updated, but sign-out failed')
       }
+
       
       setPassword('')
       setConfirmPassword('')
