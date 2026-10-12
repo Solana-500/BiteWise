@@ -450,7 +450,8 @@ export default function App() {
           },
           headerBackButtonDisplayMode: 'minimal',
         }}
-       
+       >
+     </Stack.Navigator>
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}
@@ -460,7 +461,7 @@ export default function App() {
         }}
       />
 
-      >
+      
         {!session ? (
           <>
             <Stack.Screen
