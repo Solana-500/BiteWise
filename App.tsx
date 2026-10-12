@@ -678,23 +678,20 @@ export default function App() {
             />
           </>
 
+              
         ) : isPremium ? (
-        <>
-          <Stack.Screen
-            name="PremiumTabs"
-            component={PremiumTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SubPremium"
-            component={SubPremiumScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PuCoach"
-            component={PuCoachScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen
+              name="PremiumTabs"
+              component={PremiumTabs}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="PuCoach"
+              component={PuCoachScreen}
+              options={{ headerShown: false }}
+            />
+
 
           <Stack.Screen
             name="FoodLogging"
