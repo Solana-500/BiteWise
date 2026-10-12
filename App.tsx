@@ -42,6 +42,7 @@ import CoachWorkoutPlansScreen from './screens/CoachWorkoutPlansScreen'
 import CoachCreateWorkoutPlanScreen from './screens/CoachCreateWorkoutPlanScreen'
 import CoachWorkoutPlanBuilderScreen from './screens/CoachWorkoutPlanBuilderScreen'
 import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen'
+import ResetPasswordScreen from './screens/ResetPasswordScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -449,6 +450,16 @@ export default function App() {
           },
           headerBackButtonDisplayMode: 'minimal',
         }}
+       
+      <Stack.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{
+          title: 'Reset Password',
+          headerShown: false,
+        }}
+      />
+
       >
         {!session ? (
           <>
