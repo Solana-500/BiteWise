@@ -145,6 +145,12 @@ async function pickFoodImage() {
     
     // Display the AI result in the food logging card.
         
+  
+    const calories = Number(editCalories)
+    const protein = Number(editProtein)
+    const carbs = Number(editCarbs)
+    const fat = Number(editFat)
+    
     setSelectedFood({
       name: editFoodName.trim(),
       serving: editServing.trim(),
@@ -153,6 +159,13 @@ async function pickFoodImage() {
       carbs,
       fat,
     })
+    
+    if (isAiFood) {
+      setAiFoodReviewed(true)
+    }
+    
+    setShowEditFood(false)
+
     
     // Confirm the user has reviewed the AI estimates.
     if (isAiFood) {
