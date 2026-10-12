@@ -768,7 +768,11 @@ function openEditFood() {
                   <TouchableOpacity
                     key={`${food.name}-${food.serving}-${index}`}
                     style={styles.foodCard}
-                    onPress={() => setSelectedFood(food)}
+                    onPress={() => {
+                      setIsAiFood(false)
+                      setAiFoodReviewed(false)
+                      setSelectedFood(food)
+                    }}
                   >
                     <View style={styles.foodInfo}>
                       <Text style={styles.foodName}>{food.name}</Text>
