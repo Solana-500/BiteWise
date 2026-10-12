@@ -56,10 +56,13 @@ export default function SubPremiumScreen() {
        */
       const { error } = await supabase
         .from('profiles')
-        .update({
+        
+      .update({
         subscription_tier: 'premium',
+        tier: 'premium',
         updated_at: new Date().toISOString(),
-        })
+      })
+
         .eq('id', user.id)
 
       if (error) {
