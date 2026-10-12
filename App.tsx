@@ -341,7 +341,8 @@ export default function App() {
   const [userRole, setUserRole] = useState<'user' | 'coach' | 'admin' | null>(null)
   const [isPremium, setIsPremium] = useState(false)
   const [recoveryMode, setRecoveryMode] = useState(false)
-
+  const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
+  
   useEffect(() => {
     let active = true
   
@@ -389,7 +390,16 @@ export default function App() {
     }
   
     // Handles opening BiteWise from a closed state.
-    Linking.getInitialURL().then(handleRecoveryLink)
+    Linking.getInitialURL()
+      .then(handleRecoveryLink)
+      .catch(() => {
+        console.warn('Unable to check initial recovery link')
+      })
+      .finally(() => {
+        if (active) {
+          setCheckingRecoveryLink(false)
+        }
+      })
   
     // Handles opening a link while BiteWise is running.
     const subscription = Linking.addEventListener(
@@ -483,7 +493,7 @@ export default function App() {
     }
   }, [checkProfile])
 
-  if (loading) {
+  if (loading || checkingRecoveryLink) {
     return (
       <View
         style={{
