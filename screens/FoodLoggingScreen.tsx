@@ -307,6 +307,14 @@ async function pickFoodImage() {
 
   const saveFood = useCallback(
     async (food: FoodResult) => {
+        if (isAiFood && !aiFoodReviewed) {
+          Alert.alert(
+            'Review Required',
+            'Please tap Edit Food Details and confirm the nutritional estimates before saving this AI-generated meal.'
+          )
+          return
+        }
+
       const {
         data: { user },
         error: userError,
@@ -350,7 +358,7 @@ async function pickFoodImage() {
         setSaving(false)
       }
     },
-    [navigation, selectedMeal]
+    [navigation, selectedMeal, isAiFood, aiFoodReviewed]
   )
 
   function getOptionalMacro(value: string) {
@@ -712,7 +720,12 @@ function openEditFood() {
                   saving && styles.disabledAddButton,
                 ]}
                 disabled={saving}
-                onPress={() => void saveFood(selectedFood)}
+                onPress={() => {
+                  setIsAiFood(false)
+                  setAiFoodReviewed(false)
+                  setSelectedFood(food)
+                }}
+
               >
                 {saving ? (
                   <ActivityIndicator color="#FFFFFF" />
