@@ -437,21 +437,20 @@ export default function App() {
   return (
     <SafeAreaProvider>
     <NavigationContainer>
-     <Stack.Navigator
-        screenOptions={{
-          animation: 'none',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: '#F5FAF6',
-          },
-          headerTintColor: '#1E5C35',
-          headerTitleStyle: {
-            fontWeight: '800',
-          },
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-       >
-     </Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        animation: 'none',
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#F5FAF6',
+        },
+        headerTintColor: '#1E5C35',
+        headerTitleStyle: {
+          fontWeight: '800',
+        },
+        headerBackButtonDisplayMode: 'minimal',
+      }}
+    >
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}
@@ -460,8 +459,7 @@ export default function App() {
           headerShown: false,
         }}
       />
-
-      
+    
         {!session ? (
           <>
             <Stack.Screen
