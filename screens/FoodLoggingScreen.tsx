@@ -136,10 +136,16 @@ async function pickFoodImage() {
     setAnalyzingImage(true)
 
     
+   
     const analysis = await analyzeFoodImage(imageUri)
     
-    // Display the AI result in the existing food logging card.
+    // Mark this food as AI-generated and not yet reviewed.
+    setIsAiFood(true)
+    setAiFoodReviewed(false)
+    
+    // Display the AI result in the food logging card.
     setSelectedFood(analysis)
+
 
     Alert.alert(
       'Food Identified!',
