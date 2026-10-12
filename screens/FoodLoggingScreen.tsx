@@ -714,16 +714,15 @@ function openEditFood() {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity>
+             
+              <TouchableOpacity
                 style={[
                   styles.addButton,
                   saving && styles.disabledAddButton,
                 ]}
                 disabled={saving}
                 onPress={() => void saveFood(selectedFood)}
-                
-
-              
+              >
                 {saving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
@@ -732,6 +731,7 @@ function openEditFood() {
                   </Text>
                 )}
               </TouchableOpacity>
+
             </View>
           ) : (
             <>
