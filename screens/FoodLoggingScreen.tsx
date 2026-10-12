@@ -720,10 +720,7 @@ function openEditFood() {
                   saving && styles.disabledAddButton,
                 ]}
                 disabled={saving}
-                onPress={() => {
-                  setIsAiFood(false)
-                  setAiFoodReviewed(false)
-                  setSelectedFood(food)
+                onPress={() => void saveFood(selectedFood)}
                 }}
 
               >
