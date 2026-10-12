@@ -13,7 +13,11 @@ import {
 
 import { supabase } from '../services/supabase'
 
-export default function ResetPasswordScreen() {
+type Props = {
+  onComplete: () => void
+}
+
+export default function ResetPasswordScreen({ onComplete }: Props) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -55,13 +59,27 @@ export default function ResetPasswordScreen() {
 
       if (error) throw error
 
-      Alert.alert(
-        'Password Updated',
-        'Your password has been successfully changed.'
-      )
-
+      
+      const { error: signOutError } = await supabase.auth.signOut()
+      
+      if (signOutError) {
+        throw signOutError
+      }
+      
       setPassword('')
       setConfirmPassword('')
+      
+      Alert.alert(
+        'Password Updated',
+        'Your password has been changed successfully. Please log in again.',
+        [
+          {
+            text: 'OK',
+            onPress: onComplete,
+          },
+        ]
+      )
+
     } catch (error: any) {
       Alert.alert(
         'Password Reset Failed',
