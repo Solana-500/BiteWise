@@ -99,6 +99,8 @@ export default function FoodLoggingScreen() {
 
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
+  const [isAiFood, setIsAiFood] = useState(false)
+  const [aiFoodReviewed, setAiFoodReviewed] = useState(false)
   const [showEditFood, setShowEditFood] = useState(false)
   const [editFoodName, setEditFoodName] = useState('')
   const [editServing, setEditServing] = useState('')
