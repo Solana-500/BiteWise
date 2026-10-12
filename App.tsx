@@ -204,6 +204,8 @@ function PremiumHomeStackNavigator() {
 }
 
 function PremiumTabs() {
+  const insets = useSafeAreaInsets()
+
   return (
     <PremiumTab.Navigator
       screenOptions={{
@@ -220,14 +222,16 @@ function PremiumTabs() {
           alignItems: 'center',
           justifyContent: 'center',
         },
+       
         tabBarStyle: {
-        height: 60,
-        paddingTop: 5,
-        paddingBottom: 5,
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: '#E2ECE6',
-      },
+          height: 60 + insets.bottom,
+          paddingTop: 5,
+          paddingBottom: Math.max(insets.bottom, 8),
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2ECE6',
+        },
+
       }}
     >
       <PremiumTab.Screen
