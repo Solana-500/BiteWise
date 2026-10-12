@@ -95,6 +95,8 @@ function HomeStackNavigator() {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets()
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -111,13 +113,15 @@ function MainTabs() {
           flex: 1,
           justifyContent: 'center',
         },
+        
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#E2ECE6',
-          height: 68,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 7,
         },
+
       }}
     >
       <Tab.Screen
