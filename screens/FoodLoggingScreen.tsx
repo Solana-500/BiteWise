@@ -144,18 +144,28 @@ async function pickFoodImage() {
     setAiFoodReviewed(false)
     
     // Display the AI result in the food logging card.
-    setSelectedFood(analysis)
-
-
+        
+    setSelectedFood({
+      name: editFoodName.trim(),
+      serving: editServing.trim(),
+      calories,
+      protein,
+      carbs,
+      fat,
+    })
+    
+    // Confirm the user has reviewed the AI estimates.
+    if (isAiFood) {
+      setAiFoodReviewed(true)
+    }
+    
+    setShowEditFood(false)
+    
     Alert.alert(
-      'Food Identified!',
-      `${analysis.name}\n\n` +
-      `Estimated Calories: ${analysis.calories} kcal\n` +
-      `Protein: ${analysis.protein} g\n` +
-      `Carbs: ${analysis.carbs} g\n` +
-      `Fat: ${analysis.fat} g\n\n` +
-      `Please review these estimates before saving.`
+      'Food Reviewed',
+      'Your food details have been confirmed. You can now save the meal.'
     )
+
   } catch (error) {
     console.error('Food image analysis failed:', error)
 
