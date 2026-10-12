@@ -92,6 +92,7 @@ export type RootStackParamList = {
   SignUp: undefined
   CoachSignUp: undefined
   Onboarding: undefined
+  ResetPassword: undefined
   SubPremium: undefined
   
   MainTabs: NavigatorScreenParams<MainTabParamList>
