@@ -340,6 +340,70 @@ export default function App() {
   const [hasProfile, setHasProfile] = useState(false)
   const [userRole, setUserRole] = useState<'user' | 'coach' | 'admin' | null>(null)
   const [isPremium, setIsPremium] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(false)
+
+  useEffect(() => {
+    let active = true
+  
+    async function handleRecoveryLink(url: string | null) {
+      if (!url || !active) return
+  
+      // Only process BiteWise password recovery links.
+      if (!url.startsWith('bitewise://reset-password')) return
+  
+      try {
+        const fragment = url.split('#')[1]
+  
+        if (!fragment) {
+          console.warn('Recovery link has no token fragment')
+          return
+        }
+  
+        const params = new URLSearchParams(fragment)
+  
+        if (params.get('type') !== 'recovery') return
+  
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+  
+        if (!accessToken || !refreshToken) {
+          console.warn('Recovery link is missing tokens')
+          return
+        }
+  
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+  
+        if (error) throw error
+  
+        if (active) {
+          setRecoveryMode(true)
+        }
+      } catch (error) {
+        console.error(
+          'Password recovery link could not be validated'
+        )
+      }
+    }
+  
+    // Handles opening BiteWise from a closed state.
+    Linking.getInitialURL().then(handleRecoveryLink)
+  
+    // Handles opening a link while BiteWise is running.
+    const subscription = Linking.addEventListener(
+      'url',
+      ({ url }) => {
+        void handleRecoveryLink(url)
+      }
+    )
+  
+    return () => {
+      active = false
+      subscription.remove()
+    }
+  }, [])
 
   const checkProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
