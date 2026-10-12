@@ -721,7 +721,7 @@ function openEditFood() {
                 ]}
                 disabled={saving}
                 onPress={() => void saveFood(selectedFood)}
-                }}
+                
 
               
                 {saving ? (
