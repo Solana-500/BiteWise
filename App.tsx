@@ -4,8 +4,10 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import type { Session } from '@supabase/supabase-js'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context'
 import LoginScreen from './screens/LoginScreen'
 import SignUpScreen from './screens/SignUpScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
