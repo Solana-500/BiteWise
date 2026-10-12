@@ -353,33 +353,6 @@ export default function App() {
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
   
-  useEffect(() => {
-    const channel = supabase
-      .channel('bitewise-subscription-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-        },
-        (payload) => {
-          const updatedProfile = payload.new
-  
-          if (
-            session?.user?.id &&
-            updatedProfile.id === session.user.id
-          ) {
-            void checkProfile(session.user.id)
-          }
-        }
-      )
-      .subscribe()
-  
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [session?.user?.id, checkProfile])
 
   useEffect(() => {
     let active = true
@@ -478,6 +451,33 @@ export default function App() {
       setIsPremium(false)
     }
   }, [])
+  
+  useEffect(() => {
+    const channel = supabase
+      .channel('bitewise-subscription-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${session?.user?.id}`,
+        },
+        (payload) => {
+          if (
+            session?.user?.id &&
+            payload.new.id === session.user.id
+          ) {
+            void checkProfile(session.user.id)
+          }
+        }
+      )
+      .subscribe()
+  
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [session?.user?.id, checkProfile])
 
   useEffect(() => {
     let mounted = true
