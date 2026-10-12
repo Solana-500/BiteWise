@@ -517,14 +517,21 @@ export default function App() {
     >
     
         {recoveryMode ? (
-  <Stack.Screen
-    name="ResetPassword"
-    component={ResetPasswordScreen}
-    options={{
-      title: 'Reset Password',
-      headerShown: false,
-    }}
-  />
+  
+    <Stack.Screen
+      name="ResetPassword"
+      options={{
+        title: 'Reset Password',
+        headerShown: false,
+      }}
+    >
+      {() => (
+        <ResetPasswordScreen
+          onComplete={() => setRecoveryMode(false)}
+        />
+      )}
+    </Stack.Screen>
+
 ) : !session ? (
           <>
             <Stack.Screen
