@@ -19,6 +19,8 @@ type CoachProfile = {
   id: string
   full_name: string | null
   app_role: 'user' | 'coach' | 'admin' | null
+  coaching_specialty?: string | null
+  years_experience?: string | null
 }
 
 type CoachActionCardProps = {
@@ -52,93 +54,197 @@ function CoachActionCard({
 
 export default function PuCoachScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true)
+  const [assigning, setAssigning] = useState(false)
   const [coach, setCoach] = useState<CoachProfile | null>(null)
+  const [userGoal, setUserGoal] = useState<string | null>(null)
 
   useEffect(() => {
     void loadAssignedCoach()
   }, [])
 
   async function loadAssignedCoach() {
-  try {
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
 
-    if (userError) {
-      throw userError
-    }
+      if (userError) {
+        throw userError
+      }
 
-    if (!user) {
-      console.error('No authenticated user found.')
+      if (!user) {
+        console.error('No authenticated user found.')
+        setCoach(null)
+        return
+      }
+
+      // Query the current user profile's assigned_coach_id and fitness_goal
+      const { data: userProfile, error: userProfileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, fitness_goal, assigned_coach_id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (userProfileError) {
+        throw userProfileError
+      }
+
+      setUserGoal(userProfile?.fitness_goal || null)
+
+      if (!userProfile?.assigned_coach_id) {
+        setCoach(null)
+        return
+      }
+
+      // Query the assigned coach's real profile from Supabase
+      const { data: coachProfile, error: coachError } = await supabase
+        .from('profiles')
+        .select('id, full_name, app_role, coaching_specialty, years_experience')
+        .eq('id', userProfile.assigned_coach_id)
+        .maybeSingle<CoachProfile>()
+
+      if (coachError) {
+        throw coachError
+      }
+
+      if (!coachProfile || coachProfile.app_role !== 'coach') {
+        setCoach(null)
+        return
+      }
+
+      setCoach(coachProfile)
+    } catch (error) {
+      console.error('Unable to load assigned coach:', error)
       setCoach(null)
-      return
+    } finally {
+      setLoading(false)
     }
-
-    console.log('Logged-in premium user ID:', user.id)
-
-    const { data: userProfile, error: userProfileError } = await supabase
-      .from('profiles')
-      .select('id, full_name, assigned_coach_id')
-      .eq('id', user.id)
-      .maybeSingle<{
-        id: string
-        full_name: string | null
-        assigned_coach_id: string | null
-      }>()
-
-    if (userProfileError) {
-      throw userProfileError
-    }
-
-    console.log('Premium user profile:', userProfile)
-    console.log('Assigned coach ID:', userProfile?.assigned_coach_id)
-
-    if (!userProfile?.assigned_coach_id) {
-      console.log('This premium user does not have an assigned_coach_id.')
-      setCoach(null)
-      return
-    }
-
-    const { data: coachProfile, error: coachError } = await supabase
-      .from('profiles')
-      .select('id, full_name, app_role')
-      .eq('id', userProfile.assigned_coach_id)
-      .maybeSingle<CoachProfile>()
-
-    if (coachError) {
-      throw coachError
-    }
-
-    console.log('Assigned coach profile:', coachProfile)
-
-    if (!coachProfile) {
-      console.log(
-        'Coach was not found or is hidden by RLS. Compare assigned_coach_id with the coach profiles.id.'
-      )
-      setCoach(null)
-      return
-    }
-
-    if (coachProfile.app_role !== 'coach') {
-      console.log(
-        'The assigned_coach_id points to a profile that is not marked as app_role = coach:',
-        coachProfile
-      )
-      setCoach(null)
-      return
-    }
-
-    setCoach(coachProfile)
-  } catch (error) {
-    console.error('Unable to load assigned coach:', error)
-    setCoach(null)
-  } finally {
-    setLoading(false)
   }
+
+  /**
+   * Automatic Goal-Based Matching with real coaches in Supabase:
+   * Multiple premium users can share and be assigned to the same coach.
+   */
+  async function handleAssignCoach() {
+    try {
+      setAssigning(true)
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        Alert.alert('Login required', 'Please log in again.')
+        return
+      }
+
+      // 1. Fetch user's fitness goal from profiles
+      const { data: userProfile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('fitness_goal')
+        .eq('id', user.id)
+        .single()
+
+      if (profileErr) throw profileErr
+
+      const goal = (userProfile?.fitness_goal || '').toLowerCase()
+      setUserGoal(userProfile?.fitness_goal || null)
+
+      // 2. Query all real coach accounts in Supabase
+      const { data: coaches, error: coachesErr } = await supabase
+      .from('profiles')
+      .select('id, full_name, app_role, coaching_specialty, years_experience')
+      .eq('app_role', 'coach')
+      .order('created_at', { ascending: true })
+
+      if (coachesErr) throw coachesErr
+
+      if (!coaches || coaches.length === 0) {
+        Alert.alert(
+          'No Coaches Available',
+          'There are currently no registered coach accounts in the system.'
+        )
+        return
+      }
+
+      // 3. Match coach based on specialty keywords
+      let matchedCoach = coaches.find((c) => {
+        const specialty = (c.coaching_specialty || '').toLowerCase()
+        if (goal.includes('fat loss') || goal.includes('weight loss')) {
+          return (
+            specialty.includes('weight loss') ||
+            specialty.includes('nutrition') ||
+            specialty.includes('running')
+          )
+        }
+        if (goal.includes('bodybuilding') || goal.includes('muscle') || goal.includes('body building')) {
+          return (
+            specialty.includes('bodybuilding') ||
+            specialty.includes('powerlifting') ||
+            specialty.includes('strength')
+          )
+        }
+        if (goal.includes('powerlifting') || goal.includes('power lifting')) {
+          return (
+            specialty.includes('powerlifting') ||
+            specialty.includes('bodybuilding')
+          )
+        }
+        if (
+          goal.includes('hyrox') ||
+          goal.includes('crossfit') ||
+          goal.includes('marathon') ||
+          goal.includes('running')
+        ) {
+          return (
+            specialty.includes('hyrox') ||
+            specialty.includes('running') ||
+            specialty.includes('crossfit') ||
+            specialty.includes('marathon')
+          )
+        }
+        return specialty.includes(goal)
+      })
+
+      // Fallback: assign the first available coach in database if no specific specialty match
+      if (!matchedCoach) {
+  matchedCoach =
+    coaches.find((c) =>
+      (c.full_name || '').toLowerCase().includes('adam yu')
+    ) || coaches[0]
 }
+
+      // 4. Update current premium user's assigned_coach_id in Supabase
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({
+          assigned_coach_id: matchedCoach.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
+      if (updateErr) throw updateErr
+
+      setCoach(matchedCoach as CoachProfile)
+
+      Alert.alert(
+        '🎯 Coach Assigned!',
+        `You have been matched with Coach ${matchedCoach.full_name || 'Expert'} based on your fitness goal (${userProfile?.fitness_goal || 'General Health'}).`
+      )
+    } catch (error: any) {
+      console.error('Assign coach error:', error)
+      Alert.alert(
+        'Assignment Failed',
+        error?.message || 'Could not assign coach. Please try again.'
+      )
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   const coachInitials =
     coach?.full_name
@@ -192,7 +298,7 @@ export default function PuCoachScreen({ navigation }: Props) {
                 </Text>
 
                 <Text style={styles.coachSpecialty}>
-                  Health and nutrition coach
+                  {coach.coaching_specialty || 'Health and nutrition coach'}
                 </Text>
 
                 <View style={styles.premiumCoachChip}>
@@ -216,19 +322,19 @@ export default function PuCoachScreen({ navigation }: Props) {
             <CoachActionCard
               title="View Coach Meal Plan"
               subtitle="See your coach’s meal plan"
-              onPress={() => showComingSoon('Coach Meal Plan')}
+              onPress={() => navigation.navigate('PuChat')}
             />
 
             <CoachActionCard
               title="View Coach Recipes"
               subtitle="View and search recipes created by your coach"
-              onPress={() => showComingSoon('Coach Recipes')}
+              onPress={() => navigation.navigate('PuChat')}
             />
 
             <CoachActionCard
               title="View Coach Workout Plan"
               subtitle="See your assigned workout plan"
-              onPress={() => showComingSoon('Coach Workout Plan')}
+              onPress={() => navigation.navigate('PuChat')}
             />
 
             <View style={styles.coachNoteCard}>
@@ -249,18 +355,23 @@ export default function PuCoachScreen({ navigation }: Props) {
             <Text style={styles.emptyTitle}>No coach assigned yet</Text>
 
             <Text style={styles.emptyText}>
-              Your premium coach will appear here once an administrator assigns
-              one to your account.
+              As a Premium member, you get 1-on-1 coaching matched directly to your goal ({userGoal || 'Fitness'}).
             </Text>
 
             <Pressable
               style={({ pressed }) => [
-                styles.refreshButton,
+                styles.assignButton,
+                assigning && styles.disabledButton,
                 pressed && styles.pressedButton,
               ]}
-              onPress={() => void loadAssignedCoach()}
+              onPress={handleAssignCoach}
+              disabled={assigning}
             >
-              <Text style={styles.refreshButtonText}>Refresh Assignment</Text>
+              {assigning ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.assignButtonText}> Assign me a coach</Text>
+              )}
             </Pressable>
           </View>
         )}
@@ -273,7 +384,7 @@ export default function PuCoachScreen({ navigation }: Props) {
               styles.messageButton,
               pressed && styles.pressedButton,
             ]}
-            onPress={() => showComingSoon('Message Health Coach')}
+            onPress={() => navigation.navigate('PuChat')}
           >
             <Text style={styles.messageButtonText}>Message Health Coach</Text>
           </Pressable>
@@ -343,7 +454,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 140,
+    paddingBottom: 160,
   },
 
   coachCard: {
@@ -500,16 +611,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
   },
-  refreshButton: {
+  assignButton: {
     marginTop: 20,
     borderRadius: 999,
     backgroundColor: '#1E5C35',
-    paddingHorizontal: 18,
-    paddingVertical: 11,
+    paddingHorizontal: 24,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  refreshButtonText: {
+  assignButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
   },
 
@@ -561,5 +674,8 @@ const styles = StyleSheet.create({
   },
   pressedReviewButton: {
     backgroundColor: '#D8EADF',
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 })

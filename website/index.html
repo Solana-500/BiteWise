@@ -1657,7 +1657,6 @@
 
     <div class="login-modal-overlay"></div>
 
-
     <div class="login-card">
 
 
@@ -1673,7 +1672,6 @@
         </button>
 
 
-
         <!-- HEADING -->
 
         <div class="login-heading">
@@ -1682,63 +1680,19 @@
                 BiteWise
             </h1>
 
-            <p id="login-subtitle">
-                Registered User Sign In
+            <p>
+                Sign in to your BiteWise account
             </p>
 
         </div>
 
 
-
-        <!-- ACCOUNT TYPE -->
-
-        <div class="account-type-tabs">
-
-
-            <button
-                type="button"
-                class="account-tab active"
-                data-account="User"
-            >
-                User
-            </button>
-
-
-            <button
-                type="button"
-                class="account-tab"
-                data-account="Coach"
-            >
-                Coach
-            </button>
-
-
-            <button
-                type="button"
-                class="account-tab"
-                data-account="Admin"
-            >
-                Admin
-            </button>
-
-
-        </div>
-
-
-
         <!-- LOGIN FORM -->
 
-        <form class="login-form" id="login-form">
-
-
-            <input
-                type="hidden"
-                id="account-type"
-                name="account-type"
-                value="User"
-            >
-
-
+        <form
+            class="login-form"
+            id="login-form"
+        >
 
             <div class="form-group">
 
@@ -1755,7 +1709,6 @@
                 >
 
             </div>
-
 
 
             <div class="form-group">
@@ -1775,7 +1728,6 @@
             </div>
 
 
-
             <!-- LOGIN MESSAGE -->
 
             <p
@@ -1784,6 +1736,7 @@
             ></p>
 
 
+            <!-- LOGIN BUTTON -->
 
             <button
                 type="submit"
@@ -1792,28 +1745,21 @@
                 Log In
             </button>
 
-
-
-            <!-- SWITCH TO REGISTER (text changes per account type) -->
+            <a
+                href="#"
+                class="login-switch-link"
+                id="login-user-register-link"
+            >
+                Don't have an account? Sign Up
+            </a>
 
             <a
                 href="#"
                 class="login-switch-link"
-                id="login-switch-link"
-                data-register-as="User"
+                id="login-coach-register-link"
             >
-                Don't have a user account? Sign Up
+                Want to join as a coach? Apply here
             </a>
-
-            <p
-                class="login-admin-note"
-                id="login-admin-note"
-                hidden
-            >
-                System administrator accounts are created by BiteWise.
-            </p>
-
-
 
             <a
                 href="#"
@@ -1822,7 +1768,6 @@
             >
                 Forgot password?
             </a>
-
 
         </form>
 

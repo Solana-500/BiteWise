@@ -237,7 +237,7 @@ export default function AdminUserListScreen({ navigation }: Props) {
                         
                         {/* Tier + Role Display */}
                         <Text style={styles.userTier}>
-                        {(item.subscription_tier || item.tier || 'free').toUpperCase()} TIER • {(item.app_role || 'user').toUpperCase()}
+                        {(item.subscription_tier || 'free').toUpperCase()} TIER • {(item.app_role || 'user').toUpperCase()}
                         </Text>
                     </View>
 

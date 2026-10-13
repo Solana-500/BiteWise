@@ -15,10 +15,12 @@ import {
   View,
 } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
+import * as ImagePicker from 'expo-image-picker'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import { supabase } from '../services/supabase'
+import { analyzeFoodImage } from '../services/aiFoodAnalysis'
 import {
   getFoodByBarcode,
   type BarcodeFood,
@@ -97,12 +99,101 @@ export default function FoodLoggingScreen() {
 
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
+  const [isAiFood, setIsAiFood] = useState(false)
+  const [aiFoodReviewed, setAiFoodReviewed] = useState(false)
+  const [showEditFood, setShowEditFood] = useState(false)
+  const [editFoodName, setEditFoodName] = useState('')
+  const [editServing, setEditServing] = useState('')
+  const [editCalories, setEditCalories] = useState('')
+  const [editProtein, setEditProtein] = useState('')
+  const [editCarbs, setEditCarbs] = useState('')
+  const [editFat, setEditFat] = useState('')
   const [showScanner, setShowScanner] = useState(false)
   const [scanned, setScanned] = useState(false)
   const barcodeScanLock = useRef(false)
   const [lookingUpBarcode, setLookingUpBarcode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [permission, requestPermission] = useCameraPermissions()
+  
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [analyzingImage, setAnalyzingImage] = useState(false)
+  
+async function pickFoodImage() {
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.5,
+      base64: false,
+    })
+
+    if (result.canceled || result.assets.length === 0) {
+      return
+    }
+
+    const imageUri = result.assets[0].uri
+    setSelectedImage(imageUri)
+    setAnalyzingImage(true)
+
+    
+   
+    const analysis = await analyzeFoodImage(imageUri)
+    
+    // Mark this food as AI-generated and not yet reviewed.
+    setIsAiFood(true)
+    setAiFoodReviewed(false)
+    
+    // Display the AI result in the food logging card.
+        
+  
+    const calories = Number(editCalories)
+    const protein = Number(editProtein)
+    const carbs = Number(editCarbs)
+    const fat = Number(editFat)
+    
+    setSelectedFood({
+      name: editFoodName.trim(),
+      serving: editServing.trim(),
+      calories,
+      protein,
+      carbs,
+      fat,
+    })
+    
+    if (isAiFood) {
+      setAiFoodReviewed(true)
+    }
+    
+    setShowEditFood(false)
+
+    
+    // Confirm the user has reviewed the AI estimates.
+    if (isAiFood) {
+      setAiFoodReviewed(true)
+    }
+    
+    setShowEditFood(false)
+    
+    Alert.alert(
+      'Food Reviewed',
+      'Your food details have been confirmed. You can now save the meal.'
+    )
+
+  } catch (error) {
+    console.error('Food image analysis failed:', error)
+
+    Alert.alert(
+      'AI Analysis Failed',
+      'Unable to analyze this photo. Please try again.'
+    )
+  } finally {
+    setAnalyzingImage(false)
+  }
+}
+
+
+
+  
 
   const [selectedMeal, setSelectedMeal] = useState<MealType>('Breakfast')
   const [showMealMenu, setShowMealMenu] = useState(false)
@@ -216,6 +307,14 @@ export default function FoodLoggingScreen() {
 
   const saveFood = useCallback(
     async (food: FoodResult) => {
+        if (isAiFood && !aiFoodReviewed) {
+          Alert.alert(
+            'Review Required',
+            'Please tap Edit Food Details and confirm the nutritional estimates before saving this AI-generated meal.'
+          )
+          return
+        }
+
       const {
         data: { user },
         error: userError,
@@ -259,7 +358,7 @@ export default function FoodLoggingScreen() {
         setSaving(false)
       }
     },
-    [navigation, selectedMeal]
+    [navigation, selectedMeal, isAiFood, aiFoodReviewed]
   )
 
   function getOptionalMacro(value: string) {
@@ -275,6 +374,19 @@ export default function FoodLoggingScreen() {
       ? numberValue
       : 0
   }
+
+function openEditFood() {
+  if (!selectedFood) return
+
+  setEditFoodName(selectedFood.name)
+  setEditServing(selectedFood.serving)
+  setEditCalories(String(selectedFood.calories))
+  setEditProtein(String(selectedFood.protein))
+  setEditCarbs(String(selectedFood.carbs))
+  setEditFat(String(selectedFood.fat))
+
+  setShowEditFood(true)
+}
 
   function openQuickAdd() {
     setQuickAddName('')
@@ -558,6 +670,25 @@ export default function FoodLoggingScreen() {
               <Text style={styles.actionIcon}>⊕</Text>
               <Text style={styles.actionText}>Quick add</Text>
             </TouchableOpacity>
+            
+            
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => void pickFoodImage()}
+              disabled={analyzingImage}
+            >
+              {analyzingImage ? (
+                <ActivityIndicator color="#1E5C35" />
+              ) : (
+                <Text style={styles.actionIcon}>📷</Text>
+              )}
+            
+              <Text style={styles.actionText}>
+                {analyzingImage ? 'Analyzing...' : 'AI Photo'}
+              </Text>
+            </TouchableOpacity>
+
+
           </View>
 
           {selectedFood ? (
@@ -573,7 +704,17 @@ export default function FoodLoggingScreen() {
                 P {selectedFood.protein}g · C {selectedFood.carbs}g · F{' '}
                 {selectedFood.fat}g
               </Text>
+              
+              <TouchableOpacity
+                style={styles.editFoodButton}
+                onPress={openEditFood}
+              >
+                <Text style={styles.editFoodButtonText}>
+                  Edit Food Details
+                </Text>
+              </TouchableOpacity>
 
+             
               <TouchableOpacity
                 style={[
                   styles.addButton,
@@ -590,6 +731,7 @@ export default function FoodLoggingScreen() {
                   </Text>
                 )}
               </TouchableOpacity>
+
             </View>
           ) : (
             <>
@@ -623,7 +765,11 @@ export default function FoodLoggingScreen() {
                   <TouchableOpacity
                     key={`${food.name}-${food.serving}-${index}`}
                     style={styles.foodCard}
-                    onPress={() => setSelectedFood(food)}
+                    onPress={() => {
+                      setIsAiFood(false)
+                      setAiFoodReviewed(false)
+                      setSelectedFood(food)
+                    }}
                   >
                     <View style={styles.foodInfo}>
                       <Text style={styles.foodName}>{food.name}</Text>
@@ -696,6 +842,105 @@ export default function FoodLoggingScreen() {
             </Pressable>
           </Pressable>
         </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showEditFood}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditFood(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.quickAddKeyboard}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.quickAddBackdrop}>
+            <View style={styles.quickAddModal}>
+              <Text style={styles.quickAddTitle}>
+                Edit Food Details
+              </Text>
+      
+              <Text style={styles.quickAddSubtitle}>
+                Review and correct AI nutritional estimates
+              </Text>
+      
+              <ScrollView keyboardShouldPersistTaps="handled">
+                {[
+                  { label: 'Food Name', value: editFoodName, setter: setEditFoodName },
+                  { label: 'Serving Size', value: editServing, setter: setEditServing },
+                  { label: 'Calories (kcal)', value: editCalories, setter: setEditCalories },
+                  { label: 'Protein (g)', value: editProtein, setter: setEditProtein },
+                  { label: 'Carbs (g)', value: editCarbs, setter: setEditCarbs },
+                  { label: 'Fat (g)', value: editFat, setter: setEditFat },
+                ].map((field, index) => (
+                  <View key={field.label}>
+                    <Text style={styles.quickAddLabel}>
+                      {field.label}
+                    </Text>
+      
+                    <TextInput
+                      style={styles.quickAddInput}
+                      value={field.value}
+                      onChangeText={field.setter}
+                      keyboardType={index >= 2 ? 'decimal-pad' : 'default'}
+                    />
+                  </View>
+                ))}
+      
+                <TouchableOpacity
+                  style={styles.quickAddSaveButton}
+                  onPress={() => {
+                    const calories = Number(editCalories)
+                    const protein = Number(editProtein)
+                    const carbs = Number(editCarbs)
+                    const fat = Number(editFat)
+      
+                    const validNumbers = [calories, protein, carbs, fat]
+                      .every(value => Number.isFinite(value) && value >= 0)
+      
+                    if (
+                      !editFoodName.trim() ||
+                      !editServing.trim() ||
+                      !validNumbers ||
+                      [editCalories, editProtein, editCarbs, editFat]
+                        .some(value => value.trim() === '')
+                    ) {
+                      Alert.alert(
+                        'Invalid food details',
+                        'Please enter a name, serving size and valid non-negative nutritional values.'
+                      )
+                      return
+                    }
+      
+                    setSelectedFood({
+                      name: editFoodName.trim(),
+                      serving: editServing.trim(),
+                      calories,
+                      protein,
+                      carbs,
+                      fat,
+                    })
+      
+                    setShowEditFood(false)
+                  }}
+                >
+                  <Text style={styles.quickAddSaveText}>
+                    Save Changes
+                  </Text>
+                </TouchableOpacity>
+      
+                <TouchableOpacity
+                  style={styles.cancelMealButton}
+                  onPress={() => setShowEditFood(false)}
+                >
+                  <Text style={styles.cancelMealText}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -1356,4 +1601,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
+  
+  editFoodButton: {
+    backgroundColor: '#EAF3EC',
+    borderColor: '#1E5C35',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  
+  editFoodButtonText: {
+    color: '#1E5C35',
+    fontSize: 14,
+    fontWeight: '800',
+},
+
 })

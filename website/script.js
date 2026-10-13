@@ -1020,139 +1020,11 @@ function showRegisterStep(step) {
 
 
 // ==============================================
-// LOGIN ACCOUNT TYPE
-// ==============================================
-
-const accountTabs =
-    document.querySelectorAll(
-        ".account-tab"
-    );
-
-
-const accountTypeInput =
-    document.getElementById(
-        "account-type"
-    );
-
-
-const loginSubtitle =
-    document.getElementById(
-        "login-subtitle"
-    );
-
-
-const accountSubtitles = {
-
-    User:
-        "Registered User Sign In",
-
-    Coach:
-        "Health Coach Sign In",
-
-    Admin:
-        "System Admin Sign In"
-
-};
-
-
-// Text under the Log In button changes per account type.
-// Admin has no sign-up, so it shows a plain note instead.
-
-const loginSwitchLink =
-    document.getElementById(
-        "login-switch-link"
-    );
-
-const loginAdminNote =
-    document.getElementById(
-        "login-admin-note"
-    );
-
-const loginSwitchOptions = {
-
-    User: {
-        text: "Don't have a user account? Sign Up",
-        registerAs: "User"
-    },
-
-    Coach: {
-        text: "New coach? Register as a Coach",
-        registerAs: "Coach"
-    }
-
-};
-
-
-function updateLoginFooter(accountType) {
-
-    const option =
-        loginSwitchOptions[accountType];
-
-    if (loginSwitchLink) {
-
-        loginSwitchLink.hidden = !option;
-
-        if (option) {
-
-            loginSwitchLink.textContent =
-                option.text;
-
-            loginSwitchLink.dataset.registerAs =
-                option.registerAs;
-
-        }
-
-    }
-
-    if (loginAdminNote) {
-
-        loginAdminNote.hidden = !!option;
-
-    }
-
-}
-
-
-loginSwitchLink?.addEventListener(
-    "click",
-    function(event) {
-
-        event.preventDefault();
-
-        const registerAs =
-            loginSwitchLink.dataset.registerAs ||
-            "User";
-
-        openRegisterModal();
-
-        // Pre-select the matching tab in the register popup
-
-        registerAccountTabs.forEach(
-            (tab) => {
-
-                if (
-                    tab.dataset.registerAccount ===
-                    registerAs
-                ) {
-
-                    tab.click();
-
-                }
-
-            }
-        );
-
-    }
-);
-
-
-// ==============================================
 // LOGIN
 // ==============================================
 //
-// Users and health coaches are checked and then sent to the
-// download page (there is no web app for them). Admins are
-// checked and then sent to the system admin web portal.
+// Users and health coaches are checked and then sent to the download page. 
+// Admins are checked and then sent to the system admin web portal.
 
 const loginForm =
     document.getElementById(
@@ -1163,18 +1035,6 @@ const loginMessage =
     document.getElementById(
         "login-message"
     );
-
-const loginRoleForTab = {
-    User: "user",
-    Coach: "coach",
-    Admin: "admin"
-};
-
-const loginAccountLabel = {
-    User: "a user account",
-    Coach: "a coach account",
-    Admin: "an admin account"
-};
 
 
 function showLoginMessage(text, type) {
@@ -1189,7 +1049,6 @@ function showLoginMessage(text, type) {
         "info",
         type === "info"
     );
-
 }
 
 
@@ -1211,9 +1070,6 @@ loginForm?.addEventListener(
                 "login-password"
             )?.value;
 
-        const selectedAccount =
-            accountTypeInput?.value || "User";
-
         const submitButton =
             loginForm.querySelector(
                 ".login-submit-button"
@@ -1227,7 +1083,6 @@ loginForm?.addEventListener(
             );
 
             return;
-
         }
 
 
@@ -1235,8 +1090,8 @@ loginForm?.addEventListener(
 
             submitButton.disabled = true;
 
-            submitButton.innerHTML = '<span class="button-spinner"></span>';
-
+            submitButton.innerHTML =
+                '<span class="button-spinner"></span>';
         }
 
 
@@ -1270,7 +1125,6 @@ loginForm?.addEventListener(
                 );
 
                 return;
-
             }
 
 
@@ -1305,11 +1159,11 @@ loginForm?.addEventListener(
                 );
 
                 return;
-
             }
 
+
             // ==================================
-            // CHECK ACCOUNT SUSPENSION
+            // STEP 3: CHECK ACCOUNT SUSPENSION
             // ==================================
 
             if (profile.is_suspended === true) {
@@ -1325,32 +1179,10 @@ loginForm?.addEventListener(
 
 
             // ==================================
-            // STEP 3: CHECK ROLE MATCHES TAB
-            // ==================================
-
-            const expectedRole =
-                loginRoleForTab[selectedAccount];
-
-            if (profile.app_role !== expectedRole) {
-
-                await supabaseClient.auth.signOut();
-
-                showLoginMessage(
-                    "This isn't " +
-                    loginAccountLabel[selectedAccount] +
-                    ". Please choose the correct tab above."
-                );
-
-                return;
-
-            }
-
-
-            // ==================================
             // STEP 4: COACH APPROVAL
             // ==================================
 
-            if (expectedRole === "coach") {
+            if (profile.app_role === "coach") {
 
                 if (
                     profile.approval_status ===
@@ -1365,8 +1197,8 @@ loginForm?.addEventListener(
                     );
 
                     return;
-
                 }
+
 
                 if (
                     profile.approval_status ===
@@ -1380,36 +1212,32 @@ loginForm?.addEventListener(
                     );
 
                     return;
-
                 }
-
             }
 
 
             // ==================================
-            // STEP 5: ADMIN 
+            // STEP 5: ADMIN
             // ==================================
 
-            if (expectedRole === "admin") {
+            if (profile.app_role === "admin") {
 
-               window.location.href =
-                "../admin_web/admin-dashboard.html";
-            return;
+                window.location.href =
+                    "../admin_web/admin-dashboard.html";
 
+                return;
             }
 
 
             // ==================================
             // STEP 6: USER / APPROVED COACH
             // ==================================
-            //
-            // No web app for these accounts, so sign out
-            // and send them to the mobile app download page.
 
             await supabaseClient.auth.signOut();
 
             window.location.href =
                 "download.html";
+
 
         } catch (error) {
 
@@ -1422,6 +1250,7 @@ loginForm?.addEventListener(
                 "Something went wrong. Please try again."
             );
 
+
         } finally {
 
             if (submitButton) {
@@ -1430,67 +1259,67 @@ loginForm?.addEventListener(
 
                 submitButton.textContent =
                     "Log In";
-
             }
-
         }
-
     }
 );
 
 
-accountTabs.forEach((tab) => {
+// ==============================================
+// LOGIN → REGISTRATION LINKS
+// ==============================================
 
-    tab.addEventListener(
-        "click",
-        function() {
-
-            accountTabs.forEach(
-                (item) => {
-
-                    item.classList.remove(
-                        "active"
-                    );
-
-                }
-            );
-
-
-            tab.classList.add(
-                "active"
-            );
-
-
-            const selectedAccount =
-                tab.dataset.account;
-
-
-            if (accountTypeInput) {
-
-                accountTypeInput.value =
-                    selectedAccount;
-
-            }
-
-
-            if (loginSubtitle) {
-
-                loginSubtitle.textContent =
-                    accountSubtitles[
-                        selectedAccount
-                    ];
-
-            }
-
-
-            updateLoginFooter(selectedAccount);
-            showLoginMessage("");
-
-        }
+const loginUserRegisterLink =
+    document.getElementById(
+        "login-user-register-link"
     );
 
-});
+const loginCoachRegisterLink =
+    document.getElementById(
+        "login-coach-register-link"
+    );
 
+
+loginUserRegisterLink?.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        openRegisterModal();
+
+        registerAccountTabs.forEach((tab) => {
+
+            if (
+                tab.dataset.registerAccount ===
+                "User"
+            ) {
+                tab.click();
+            }
+        });
+    }
+);
+
+
+loginCoachRegisterLink?.addEventListener(
+    "click",
+    function(event) {
+
+        event.preventDefault();
+
+        openRegisterModal();
+
+        registerAccountTabs.forEach((tab) => {
+
+            if (
+                tab.dataset.registerAccount ===
+                "Coach"
+            ) {
+                tab.click();
+            }
+        });
+    }
+);
 
 
 // ==============================================

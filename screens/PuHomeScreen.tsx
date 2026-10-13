@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { supabase } from '../services/supabase'
+import { getAiMealRecommendation } from '../services/aiRecommendations'
 
 type Props = {
   navigation: any
@@ -62,7 +63,26 @@ export default function PuHomeScreen({ navigation }: Props) {
     name: 'Suggested meal name',
     kcal: 0,
   })
+  
+const [aiLoading, setAiLoading] = useState(false)
 
+async function fetchAiRecommendation() {
+  try {
+    setAiLoading(true)
+
+    const result = await getAiMealRecommendation()
+
+    setRecommendation({
+      name: result,
+      kcal: 0,
+    })
+  } catch (error) {
+    console.error('Failed to get AI recommendation:', error)
+  } finally {
+    setAiLoading(false)
+  }
+}
+  
   useFocusEffect(
   useCallback(() => {
     void loadPuHome()
@@ -146,10 +166,7 @@ export default function PuHomeScreen({ navigation }: Props) {
         fat: { value: 0, goal: 0 },
         fiber: { value: 0, goal: 0 },
       })
-      setRecommendation({
-        name: 'Suggested meal name',
-        kcal: 0,
-      })
+     
     } catch (error) {
       console.error('Unable to load premium user dashboard:', error)
     } finally {
@@ -318,24 +335,35 @@ export default function PuHomeScreen({ navigation }: Props) {
           </View>
         </Pressable>
 
+        
+
         <View style={styles.recommendationSection}>
-        <Pressable
-          style={styles.summaryLinkCard}
-          onPress={() => navigation.navigate('PuRecommendation')}
-        >
-          <View style={styles.summaryLinkHeaderRow}>
-            <Text style={styles.summaryLinkHeading}>
-              Personalized Recommendation
+          <View style={styles.summaryLinkCard}>
+            <View style={styles.summaryLinkHeaderRow}>
+              <Text style={styles.summaryLinkHeading}>
+                Personalized Recommendation
+              </Text>
+            </View>
+
+            <Text style={styles.recommendationText}>
+              {recommendation.name === 'Suggested meal name'
+                ? 'No AI recommendation generated yet'
+                : recommendation.name}
             </Text>
 
-            <Text style={styles.chevron}>›</Text>
+            <Pressable
+              style={styles.logMealButton}
+              onPress={fetchAiRecommendation}
+              disabled={aiLoading}
+            >
+              <Text style={styles.logMealText}>
+                {aiLoading
+                  ? 'Generating...'
+                  : 'Generate AI Recommendation'}
+              </Text>
+            </Pressable>
           </View>
-
-          <Text style={styles.recommendationText} numberOfLines={1}>
-            {recommendation.name} — {recommendation.kcal} kcal
-          </Text>
-        </Pressable>
-      </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

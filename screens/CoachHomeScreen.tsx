@@ -37,58 +37,59 @@ export default function CoachHomeScreen({ navigation }: Props) {
   }, []);
 
   const loadCoachHome = async () => {
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError) {
-      throw userError
+      if (userError) {
+        throw userError;
+      }
+
+      if (!user) {
+        navigation.replace('Login');
+        return;
+      }
+
+      const [profileResult, clientCountResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('full_name, coaching_specialty')
+          .eq('id', user.id)
+          .single<CoachProfile>(),
+
+        // Count premium users assigned to this coach through profiles.assigned_coach_id
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('assigned_coach_id', user.id),
+      ]);
+
+      if (profileResult.error) {
+        throw profileResult.error;
+      }
+
+      if (clientCountResult.error) {
+        throw clientCountResult.error;
+      }
+
+      setCoachName(profileResult.data?.full_name || 'Coach');
+      setSpecialty(profileResult.data?.coaching_specialty || '');
+
+      setStats({
+        clients: clientCountResult.count ?? 0,
+        pendingContent: 0,
+        approvedContent: 0,
+        unreadMessages: 0,
+        recentRatings: 0,
+      });
+    } catch (error) {
+      console.error('Unable to load coach dashboard:', error);
+    } finally {
+      setLoading(false);
     }
-
-    if (!user) {
-      navigation.replace('Login')
-      return
-    }
-
-    const [profileResult, clientCountResult] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('full_name, coaching_specialty')
-        .eq('id', user.id)
-        .single<CoachProfile>(),
-
-      supabase
-        .from('coach_assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('coach_id', user.id),
-    ])
-
-    if (profileResult.error) {
-      throw profileResult.error
-    }
-
-    if (clientCountResult.error) {
-      throw clientCountResult.error
-    }
-
-    setCoachName(profileResult.data?.full_name || 'Coach')
-    setSpecialty(profileResult.data?.coaching_specialty || '')
-
-    setStats({
-      clients: clientCountResult.count ?? 0,
-      pendingContent: 0,
-      approvedContent: 0,
-      unreadMessages: 0,
-      recentRatings: 0,
-    })
-  } catch (error) {
-    console.error('Unable to load coach dashboard:', error)
-  } finally {
-    setLoading(false)
-  }
-}
+  };
 
   const firstName = coachName.trim().split(' ')[0] || 'Coach';
 
@@ -214,8 +215,8 @@ export default function CoachHomeScreen({ navigation }: Props) {
           <Pressable
             style={styles.activityCard}
             onPress={() =>
-            navigation.getParent()?.navigate('CoachChat' as never)
-          }
+              navigation.getParent()?.navigate('CoachChat' as never)
+            }
           >
             <Text style={styles.activityEmoji}>💬</Text>
 
