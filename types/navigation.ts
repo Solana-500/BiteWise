@@ -94,6 +94,7 @@ export type RootStackParamList = {
   Onboarding: undefined
   ResetPassword: undefined
   SubPremium: undefined
+  PUPayment: undefined
   
   MainTabs: NavigatorScreenParams<MainTabParamList>
   PremiumTabs: NavigatorScreenParams<PremiumTabParamList>

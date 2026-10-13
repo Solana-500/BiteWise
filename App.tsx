@@ -45,6 +45,7 @@ import CoachCreateWorkoutPlanScreen from './screens/CoachCreateWorkoutPlanScreen
 import CoachWorkoutPlanBuilderScreen from './screens/CoachWorkoutPlanBuilderScreen'
 import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen'
 import ResetPasswordScreen from './screens/ResetPasswordScreen'
+import PUPaymentScreen from './screens/PUPaymentScreen'
 
 import { supabase } from './services/supabase'
 import type {
@@ -680,17 +681,22 @@ export default function App() {
 
               
         ) : isPremium ? (
-          <>
-            <Stack.Screen
-              name="PremiumTabs"
-              component={PremiumTabs}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="PuCoach"
-              component={PuCoachScreen}
-              options={{ headerShown: false }}
-            />
+        <>
+          <Stack.Screen
+            name="PremiumTabs"
+            component={PremiumTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SubPremium"
+            component={SubPremiumScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PuCoach"
+            component={PuCoachScreen}
+            options={{ headerShown: false }}
+          />
 
 
           <Stack.Screen
@@ -739,6 +745,11 @@ export default function App() {
             <Stack.Screen
               name="SubPremium"
               component={SubPremiumScreen}
+              options={{ headerShown: false }}
+            />
+             <Stack.Screen
+              name="PUPayment"
+              component={PUPaymentScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

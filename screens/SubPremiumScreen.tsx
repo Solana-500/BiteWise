@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  ActivityIndicator,
   Alert,
   SafeAreaView,
   ScrollView,
@@ -12,7 +11,6 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-import { supabase } from '../services/supabase'
 import type { RootStackParamList } from '../types/navigation'
 
 type NavigationProp = NativeStackNavigationProp<
@@ -31,71 +29,7 @@ const PREMIUM_FEATURES = [
 
 export default function SubPremiumScreen() {
   const navigation = useNavigation<NavigationProp>()
-  const [loading, setLoading] = useState(false)
-
-  async function handleStartPremium() {
-    try {
-      setLoading(true)
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError || !user) {
-        Alert.alert('Login required', 'Please log in again.')
-        return
-      }
-
-      /*
-       * DEMO / FYP MODE:
-       * This changes the current user to Premium in Supabase.
-       *
-       * For a real production app, replace this with Apple/Google
-       * in-app subscription payment verification.
-       */
-      const { error } = await supabase
-        .from('profiles')
-        
-      .update({
-        subscription_tier: 'premium',
-        tier: 'premium',
-        updated_at: new Date().toISOString(),
-      })
-
-        .eq('id', user.id)
-
-      if (error) {
-        throw error
-      }
-
-      Alert.alert(
-        'Welcome to BiteWise Premium!',
-        'Your Premium access is now active.',
-        [
-          
-      {
-        text: 'Continue',
-        onPress: () => {
-          if (navigation.canGoBack()) {
-            navigation.goBack()
-          }
-        },
-      },
-
-        ]
-      )
-    } catch (error: any) {
-      console.error('Premium activation error:', error)
-
-      Alert.alert(
-        'Could not activate Premium',
-        error?.message ?? 'Please try again.'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [loading] = useState(false)
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -167,17 +101,10 @@ export default function SubPremiumScreen() {
         </View>
 
         <TouchableOpacity
-          disabled={loading}
-          onPress={() => void handleStartPremium()}
-          style={[styles.subscribeButton, loading && styles.disabledButton]}
-          accessibilityRole="button"
-          accessibilityLabel="Start BiteWise Premium"
+          style={styles.goPremiumButton}
+          onPress={() => navigation.navigate('PUPayment' as never)}
         >
-          {loading ? (
-            <ActivityIndicator color="#16281D" />
-          ) : (
-            <Text style={styles.subscribeButtonText}>Go Premium</Text>
-          )}
+          <Text style={styles.goPremiumButtonText}>Go Premium</Text>
         </TouchableOpacity>
 
         <Text style={styles.footerText}>
@@ -233,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-    priceBadge: {
+  priceBadge: {
     alignItems: 'baseline',
     backgroundColor: 'rgba(244, 201, 93, 0.2)',
     borderColor: '#F4C95D',
@@ -302,7 +229,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 18,
   },
-    planTopRow: {
+  planTopRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -345,7 +272,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 12,
   },
-  subscribeButton: {
+  goPremiumButton: {
     alignItems: 'center',
     backgroundColor: '#F4C95D',
     borderRadius: 14,
@@ -354,10 +281,7 @@ const styles = StyleSheet.create({
     minHeight: 54,
     paddingVertical: 15,
   },
-  disabledButton: {
-    opacity: 0.65,
-  },
-  subscribeButtonText: {
+  goPremiumButtonText: {
     color: '#16281D',
     fontSize: 16,
     fontWeight: '900',
