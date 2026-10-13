@@ -14,22 +14,14 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
 
-type CoachAssignment = {
-  id: string
-  client_id: string
-  created_at: string
-}
-
 type ClientProfile = {
   id: string
   full_name: string | null
   fitness_goal: string | null
   activity_level: string | null
   subscription_tier: string | null
-}
-
-type AssignedClient = CoachAssignment & {
-  profile: ClientProfile | null
+  assigned_coach_id: string | null
+  updated_at: string | null
 }
 
 function getInitials(name: string | null) {
@@ -47,18 +39,22 @@ function getInitials(name: string | null) {
     .toUpperCase()
 }
 
-function formatAssignedDate(createdAt: string) {
+function formatAssignedDate(updatedAt: string | null) {
+  if (!updatedAt) {
+    return 'Recently'
+  }
+
   return new Intl.DateTimeFormat('en-SG', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  }).format(new Date(createdAt))
+  }).format(new Date(updatedAt))
 }
 
 export default function CoachClientsScreen() {
   const navigation = useNavigation<any>()
 
-  const [clients, setClients] = useState<AssignedClient[]>([])
+  const [clients, setClients] = useState<ClientProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -75,49 +71,20 @@ export default function CoachClientsScreen() {
         return
       }
 
-      const { data: assignmentData, error: assignmentError } = await supabase
-        .from('coach_assignments')
-        .select('id, client_id, created_at')
-        .eq('coach_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (assignmentError) {
-        throw assignmentError
-      }
-
-      const assignments = (assignmentData ?? []) as CoachAssignment[]
-
-      if (assignments.length === 0) {
-        setClients([])
-        return
-      }
-
-      const clientIds = assignments.map((assignment) => assignment.client_id)
-
-      const { data: profileData, error: profileError } = await supabase
+      // Load all premium users directly assigned to this coach
+      const { data: clientData, error: clientError } = await supabase
         .from('profiles')
         .select(
-          'id, full_name, fitness_goal, activity_level, subscription_tier'
+          'id, full_name, fitness_goal, activity_level, subscription_tier, assigned_coach_id, updated_at'
         )
-        .in('id', clientIds)
+        .eq('assigned_coach_id', user.id)
+        .order('full_name', { ascending: true })
 
-      if (profileError) {
-        throw profileError
+      if (clientError) {
+        throw clientError
       }
 
-      const profilesById = new Map(
-        ((profileData ?? []) as ClientProfile[]).map((profile) => [
-          profile.id,
-          profile,
-        ])
-      )
-
-      setClients(
-        assignments.map((assignment) => ({
-          ...assignment,
-          profile: profilesById.get(assignment.client_id) ?? null,
-        }))
-      )
+      setClients((clientData ?? []) as ClientProfile[])
     } catch (error: any) {
       console.error('Load coach clients error:', error)
 
@@ -142,13 +109,13 @@ export default function CoachClientsScreen() {
     setRefreshing(false)
   }
 
-  function openClientChat(client: AssignedClient) {
-  navigation.navigate('CoachConversation', {
-    assignmentId: client.id,
-    clientId: client.client_id,
-    clientName: client.profile?.full_name || 'Premium member',
-  })
-}
+  function openClientChat(client: ClientProfile) {
+    navigation.navigate('CoachConversation', {
+      assignmentId: client.id,
+      clientId: client.id,
+      clientName: client.full_name || 'Premium member',
+    })
+  }
 
   if (loading) {
     return (
@@ -161,123 +128,129 @@ export default function CoachClientsScreen() {
   }
 
   return (
-  <View style={styles.screen}>
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Go back to coach dashboard"
-        >
-          <Text style={styles.backButtonText}>‹ Dashboard</Text>
-        </TouchableOpacity>
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back to coach dashboard"
+          >
+            <Text style={styles.backButtonText}>‹ Dashboard</Text>
+          </TouchableOpacity>
 
-        <Text style={styles.topBarTitle}>My Clients</Text>
+          <Text style={styles.topBarTitle}>My Clients</Text>
 
-        <View style={styles.topBarSpacer} />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#1E5C35"
-          />
-        }
-      >
-        <View style={styles.heroCard}>
-          <View>
-            <Text style={styles.heroLabel}>COACH DASHBOARD</Text>
-            <Text style={styles.heroTitle}>Assigned Premium users</Text>
-            <Text style={styles.heroText}>
-              Review each client&apos;s goals and open a private coaching chat.
-            </Text>
-          </View>
-
-          <View style={styles.countCircle}>
-            <Text style={styles.countText}>{clients.length}</Text>
-          </View>
+          <View style={styles.topBarSpacer} />
         </View>
 
-        <Text style={styles.sectionTitle}>
-          {clients.length === 1 ? '1 assigned user' : `${clients.length} assigned users`}
-        </Text>
-
-        {clients.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <View style={styles.emptyIconCircle}>
-              <Text style={styles.emptyIcon}>👥</Text>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#1E5C35"
+            />
+          }
+        >
+          <View style={styles.heroCard}>
+            <View>
+              <Text style={styles.heroLabel}>COACH DASHBOARD</Text>
+              <Text style={styles.heroTitle}>Assigned Premium users</Text>
+              <Text style={styles.heroText}>
+                Review each client&apos;s goals and open a private coaching
+                chat.
+              </Text>
             </View>
 
-            <Text style={styles.emptyTitle}>No users assigned yet</Text>
-            <Text style={styles.emptyText}>
-              Ask an administrator to assign a Premium user to your coach
-              account in the coach_assignments table.
-            </Text>
+            <View style={styles.countCircle}>
+              <Text style={styles.countText}>{clients.length}</Text>
+            </View>
           </View>
-        ) : (
-          clients.map((client) => {
-            const name = client.profile?.full_name || 'Premium member'
-            const goal = client.profile?.fitness_goal || 'Goal not set'
-            const activity =
-              client.profile?.activity_level || 'Activity level not set'
 
-            return (
-              <View key={client.id} style={styles.clientCard}>
-                <View style={styles.clientHeader}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                      {getInitials(client.profile?.full_name ?? null)}
+          <Text style={styles.sectionTitle}>
+            {clients.length === 1
+              ? '1 assigned user'
+              : `${clients.length} assigned users`}
+          </Text>
+
+          {clients.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyIconCircle}>
+                <Text style={styles.emptyIcon}>👥</Text>
+              </View>
+
+              <Text style={styles.emptyTitle}>No users assigned yet</Text>
+              <Text style={styles.emptyText}>
+                Premium users assigned to your coach account through
+                profiles.assigned_coach_id will appear here.
+              </Text>
+            </View>
+          ) : (
+            clients.map((client) => {
+              const name = client.full_name || 'Premium member'
+              const goal = client.fitness_goal || 'Goal not set'
+              const activity =
+                client.activity_level || 'Activity level not set'
+
+              return (
+                <View key={client.id} style={styles.clientCard}>
+                  <View style={styles.clientHeader}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>
+                        {getInitials(client.full_name)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.clientIdentity}>
+                      <Text style={styles.clientName}>{name}</Text>
+                      <Text style={styles.clientStatus}>
+                        ✦ Premium member
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.clientDetailRow}>
+                    <Text style={styles.clientDetailLabel}>Fitness goal</Text>
+                    <Text style={styles.clientDetailValue} numberOfLines={1}>
+                      {goal}
                     </Text>
                   </View>
 
-                  <View style={styles.clientIdentity}>
-                    <Text style={styles.clientName}>{name}</Text>
-                    <Text style={styles.clientStatus}>✦ Premium member</Text>
+                  <View style={styles.clientDetailRow}>
+                    <Text style={styles.clientDetailLabel}>
+                      Activity level
+                    </Text>
+                    <Text style={styles.clientDetailValue} numberOfLines={1}>
+                      {activity}
+                    </Text>
                   </View>
-                </View>
 
-                <View style={styles.clientDetailRow}>
-                  <Text style={styles.clientDetailLabel}>Fitness goal</Text>
-                  <Text style={styles.clientDetailValue} numberOfLines={1}>
-                    {goal}
+                  <Text style={styles.assignedDate}>
+                    Assigned {formatAssignedDate(client.updated_at)}
                   </Text>
+
+                  <TouchableOpacity
+                    style={styles.chatButton}
+                    onPress={() => openClientChat(client)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open chat with ${name}`}
+                  >
+                    <Text style={styles.chatButtonText}>
+                      💬 Open Coaching Chat
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-
-                <View style={styles.clientDetailRow}>
-                  <Text style={styles.clientDetailLabel}>Activity level</Text>
-                  <Text style={styles.clientDetailValue} numberOfLines={1}>
-                    {activity}
-                  </Text>
-                </View>
-
-                <Text style={styles.assignedDate}>
-                  Assigned {formatAssignedDate(client.created_at)}
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.chatButton}
-                  onPress={() => openClientChat(client)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open chat with ${name}`}
-                >
-                  <Text style={styles.chatButtonText}>💬 Open Coaching Chat</Text>
-                </TouchableOpacity>
-              </View>
-            )
-          })
-        )}
-              </ScrollView>
+              )
+            })
+          )}
+        </ScrollView>
       </SafeAreaView>
 
-      <SafeAreaView
-        edges={['bottom']}
-        style={styles.bottomTabSafeArea}
-      >
+      <SafeAreaView edges={['bottom']} style={styles.bottomTabSafeArea}>
         <View style={styles.bottomTabBar}>
           <CoachTab
             label="Home"
@@ -338,13 +311,9 @@ function CoachTab({
       accessibilityLabel={label}
       accessibilityState={{ selected: active }}
     >
-      <Text style={[styles.tabIcon, { color }]}>
-        {icon}
-      </Text>
+      <Text style={[styles.tabIcon, { color }]}>{icon}</Text>
 
-      <Text style={[styles.tabLabel, { color }]}>
-        {label}
-      </Text>
+      <Text style={[styles.tabLabel, { color }]}>{label}</Text>
     </Pressable>
   )
 }
@@ -355,9 +324,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeArea: {
-  backgroundColor: '#F5FAF6',
-  flex: 1,
-},
+    backgroundColor: '#F5FAF6',
+    flex: 1,
+  },
   loadingContainer: {
     alignItems: 'center',
     flex: 1,
@@ -553,35 +522,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bottomTabSafeArea: {
-  backgroundColor: '#FFFFFF',
-  borderTopWidth: 1,
-  borderTopColor: '#E2ECE6',
-},
-
-bottomTabBar: {
-  minHeight: 60,
-  paddingTop: 8,
-  paddingBottom: 8,
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#FFFFFF',
-},
-
-tabItem: {
-  flex: 1,
-  minHeight: 44,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-
-tabIcon: {
-  fontSize: 19,
-},
-
-tabLabel: {
-  marginTop: 3,
-  fontSize: 11,
-  fontWeight: '700',
-},
-}
-)
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2ECE6',
+  },
+  bottomTabBar: {
+    minHeight: 60,
+    paddingTop: 8,
+    paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  tabItem: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIcon: {
+    fontSize: 19,
+  },
+  tabLabel: {
+    marginTop: 3,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+})

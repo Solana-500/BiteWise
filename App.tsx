@@ -1,5 +1,5 @@
 import { type ComponentType, useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Linking, Text, View } from 'react-native'
+import { ActivityIndicator, Linking, StyleSheet, Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -47,6 +47,7 @@ import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen
 import ResetPasswordScreen from './screens/ResetPasswordScreen'
 import PUPaymentScreen from './screens/PUPaymentScreen'
 
+import { useCoachUnreadCount } from './hooks/useCoachUnreadCount'
 import { supabase } from './services/supabase'
 import type {
   HomeStackParamList,
@@ -54,7 +55,6 @@ import type {
   PremiumTabParamList,
   RootStackParamList,
 } from './types/navigation'
-
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 const Tab = createBottomTabNavigator<MainTabParamList>()
@@ -74,15 +74,12 @@ const PremiumHomeStack =
 function HomeStackNavigator() {
   return (
     <HomeStack.Navigator
-        screenOptions={{
-          animation: 'none',
-          headerShown: false,
-        }}
-      >
-      <HomeStack.Screen
-        name="HomeMain"
-        component={HomeScreen}
-      />
+      screenOptions={{
+        animation: 'none',
+        headerShown: false,
+      }}
+    >
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
 
       <HomeStack.Screen
         name="FavoriteList"
@@ -114,7 +111,6 @@ function MainTabs() {
           flex: 1,
           justifyContent: 'center',
         },
-        
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#E2ECE6',
@@ -122,7 +118,6 @@ function MainTabs() {
           paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 7,
         },
-
       }}
     >
       <Tab.Screen
@@ -206,6 +201,7 @@ function PremiumHomeStackNavigator() {
 
 function PremiumTabs() {
   const insets = useSafeAreaInsets()
+  const unreadCount = useCoachUnreadCount()
 
   return (
     <PremiumTab.Navigator
@@ -223,7 +219,6 @@ function PremiumTabs() {
           alignItems: 'center',
           justifyContent: 'center',
         },
-       
         tabBarStyle: {
           height: 60 + insets.bottom,
           paddingTop: 5,
@@ -232,7 +227,6 @@ function PremiumTabs() {
           borderTopWidth: 1,
           borderTopColor: '#E2ECE6',
         },
-
       }}
     >
       <PremiumTab.Screen
@@ -274,7 +268,17 @@ function PremiumTabs() {
         options={{
           tabBarLabel: 'Chat',
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 19 }}>💬</Text>
+            <View style={styles.tabIconContainer}>
+              <Text style={{ color, fontSize: 19 }}>💬</Text>
+
+              {unreadCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
@@ -298,7 +302,7 @@ function AdminTabs() {
     <AdminTabNav.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // Hides default React Navigation tab bar since custom UI is used
+        tabBarStyle: { display: 'none' },
       }}
     >
       <AdminTabNav.Screen name="AdminHome" component={AdminHomeScreen} />
@@ -316,34 +320,14 @@ function CoachTabs() {
         tabBarStyle: { display: 'none' },
       }}
     >
-      <CoachTabNav.Screen
-        name="CoachHome"
-        component={CoachHomeScreen}
-      />
-
-      <CoachTabNav.Screen
-        name="CoachContent"
-        component={CoachContentScreen}
-      />
-
-      <CoachTabNav.Screen
-        name="CoachClients"
-        component={CoachClientsScreen}
-      />
-
-      <CoachTabNav.Screen
-        name="CoachChat"
-        component={CoachChatScreen}
-      />
-
-      <CoachTabNav.Screen
-        name="CoachProfile"
-        component={CoachProfileScreen}
-      />
+      <CoachTabNav.Screen name="CoachHome" component={CoachHomeScreen} />
+      <CoachTabNav.Screen name="CoachContent" component={CoachContentScreen} />
+      <CoachTabNav.Screen name="CoachClients" component={CoachClientsScreen} />
+      <CoachTabNav.Screen name="CoachChat" component={CoachChatScreen} />
+      <CoachTabNav.Screen name="CoachProfile" component={CoachProfileScreen} />
     </CoachTabNav.Navigator>
   )
 }
-
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -353,55 +337,50 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false)
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
-  
 
   useEffect(() => {
     let active = true
-  
+
     async function handleRecoveryLink(url: string | null) {
       if (!url || !active) return
-  
-      // Only process BiteWise password recovery links.
+
       if (!url.startsWith('bitewise://reset-password')) return
-  
+
       try {
         const fragment = url.split('#')[1]
-  
+
         if (!fragment) {
           console.warn('Recovery link has no token fragment')
           return
         }
-  
+
         const params = new URLSearchParams(fragment)
-  
+
         if (params.get('type') !== 'recovery') return
-  
+
         const accessToken = params.get('access_token')
         const refreshToken = params.get('refresh_token')
-  
+
         if (!accessToken || !refreshToken) {
           console.warn('Recovery link is missing tokens')
           return
         }
-  
+
         const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         })
-  
+
         if (error) throw error
-  
+
         if (active) {
           setRecoveryMode(true)
         }
       } catch (error) {
-        console.error(
-          'Password recovery link could not be validated'
-        )
+        console.error('Password recovery link could not be validated')
       }
     }
-  
-    // Handles opening BiteWise from a closed state.
+
     Linking.getInitialURL()
       .then(handleRecoveryLink)
       .catch(() => {
@@ -412,15 +391,11 @@ export default function App() {
           setCheckingRecoveryLink(false)
         }
       })
-  
-    // Handles opening a link while BiteWise is running.
-    const subscription = Linking.addEventListener(
-      'url',
-      ({ url }) => {
-        void handleRecoveryLink(url)
-      }
-    )
-  
+
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      void handleRecoveryLink(url)
+    })
+
     return () => {
       active = false
       subscription.remove()
@@ -452,7 +427,7 @@ export default function App() {
       setIsPremium(false)
     }
   }, [])
-  
+
   useEffect(() => {
     const channel = supabase
       .channel('bitewise-subscription-updates')
@@ -465,16 +440,13 @@ export default function App() {
           filter: `id=eq.${session?.user?.id}`,
         },
         (payload) => {
-          if (
-            session?.user?.id &&
-            payload.new.id === session.user.id
-          ) {
+          if (session?.user?.id && payload.new.id === session.user.id) {
             void checkProfile(session.user.id)
           }
         }
       )
       .subscribe()
-  
+
     return () => {
       void supabase.removeChannel(channel)
     }
@@ -509,7 +481,6 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, updatedSession) => {
-      // 1. Keep loading active while fetching profile data on auth state updates
       setLoading(true)
       setSession(updatedSession)
 
@@ -520,7 +491,6 @@ export default function App() {
         setUserRole(null)
       }
 
-      // 2. Only unblock UI after checkProfile has fully updated hasProfile and userRole
       if (mounted) {
         setLoading(false)
       }
@@ -549,246 +519,259 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-    <NavigationContainer>
-    <Stack.Navigator
-      screenOptions={{
-        animation: 'none',
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#F5FAF6',
-        },
-        headerTintColor: '#1E5C35',
-        headerTitleStyle: {
-          fontWeight: '800',
-        },
-        headerBackButtonDisplayMode: 'minimal',
-      }}
-    >
-    
-        {recoveryMode ? (
-  
-    <Stack.Screen
-      name="ResetPassword"
-      options={{
-        title: 'Reset Password',
-        headerShown: false,
-      }}
-    >
-      {() => (
-        <ResetPasswordScreen
-          onComplete={() => setRecoveryMode(false)}
-        />
-      )}
-    </Stack.Screen>
-
-) : !session ? (
-          <>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            animation: 'none',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#F5FAF6',
+            },
+            headerTintColor: '#1E5C35',
+            headerTitleStyle: {
+              fontWeight: '800',
+            },
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        >
+          {recoveryMode ? (
             <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ title: 'Log In' }}
-            />
+              name="ResetPassword"
+              options={{
+                title: 'Reset Password',
+                headerShown: false,
+              }}
+            >
+              {() => (
+                <ResetPasswordScreen
+                  onComplete={() => setRecoveryMode(false)}
+                />
+              )}
+            </Stack.Screen>
+          ) : !session ? (
+            <>
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ title: 'Log In' }}
+              />
+              <Stack.Screen
+                name="SignUp"
+                component={SignUpScreen}
+                options={{ title: 'Create Account' }}
+              />
+              <Stack.Screen
+                name="CoachSignUp"
+                component={CoachSignUpScreen}
+                options={{ title: 'Coach Registration' }}
+              />
+            </>
+          ) : !hasProfile ? (
             <Stack.Screen
-              name="SignUp"
-              component={SignUpScreen}
-              options={{ title: 'Create Account' }}
-            />
+              name="Onboarding"
+              options={{ title: 'Create Profile' }}
+            >
+              {() => (
+                <OnboardingScreen
+                  onComplete={() => {
+                    if (session?.user) {
+                      checkProfile(session.user.id)
+                    }
+                  }}
+                />
+              )}
+            </Stack.Screen>
+          ) : userRole === 'admin' ? (
             <Stack.Screen
-              name="CoachSignUp"
-              component={CoachSignUpScreen}
-              options={{ title: 'Coach Registration' }}
+              name="AdminTabs"
+              component={AdminTabs}
+              options={{ headerShown: false }}
             />
-          </>
-        ) : !hasProfile ? (
-          <Stack.Screen
-            name="Onboarding"
-            options={{ title: 'Create Profile' }}
-          >
-            {() => (
-              <OnboardingScreen
-                onComplete={() => {
-                  if (session?.user) {
-                    checkProfile(session.user.id)
-                  }
+          ) : userRole === 'coach' ? (
+            <>
+              <Stack.Screen
+                name="CoachTabs"
+                component={CoachTabs}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachChat"
+                component={CoachChatScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachConversation"
+                component={CoachConversationScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachMealPlans"
+                component={CoachMealPlansScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachCreateMealPlan"
+                component={CoachCreateMealPlanScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachMealPlanBuilder"
+                component={CoachMealPlanBuilderScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachMealPlanReview"
+                component={CoachMealPlanReviewScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachWorkoutPlans"
+                component={CoachWorkoutPlansScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachCreateWorkoutPlan"
+                component={CoachCreateWorkoutPlanScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachWorkoutPlanBuilder"
+                component={CoachWorkoutPlanBuilderScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachWorkoutPlanReview"
+                component={CoachWorkoutPlanReviewScreen}
+                options={{ headerShown: false }}
+              />
+            </>
+          ) : isPremium ? (
+            <>
+              <Stack.Screen
+                name="PremiumTabs"
+                component={PremiumTabs}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="SubPremium"
+                component={SubPremiumScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PuCoach"
+                component={PuCoachScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="FoodLogging"
+                component={FoodLoggingScreen}
+                options={{
+                  headerShown: false,
+                  presentation: 'card',
                 }}
               />
-            )}
-          </Stack.Screen>
-        ) : userRole === 'admin' ? (
-          <Stack.Screen
-            name="AdminTabs"
-            component={AdminTabs}
-            options={{ headerShown: false }}
-          />
-        ) : userRole === 'coach' ? (
-          <>
-            <Stack.Screen
-              name="CoachTabs"
-              component={CoachTabs}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachChat"
-              component={CoachChatScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachConversation"
-              component={CoachConversationScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachMealPlans"
-              component={CoachMealPlansScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachCreateMealPlan"
-              component={CoachCreateMealPlanScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachMealPlanBuilder"
-              component={CoachMealPlanBuilderScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachMealPlanReview"
-              component={CoachMealPlanReviewScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachWorkoutPlans"
-              component={CoachWorkoutPlansScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachCreateWorkoutPlan"
-              component={CoachCreateWorkoutPlanScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachWorkoutPlanBuilder"
-              component={CoachWorkoutPlanBuilderScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CoachWorkoutPlanReview"
-              component={CoachWorkoutPlanReviewScreen}
-              options={{ headerShown: false }}
-            />
-          </>
+              <Stack.Screen
+                name="Feedback"
+                component={FeedbackScreen}
+                options={{
+                  animation: 'none',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="ExerciseLibrary"
+                component={ExerciseLibraryScreen}
+                options={{
+                  headerShown: false,
+                  presentation: 'card',
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen
+                name="MainTabs"
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
 
-              
-        ) : isPremium ? (
-        <>
-          <Stack.Screen
-            name="PremiumTabs"
-            component={PremiumTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SubPremium"
-            component={SubPremiumScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PuCoach"
-            component={PuCoachScreen}
-            options={{ headerShown: false }}
-          />
-
-
-          <Stack.Screen
-            name="FoodLogging"
-            component={FoodLoggingScreen}
-            options={{
-              headerShown: false,
-              presentation: 'card',
-            }}
-          />
-
-          <Stack.Screen
-            name="Feedback"
-            component={FeedbackScreen}
-            options={{
-              animation: 'none',
-              headerShown: false,
-            }}
-          />
-
-          <Stack.Screen
-            name="ExerciseLibrary"
-            component={ExerciseLibraryScreen}
-            options={{
-              headerShown: false,
-              presentation: 'card',
-            }}
-          />
-        </>
-      ) : (
-          <>
-            <Stack.Screen
-              name="MainTabs"
-              component={MainTabs}
-              options={{ headerShown: false }}
-            />
-
-            <Stack.Screen
-              name="FoodLogging"
-              component={FoodLoggingScreen}
-              options={{
-                animation: 'none',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="SubPremium"
-              component={SubPremiumScreen}
-              options={{ headerShown: false }}
-            />
-             <Stack.Screen
-              name="PUPayment"
-              component={PUPaymentScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Feedback"
-              component={FeedbackScreen}
-              options={{
-                animation: 'none',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ExerciseLibrary"
-              component={ExerciseLibraryScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-            <Stack.Screen
-              name="ExerciseEntry"
-              component={ExerciseEntryScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-            <Stack.Screen
-              name="WorkoutRoutineBuilder"
-              component={WorkoutRoutineBuilderScreen}
-              options={{
-                headerShown: false,
-                presentation: 'card',
-              }}
-            />
-          </>
-        )}
-           
-            </Stack.Navigator>
-    </NavigationContainer>
+              <Stack.Screen
+                name="FoodLogging"
+                component={FoodLoggingScreen}
+                options={{
+                  animation: 'none',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="SubPremium"
+                component={SubPremiumScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PUPayment"
+                component={PUPaymentScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Feedback"
+                component={FeedbackScreen}
+                options={{
+                  animation: 'none',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="ExerciseLibrary"
+                component={ExerciseLibraryScreen}
+                options={{
+                  headerShown: false,
+                  presentation: 'card',
+                }}
+              />
+              <Stack.Screen
+                name="ExerciseEntry"
+                component={ExerciseEntryScreen}
+                options={{
+                  headerShown: false,
+                  presentation: 'card',
+                }}
+              />
+              <Stack.Screen
+                name="WorkoutRoutineBuilder"
+                component={WorkoutRoutineBuilderScreen}
+                options={{
+                  headerShown: false,
+                  presentation: 'card',
+                }}
+              />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
     </SafeAreaProvider>
   )
 }
+
+const styles = StyleSheet.create({
+  tabIconContainer: {
+    position: 'relative',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -7,
+    right: -11,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#E53935',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+})

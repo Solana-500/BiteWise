@@ -20,6 +20,7 @@ type ChatAssignment = {
   id: string
   client_id: string
   coach_id: string
+  client_last_read_at: string | null
 }
 
 type ChatMessage = {
@@ -49,6 +50,29 @@ export default function PuChatScreen() {
 
   const listRef = useRef<FlatList<ChatMessage>>(null)
 
+  const markChatAsRead = useCallback(async (assignmentId: string) => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('coach_assignments')
+      .update({
+        client_last_read_at: new Date().toISOString(),
+      })
+      .eq('id', assignmentId)
+      .eq('client_id', user.id)
+
+    if (error) {
+      console.error('Unable to mark chat as read:', error)
+    }
+  }, [])
+
   const loadChat = useCallback(async () => {
     try {
       setLoading(true)
@@ -66,10 +90,10 @@ export default function PuChatScreen() {
       setCurrentUserId(user.id)
 
       const { data: assignmentData, error: assignmentError } = await supabase
-      .from('coach_assignments')
-      .select('id, client_id, coach_id')
-      .or(`client_id.eq.${user.id},coach_id.eq.${user.id}`)
-      .maybeSingle()
+        .from('coach_assignments')
+        .select('id, client_id, coach_id, client_last_read_at')
+        .or(`client_id.eq.${user.id},coach_id.eq.${user.id}`)
+        .maybeSingle<ChatAssignment>()
 
       if (assignmentError) {
         throw assignmentError
@@ -81,7 +105,7 @@ export default function PuChatScreen() {
         return
       }
 
-      setAssignment(assignmentData as ChatAssignment)
+      setAssignment(assignmentData)
 
       const { data: messageData, error: messagesError } = await supabase
         .from('coach_messages')
@@ -94,6 +118,11 @@ export default function PuChatScreen() {
       }
 
       setMessages((messageData ?? []) as ChatMessage[])
+
+      // Mark the client's chat as read when they open it
+      if (assignmentData.client_id === user.id) {
+        await markChatAsRead(assignmentData.id)
+      }
     } catch (error: any) {
       console.error('Load coach chat error:', error)
 
@@ -104,7 +133,7 @@ export default function PuChatScreen() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [markChatAsRead])
 
   useFocusEffect(
     useCallback(() => {
@@ -142,6 +171,11 @@ export default function PuChatScreen() {
             return [...currentMessages, newMessage]
           })
 
+          // If the premium user is currently viewing the chat, mark it read
+          if (assignment.client_id === currentUserId) {
+            void markChatAsRead(assignment.id)
+          }
+
           setTimeout(() => {
             listRef.current?.scrollToEnd({ animated: true })
           }, 100)
@@ -152,7 +186,7 @@ export default function PuChatScreen() {
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [assignment?.id])
+  }, [assignment?.id, assignment?.client_id, currentUserId, markChatAsRead])
 
   async function sendMessage() {
     const trimmedMessage = messageText.trim()
@@ -241,7 +275,11 @@ export default function PuChatScreen() {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack()
+              }
+            }}
           >
             <Text style={styles.backButtonText}>‹ Back</Text>
           </TouchableOpacity>
@@ -276,7 +314,11 @@ export default function PuChatScreen() {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack()
+              }
+            }}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >

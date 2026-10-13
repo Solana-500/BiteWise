@@ -34,10 +34,6 @@ type CoachMessage = {
   created_at: string
 }
 
-type ClientProfile = {
-  full_name: string | null
-}
-
 function formatMessageTime(createdAt: string) {
   return new Intl.DateTimeFormat('en-SG', {
     hour: 'numeric',
@@ -49,10 +45,10 @@ export default function CoachConversationScreen() {
   const navigation = useNavigation<any>()
   const route = useRoute<any>()
 
-const {
-  assignmentId,
-  clientName = 'Premium member',
-} = route.params
+  const {
+    clientId,
+    clientName = 'Premium member',
+  } = route.params
 
   const [assignment, setAssignment] = useState<CoachAssignment | null>(null)
   const [messages, setMessages] = useState<CoachMessage[]>([])
@@ -67,6 +63,11 @@ const {
     try {
       setLoading(true)
 
+      if (!clientId) {
+        Alert.alert('Client not found', 'No client was selected.')
+        return
+      }
+
       const {
         data: { user },
         error: userError,
@@ -79,49 +80,52 @@ const {
 
       setCurrentUserId(user.id)
 
-      const { data: assignmentData, error: assignmentError } = await supabase
-        .from('coach_assignments')
-        .select('id, client_id, coach_id')
-        .eq('id', assignmentId)
-        .eq('coach_id', user.id)
-        .single()
+      // Find the existing assignment for this coach-client pair
+      const { data: existingAssignment, error: assignmentError } =
+        await supabase
+          .from('coach_assignments')
+          .select('id, client_id, coach_id')
+          .eq('coach_id', user.id)
+          .eq('client_id', clientId)
+          .maybeSingle<CoachAssignment>()
 
       if (assignmentError) {
         throw assignmentError
       }
 
-      if (!assignmentData) {
-        setAssignment(null)
-        setMessages([])
-        return
+      let activeAssignment = existingAssignment
+
+      // Create an assignment record only if one does not already exist
+      if (!activeAssignment) {
+        const { data: newAssignment, error: createError } = await supabase
+          .from('coach_assignments')
+          .insert({
+            coach_id: user.id,
+            client_id: clientId,
+          })
+          .select('id, client_id, coach_id')
+          .single<CoachAssignment>()
+
+        if (createError) {
+          throw createError
+        }
+
+        activeAssignment = newAssignment
       }
 
-      const typedAssignment = assignmentData as CoachAssignment
-      setAssignment(typedAssignment)
+      setAssignment(activeAssignment)
 
-      const [messagesResult, clientProfileResult] = await Promise.all([
-        supabase
-          .from('coach_messages')
-          .select('id, assignment_id, sender_id, message_text, created_at')
-          .eq('assignment_id', typedAssignment.id)
-          .order('created_at', { ascending: true }),
+      const { data: messageData, error: messageError } = await supabase
+        .from('coach_messages')
+        .select('id, assignment_id, sender_id, message_text, created_at')
+        .eq('assignment_id', activeAssignment.id)
+        .order('created_at', { ascending: true })
 
-        supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', typedAssignment.client_id)
-          .maybeSingle(),
-      ])
-
-      if (messagesResult.error) {
-        throw messagesResult.error
+      if (messageError) {
+        throw messageError
       }
 
-      if (!clientProfileResult.error) {
-        const clientProfile = clientProfileResult.data as ClientProfile | null
-      }
-
-      setMessages((messagesResult.data ?? []) as CoachMessage[])
+      setMessages((messageData ?? []) as CoachMessage[])
     } catch (error: any) {
       console.error('Load coach chat error:', error)
 
@@ -132,7 +136,7 @@ const {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [clientId])
 
   useFocusEffect(
     useCallback(() => {
@@ -159,7 +163,9 @@ const {
           const newMessage = payload.new as CoachMessage
 
           setMessages((currentMessages) => {
-            if (currentMessages.some((message) => message.id === newMessage.id)) {
+            if (
+              currentMessages.some((message) => message.id === newMessage.id)
+            ) {
               return currentMessages
             }
 
@@ -282,11 +288,11 @@ const {
             <Text style={styles.icon}>💬</Text>
           </View>
 
-          <Text style={styles.emptyTitle}>No client assigned yet</Text>
+          <Text style={styles.emptyTitle}>Chat unavailable</Text>
 
           <Text style={styles.emptyText}>
-            A Premium user must be linked to this coach in the coach_assignments
-            table before a conversation can be opened.
+            We could not create or find a coaching conversation for this
+            client.
           </Text>
         </View>
       </SafeAreaView>
