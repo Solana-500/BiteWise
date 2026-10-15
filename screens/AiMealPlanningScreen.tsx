@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -14,14 +13,42 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   generateAiMealPlan,
   saveAiMealPlan,
+  getSavedAiMealPlans,
   type AiMealPlanResponse,
+  type SavedAiMealPlan,
 } from '../services/aiMealPlanning'
+
 
 export default function AiMealPlanningScreen() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AiMealPlanResponse | null>(null)
   const [saving, setSaving] = useState(false)
   const [savedPlanId, setSavedPlanId] = useState<string | null>(null)
+  const [savedPlans, setSavedPlans] = useState<SavedAiMealPlan[]>([])
+  const [loadingSaved, setLoadingSaved] = useState(false)
+  
+  async function loadSavedPlans() {
+    try {
+      setLoadingSaved(true)
+  
+      const plans = await getSavedAiMealPlans()
+      setSavedPlans(plans)
+    } catch (error: any) {
+      Alert.alert(
+        'Unable to load plans',
+        error?.message || 'Please try again.'
+      )
+    } finally {
+      setLoadingSaved(false)
+    }
+  }
+  
+  useEffect(() => {
+    void loadSavedPlans()
+  }, [])
+
+  
+  
   
   async function handleGenerate() {
     if (loading) return
@@ -54,7 +81,8 @@ export default function AiMealPlanningScreen() {
       const planId = await saveAiMealPlan(result)
   
       setSavedPlanId(planId)
-  
+      await loadSavedPlans()
+      
       Alert.alert(
         'Meal Plan Saved',
         'Your 7-day meal plan has been saved successfully.'
@@ -212,6 +240,61 @@ export default function AiMealPlanningScreen() {
 
           </View>
         )}
+        
+            <View style={{ marginTop: 30 }}>
+              <Text style={styles.title}>Saved Meal Plans</Text>
+            
+              {loadingSaved ? (
+                <ActivityIndicator color="#1E5C35" />
+              ) : savedPlans.length === 0 ? (
+                <Text style={styles.subtitle}>
+                  You have no saved meal plans yet.
+                </Text>
+              ) : (
+                savedPlans.map((plan) => (
+                  <TouchableOpacity
+                    key={plan.id}
+                    style={[
+                      styles.resultCard,
+                      { marginTop: 12 },
+                    ]}
+                    onPress={() => {
+                      setResult({
+                        success: true,
+                        mealPlan: plan.plan_data,
+                        fitnessGoal: null,
+                        dailyCalorieTarget: plan.daily_calorie_target ?? 0,
+                        dietaryPreferences: [],
+                        allergies: [],
+                        durationDays: plan.duration_days,
+                        disclaimer:
+                          'AI-generated nutrition estimates may be inaccurate. Verify ingredients and allergens.',
+                      })
+            
+                      // Prevent accidentally saving the same plan again.
+                      setSavedPlanId(plan.id)
+                    }}
+                  >
+                    <Text style={styles.resultTitle}>
+                      {plan.title}
+                    </Text>
+            
+                    <Text style={styles.resultText}>
+                      {plan.duration_days} days
+                    </Text>
+            
+                    <Text style={styles.resultText}>
+                      {new Date(plan.created_at).toLocaleDateString()}
+                    </Text>
+            
+                    <Text style={styles.successText}>
+                      Tap to view meal plan →
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+
       </ScrollView>
     </SafeAreaView>
   )
