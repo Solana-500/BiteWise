@@ -13,19 +13,23 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
   generateAiMealPlan,
+  saveAiMealPlan,
   type AiMealPlanResponse,
 } from '../services/aiMealPlanning'
 
 export default function AiMealPlanningScreen() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AiMealPlanResponse | null>(null)
-
+  const [saving, setSaving] = useState(false)
+  const [savedPlanId, setSavedPlanId] = useState<string | null>(null)
+  
   async function handleGenerate() {
     if (loading) return
 
     setLoading(true)
     setResult(null)
-
+    setSavedPlanId(null)
+    
     try {
       const response = await generateAiMealPlan()
       setResult(response)
@@ -40,6 +44,32 @@ export default function AiMealPlanningScreen() {
     }
   }
 
+  
+  async function handleSave() {
+    if (!result || saving || savedPlanId) return
+  
+    try {
+      setSaving(true)
+  
+      const planId = await saveAiMealPlan(result)
+  
+      setSavedPlanId(planId)
+  
+      Alert.alert(
+        'Meal Plan Saved',
+        'Your 7-day meal plan has been saved successfully.'
+      )
+    } catch (error: any) {
+      Alert.alert(
+        'Save Failed',
+        error?.message || 'Unable to save your meal plan.'
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -161,6 +191,25 @@ export default function AiMealPlanningScreen() {
             <Text style={styles.disclaimer}>
               {result.disclaimer}
             </Text>
+            
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { marginTop: 20 },
+                (saving || savedPlanId !== null) && styles.disabledButton,
+              ]}
+              disabled={saving || savedPlanId !== null}
+              onPress={() => void handleSave()}
+            >
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {savedPlanId ? 'Meal Plan Saved ✓' : 'Save Meal Plan'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
           </View>
         )}
       </ScrollView>
