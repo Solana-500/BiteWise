@@ -14,6 +14,7 @@ import {
   generateAiMealPlan,
   saveAiMealPlan,
   getSavedAiMealPlans,
+  deleteSavedAiMealPlan,
   type AiMealPlanResponse,
   type SavedAiMealPlan,
 } from '../services/aiMealPlanning'
@@ -96,6 +97,43 @@ export default function AiMealPlanningScreen() {
       setSaving(false)
     }
   }
+    
+    function handleDeletePlan(planId: string) {
+      Alert.alert(
+        'Delete Meal Plan',
+        'Are you sure you want to permanently delete this meal plan?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteSavedAiMealPlan(planId)
+    
+                // Clear the displayed plan if it was deleted.
+                if (savedPlanId === planId) {
+                  setResult(null)
+                  setSavedPlanId(null)
+                }
+    
+                await loadSavedPlans()
+    
+                Alert.alert(
+                  'Deleted',
+                  'Your meal plan has been deleted.'
+                )
+              } catch (error: any) {
+                Alert.alert(
+                  'Delete Failed',
+                  error?.message || 'Unable to delete meal plan.'
+                )
+              }
+            },
+          },
+        ]
+      )
+    }
 
   
   return (
@@ -290,6 +328,32 @@ export default function AiMealPlanningScreen() {
                     <Text style={styles.successText}>
                       Tap to view meal plan →
                     </Text>
+                    
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#FDE8E8',
+                        padding: 12,
+                        borderRadius: 10,
+                        marginTop: 12,
+                        alignItems: 'center',
+                      }}
+                      onPress={(event) => {
+                        event.stopPropagation()
+                        handleDeletePlan(plan.id)
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete ${plan.title}`}
+                    >
+                      <Text
+                        style={{
+                          color: '#B42318',
+                          fontWeight: '700',
+                        }}
+                      >
+                        Delete Meal Plan
+                      </Text>
+                    </TouchableOpacity>
+
                   </TouchableOpacity>
                 ))
               )}
