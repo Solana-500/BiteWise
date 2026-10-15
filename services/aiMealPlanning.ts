@@ -92,3 +92,38 @@ export async function saveAiMealPlan(
 
   return data.id
 }
+
+export type SavedAiMealPlan = {
+  id: string
+  title: string
+  daily_calorie_target: number | null
+  duration_days: number
+  plan_data: AiMealPlan
+  created_at: string
+}
+
+export async function getSavedAiMealPlans(): Promise<SavedAiMealPlan[]> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    throw new Error('Please log in to view your meal plans.')
+  }
+
+  const { data, error } = await supabase
+    .from('ai_meal_plans')
+    .select(
+      'id, title, daily_calorie_target, duration_days, plan_data, created_at'
+    )
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Unable to retrieve saved meal plans:', error.message)
+    throw new Error('Unable to load your saved meal plans.')
+  }
+
+  return (data ?? []) as SavedAiMealPlan[]
+}
