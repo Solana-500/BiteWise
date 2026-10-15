@@ -89,6 +89,75 @@ export default function AiMealPlanningScreen() {
               Your meal plan was generated successfully!
             </Text>
 
+            {result.mealPlan.days.map((day) => {
+              const totalCalories = day.meals.reduce(
+                (total, meal) => total + meal.calories,
+                0
+              )
+            
+              return (
+                <View key={day.day} style={{ marginTop: 24 }}>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: '800',
+                      color: '#1E5C35',
+                      marginBottom: 10,
+                    }}
+                  >
+                    Day {day.day} — {totalCalories} kcal
+                  </Text>
+            
+                  {day.meals.map((meal, index) => (
+                    <View
+                      key={`${day.day}-${meal.type}-${index}`}
+                      style={{
+                        backgroundColor: '#F5FAF6',
+                        borderRadius: 12,
+                        padding: 16,
+                        marginBottom: 12,
+                        borderWidth: 1,
+                        borderColor: '#DCE9DF',
+                      }}
+                    >
+                      <Text style={{ fontWeight: '800', color: '#1E5C35' }}>
+                        {meal.type}
+                      </Text>
+            
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '700',
+                          marginTop: 6,
+                          color: '#16281D',
+                        }}
+                      >
+                        {meal.name}
+                      </Text>
+            
+                      <Text style={{ marginTop: 6 }}>
+                        Serving: {meal.serving}
+                      </Text>
+            
+                      <Text>
+                        Calories: {meal.calories} kcal
+                      </Text>
+            
+                      <Text>
+                        Protein: {meal.protein}g | Carbs: {meal.carbs}g | Fat: {meal.fat}g
+                      </Text>
+            
+                      <Text style={{ marginTop: 8, fontWeight: '700' }}>
+                        Ingredients:
+                      </Text>
+            
+                      <Text>{meal.ingredients.join(', ')}</Text>
+                    </View>
+                  ))}
+                </View>
+              )
+            })}
+
             <Text style={styles.disclaimer}>
               {result.disclaimer}
             </Text>
