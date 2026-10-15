@@ -57,3 +57,38 @@ export async function generateAiMealPlan(): Promise<AiMealPlanResponse> {
 
   return data as AiMealPlanResponse
 }
+
+export async function saveAiMealPlan(
+  result: AiMealPlanResponse
+): Promise<string> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    throw new Error('Please log in before saving your meal plan.')
+  }
+
+  const { data, error } = await supabase
+    .from('ai_meal_plans')
+    .insert({
+      user_id: user.id,
+      title: result.mealPlan.title,
+      fitness_goal: result.fitnessGoal,
+      daily_calorie_target: result.dailyCalorieTarget,
+      dietary_preferences: result.dietaryPreferences,
+      allergies: result.allergies,
+      duration_days: result.durationDays,
+      plan_data: result.mealPlan,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Unable to save AI meal plan:', error.message)
+    throw new Error('Unable to save meal plan. Please try again.')
+  }
+
+  return data.id
+}
