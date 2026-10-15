@@ -90,6 +90,7 @@ export type CoachWorkoutDay = {
 export type RootStackParamList = {
   Login: undefined
   SignUp: undefined
+  AiMealPlanning: undefined
   CoachSignUp: undefined
   Onboarding: undefined
   ResetPassword: undefined
