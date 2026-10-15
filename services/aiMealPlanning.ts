@@ -127,3 +127,27 @@ export async function getSavedAiMealPlans(): Promise<SavedAiMealPlan[]> {
 
   return (data ?? []) as SavedAiMealPlan[]
 }
+
+export async function deleteSavedAiMealPlan(
+  planId: string
+): Promise<void> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    throw new Error('Please log in to delete a meal plan.')
+  }
+
+  const { error } = await supabase
+    .from('ai_meal_plans')
+    .delete()
+    .eq('id', planId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Delete meal plan error:', error.message)
+    throw new Error('Unable to delete meal plan.')
+  }
+}
