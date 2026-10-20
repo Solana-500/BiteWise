@@ -34,6 +34,7 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
 } from 'expo-audio'
+import { analyzeFoodVoice } from '../services/aiVoiceAnalysis'
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -183,14 +184,35 @@ async function stopVoiceRecording() {
       allowsRecording: false,
     })
 
-    Alert.alert(
-      'Recording Complete',
-      'Your food description was recorded successfully.'
-    )
+  const analysis = await analyzeFoodVoice(uri)
+
+  const food = {
+    name: analysis.name,
+    serving: analysis.serving,
+    calories: analysis.calories,
+    protein: analysis.protein,
+    carbs: analysis.carbs,
+    fat: analysis.fat,
+  }
+  
+  setSelectedFood(food)
+  setIsAiFood(true)
+  setAiFoodReviewed(false)
+  
+  setEditFoodName(food.name)
+  setEditServing(food.serving)
+  setEditCalories(String(food.calories))
+  setEditProtein(String(food.protein))
+  setEditCarbs(String(food.carbs))
+  setEditFat(String(food.fat))
+  
+  setShowEditFood(true)
   } catch (error: any) {
+    console.error('AI Voice analysis error:', error)
+  
     Alert.alert(
-      'Recording Failed',
-      error?.message || 'Unable to stop recording.'
+      'Voice Analysis Failed',
+      error?.message || 'Unable to analyse your food recording.'
     )
   } finally {
     setAudioBusy(false)
