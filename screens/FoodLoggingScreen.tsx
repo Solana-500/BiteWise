@@ -767,25 +767,26 @@ function openEditFood() {
               </Text>
             </TouchableOpacity>
 
+     
             <TouchableOpacity
               style={styles.actionCard}
-                onPress={() => {
-                  if (recorderState.isRecording) {
-                    void stopVoiceRecording()
-                  } else {
-                    void startVoiceRecording()
-                  }
-                }}
-                disabled={audioBusy}
-
-              }
+              onPress={() => {
+                if (recorderState.isRecording) {
+                  void stopVoiceRecording()
+                } else {
+                  void startVoiceRecording()
+                }
+              }}
+              disabled={audioBusy}
               accessibilityRole="button"
               accessibilityLabel="Log food using voice"
             >
-            <Text style={styles.actionText}>
-              {recorderState.isRecording ? 'Stop Recording' : 'AI Voice'}
-            </Text>
+              <Text style={styles.actionIcon}>🎤</Text>
+              <Text style={styles.actionText}>
+                {recorderState.isRecording ? 'Stop Recording' : 'AI Voice'}
+              </Text>
             </TouchableOpacity>
+
 
 
           </View>
