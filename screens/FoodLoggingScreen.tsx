@@ -1034,6 +1034,7 @@ function openEditFood() {
                       return
                     }
       
+                    
                     setSelectedFood({
                       name: editFoodName.trim(),
                       serving: editServing.trim(),
@@ -1042,8 +1043,13 @@ function openEditFood() {
                       carbs,
                       fat,
                     })
-      
+                    
+                    if (isAiFood) {
+                      setAiFoodReviewed(true)
+                    }
+                    
                     setShowEditFood(false)
+
                   }}
                 >
                   <Text style={styles.quickAddSaveText}>
