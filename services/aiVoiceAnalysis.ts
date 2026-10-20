@@ -35,7 +35,7 @@ export async function analyzeFoodVoice(
 
   // Expo Audio's high-quality preset normally records
   // MPEG-4 audio on Android and iOS.
-  const mimeType = 'audio/mp4'
+  const mimeType = 'audio/m4a'
 
   const { data, error } = await supabase.functions.invoke(
     'ai-analyze-voice',
