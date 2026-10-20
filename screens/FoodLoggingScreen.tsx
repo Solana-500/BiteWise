@@ -688,6 +688,21 @@ function openEditFood() {
               </Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() =>
+                Alert.alert(
+                  'AI Voice Food Logging',
+                  'Voice recording will be available soon.'
+                )
+              }
+              accessibilityRole="button"
+              accessibilityLabel="Log food using voice"
+            >
+              <Text style={styles.actionIcon}>🎤</Text>
+              <Text style={styles.actionText}>AI Voice</Text>
+            </TouchableOpacity>
+
 
           </View>
 
