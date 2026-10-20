@@ -27,6 +27,14 @@ import {
 } from '../services/openFoodFacts'
 import type { RootStackParamList } from '../types/navigation'
 
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from 'expo-audio'
+
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'FoodLogging'
@@ -96,7 +104,6 @@ function mapBarcodeFoodToFoodResult(food: BarcodeFood): FoodResult {
 
 export default function FoodLoggingScreen() {
   const navigation = useNavigation<NavigationProp>()
-
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
   const [isAiFood, setIsAiFood] = useState(false)
@@ -113,11 +120,83 @@ export default function FoodLoggingScreen() {
   const barcodeScanLock = useRef(false)
   const [lookingUpBarcode, setLookingUpBarcode] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [permission, requestPermission] = useCameraPermissions()
-  
+  const [permission, requestPermission] = useCameraPermissions() 
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [analyzingImage, setAnalyzingImage] = useState(false)
-  
+  const [analyzingImage, setAnalyzingImage] = useState(false)  
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
+  const recorderState = useAudioRecorderState(audioRecorder)
+  const [audioUri, setAudioUri] = useState<string | null>(null)
+  const [audioBusy, setAudioBusy] = useState(false)
+
+async function startVoiceRecording() {
+  if (audioBusy || recorderState.isRecording) return
+
+  setAudioBusy(true)
+
+  try {
+    const permission = await requestRecordingPermissionsAsync()
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Microphone Permission Required',
+        'Allow BiteWise to access your microphone to record food descriptions.'
+      )
+      return
+    }
+
+    await setAudioModeAsync({
+      allowsRecording: true,
+      playsInSilentMode: true,
+    })
+
+    setAudioUri(null)
+
+    await audioRecorder.prepareToRecordAsync()
+    audioRecorder.record()
+  } catch (error: any) {
+    Alert.alert(
+      'Recording Failed',
+      error?.message || 'Unable to start recording.'
+    )
+  } finally {
+    setAudioBusy(false)
+  }
+}
+
+async function stopVoiceRecording() {
+  if (audioBusy || !recorderState.isRecording) return
+
+  setAudioBusy(true)
+
+  try {
+    await audioRecorder.stop()
+
+    const uri = audioRecorder.uri
+
+    if (!uri) {
+      throw new Error('No recording file was created.')
+    }
+
+    setAudioUri(uri)
+
+    await setAudioModeAsync({
+      allowsRecording: false,
+    })
+
+    Alert.alert(
+      'Recording Complete',
+      'Your food description was recorded successfully.'
+    )
+  } catch (error: any) {
+    Alert.alert(
+      'Recording Failed',
+      error?.message || 'Unable to stop recording.'
+    )
+  } finally {
+    setAudioBusy(false)
+  }
+}
+
 async function pickFoodImage() {
   try {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -690,17 +769,22 @@ function openEditFood() {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() =>
-                Alert.alert(
-                  'AI Voice Food Logging',
-                  'Voice recording will be available soon.'
-                )
+                onPress={() => {
+                  if (recorderState.isRecording) {
+                    void stopVoiceRecording()
+                  } else {
+                    void startVoiceRecording()
+                  }
+                }}
+                disabled={audioBusy}
+
               }
               accessibilityRole="button"
               accessibilityLabel="Log food using voice"
             >
-              <Text style={styles.actionIcon}>🎤</Text>
-              <Text style={styles.actionText}>AI Voice</Text>
+            <Text style={styles.actionText}>
+              {recorderState.isRecording ? 'Stop Recording' : 'AI Voice'}
+            </Text>
             </TouchableOpacity>
 
 
