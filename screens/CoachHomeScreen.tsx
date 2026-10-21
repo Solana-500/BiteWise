@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { supabase } from '../services/supabase';
+import CoachBottomTabBar from '../components/CoachBottomTabBar';
+import { useCoachUnread } from '../context/CoachUnreadContext';
 
 type Props = {
   navigation: any;
@@ -20,17 +23,17 @@ type CoachProfile = {
 };
 
 export default function CoachHomeScreen({ navigation }: Props) {
+  const { totalUnreadCount } = useCoachUnread();
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState('Coach');
   const [specialty, setSpecialty] = useState('');
 
   const [stats, setStats] = useState({
-    clients: 0,
-    pendingContent: 0,
-    approvedContent: 0,
-    unreadMessages: 0,
-    recentRatings: 0,
-  });
+  clients: 0,
+  pendingContent: 0,
+  approvedContent: 0,
+  recentRatings: 0,
+});
 
   useEffect(() => {
     loadCoachHome();
@@ -81,7 +84,6 @@ export default function CoachHomeScreen({ navigation }: Props) {
         clients: clientCountResult.count ?? 0,
         pendingContent: 0,
         approvedContent: 0,
-        unreadMessages: 0,
         recentRatings: 0,
       });
     } catch (error) {
@@ -103,7 +105,10 @@ export default function CoachHomeScreen({ navigation }: Props) {
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={styles.safeArea}
+      >
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle}>Dashboard</Text>
         </View>
@@ -194,7 +199,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
               <Text style={styles.featureEmoji}>💬</Text>
               <Text style={styles.featureTitle}>Messages</Text>
               <Text style={styles.featureSubtitle}>
-                {stats.unreadMessages} unread
+                {totalUnreadCount} unread
               </Text>
             </Pressable>
 
@@ -214,18 +219,22 @@ export default function CoachHomeScreen({ navigation }: Props) {
 
           <Pressable
             style={styles.activityCard}
-            onPress={() =>
-              navigation.getParent()?.navigate('CoachChat' as never)
-            }
+            onPress={() => navigation.navigate('CoachChat')}
           >
             <Text style={styles.activityEmoji}>💬</Text>
 
             <View style={styles.activityTextBlock}>
               <Text style={styles.activityTitle}>
-                {stats.unreadMessages} Unread Messages
+                {totalUnreadCount} Unread Messages
               </Text>
-              <Text style={styles.activitySubtitle} numberOfLines={1}>
-                From User: Coach, what&apos;s my meal plan for this week?
+
+              <Text
+                style={styles.activitySubtitle}
+                numberOfLines={1}
+              >
+                {totalUnreadCount > 0
+                  ? 'Open Messages to review unread client messages.'
+                  : 'You are all caught up with client messages.'}
               </Text>
             </View>
 
@@ -252,51 +261,14 @@ export default function CoachHomeScreen({ navigation }: Props) {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Tab bar outside SafeAreaView to stretch flush to device bottom */}
-      <View style={styles.bottomTabBar}>
-        <CoachTab label="Home" icon="🏠" active onPress={() => {}} />
-        <CoachTab
-          label="Content"
-          icon="📋"
-          onPress={() => navigation.navigate('CoachContent')}
-        />
-        <CoachTab
-          label="Clients"
-          icon="👥"
-          onPress={() => navigation.navigate('CoachClients')}
-        />
-        <CoachTab
-          label="Messages"
-          icon="💬"
-          onPress={() => navigation.navigate('CoachChat')}
-        />
-        <CoachTab
-          label="Profile"
-          icon="👤"
-          onPress={() => navigation.navigate('CoachProfile')}
-        />
-      </View>
+      <CoachBottomTabBar
+        activeTab="CoachHome"
+        onNavigate={(route) => navigation.navigate(route)}
+      />
     </View>
   );
 }
 
-type CoachTabProps = {
-  label: string;
-  icon: string;
-  active?: boolean;
-  onPress: () => void;
-};
-
-function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
-  const color = active ? '#1E5C35' : '#7C8F83';
-
-  return (
-    <Pressable style={styles.tabItem} onPress={onPress}>
-      <Text style={[styles.tabIcon, { color }]}>{icon}</Text>
-      <Text style={[styles.tabLabel, { color }]}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const styles = StyleSheet.create({
   screen: {
@@ -535,4 +507,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  bottomTabSafeArea: {
+  backgroundColor: '#FFFFFF',
+},
 });

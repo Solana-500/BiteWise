@@ -16,6 +16,7 @@ import {
 } from 'react-native'
 
 import { supabase } from '../services/supabase'
+import CoachBottomTabBar from '../components/CoachBottomTabBar';
 
 type Props = { navigation: any }
 
@@ -272,13 +273,10 @@ export default function CoachProfileScreen({ navigation }: Props) {
         </ScrollView>
       </SafeAreaView>
 
-      <View style={styles.bottomTabBar}>
-        <CoachTab label="Home" icon="🏠" onPress={() => navigation.navigate('CoachHome')} />
-        <CoachTab label="Content" icon="📋" onPress={() => navigation.navigate('CoachContent')} />
-        <CoachTab label="Clients" icon="👥" onPress={() => navigation.navigate('CoachClients')} />
-        <CoachTab label="Messages" icon="💬" onPress={() => navigation.navigate('CoachChat')} />
-        <CoachTab label="Profile" icon="👤" active onPress={() => {}} />
-      </View>
+      <CoachBottomTabBar
+        activeTab="CoachProfile"
+        onNavigate={(route) => navigation.navigate(route)}
+      />
 
       <Modal visible={passwordModalVisible} transparent animationType="slide" onRequestClose={closePasswordModal}>
         <KeyboardAvoidingView style={styles.modalKeyboardAvoidingView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

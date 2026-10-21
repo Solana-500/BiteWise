@@ -384,17 +384,32 @@ export default function PuCoachScreen({ navigation }: Props) {
               styles.messageButton,
               pressed && styles.pressedButton,
             ]}
-            onPress={() => navigation.navigate('PuChat')}
+            onPress={() =>
+              navigation.navigate('PremiumTabs', {
+                screen: 'PuChat',
+              })
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Open chat with your health coach"
           >
-            <Text style={styles.messageButtonText}>Message Health Coach</Text>
+            <Text style={styles.messageButtonText}>
+              Message Health Coach
+            </Text>
           </Pressable>
-
+          
           <Pressable
             style={({ pressed }) => [
               styles.reviewButton,
               pressed && styles.pressedReviewButton,
             ]}
-            onPress={() => showComingSoon('Rate and Review Coach')}
+            onPress={() =>
+              navigation.navigate('RateCoach', {
+                coachId: coach.id,
+                coachName: coach.full_name || 'Your coach',
+              })
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Rate and review your coach"
           >
             <Text style={styles.reviewButtonText}>
               Rate and Review Coach

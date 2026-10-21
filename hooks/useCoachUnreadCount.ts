@@ -1,69 +1,105 @@
 import { useEffect, useState } from 'react'
+import { AppState } from 'react-native'
 import { supabase } from '../services/supabase'
+
+let unreadChannelSequence = 0
 
 export function useCoachUnreadCount() {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     let isActive = true
+    let latestRequestId = 0
+
+    unreadChannelSequence += 1
+
+    const channelName =
+      `pu-chat-unread-badge-${Date.now()}-${unreadChannelSequence}`
 
     async function loadUnreadCount() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+      const requestId = ++latestRequestId
 
-  if (userError || !user) {
-    setUnreadCount(0)
-    return
-  }
+      function canUpdateState() {
+        return isActive && requestId === latestRequestId
+      }
 
-  const { data: assignments, error: assignmentError } = await supabase
-    .from('coach_assignments')
-    .select('id, client_last_read_at')
-    .eq('client_id', user.id)
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
 
-  if (assignmentError || !assignments) {
-    console.error('Unable to load chat assignments:', assignmentError)
-    return
-  }
+        if (userError) {
+          throw userError
+        }
 
-  let total = 0
+        if (!user) {
+          if (canUpdateState()) {
+            setUnreadCount(0)
+          }
 
-  for (const assignment of assignments) {
-    const lastRead = assignment.client_last_read_at
-      ? new Date(assignment.client_last_read_at).toISOString()
-      : null
+          return
+        }
 
-    let query = supabase
-      .from('coach_messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('assignment_id', assignment.id)
-      .neq('sender_id', user.id)
+        const {
+          data: assignments,
+          error: assignmentError,
+        } = await supabase
+          .from('coach_assignments')
+          .select('id, client_last_read_at')
+          .eq('client_id', user.id)
 
-    if (lastRead) {
-      query = query.gt('created_at', lastRead)
+        if (assignmentError) {
+          throw assignmentError
+        }
+
+        let total = 0
+
+        for (const assignment of assignments ?? []) {
+          if (!isActive) {
+            return
+          }
+
+          let query = supabase
+            .from('coach_messages')
+            .select('id', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('assignment_id', assignment.id)
+            .neq('sender_id', user.id)
+
+          if (assignment.client_last_read_at) {
+            query = query.gt(
+              'created_at',
+              assignment.client_last_read_at
+            )
+          }
+
+          const { count, error } = await query
+
+          if (error) {
+            throw error
+          }
+
+          total += count ?? 0
+        }
+
+        if (canUpdateState()) {
+          setUnreadCount(total)
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error(
+            'Unable to load coach unread count:',
+            error
+          )
+        }
+      }
     }
-
-    const { count, error } = await query
-
-    if (error) {
-      console.error('Unable to count unread messages:', error)
-      continue
-    }
-
-    total += count ?? 0
-  }
-
-  if (isActive) {
-    setUnreadCount(total)
-  }
-}
-
-    void loadUnreadCount()
 
     const channel = supabase
-      .channel('pu-chat-unread-badge')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -75,10 +111,49 @@ export function useCoachUnreadCount() {
           void loadUnreadCount()
         }
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'coach_assignments',
+        },
+        () => {
+          void loadUnreadCount()
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void loadUnreadCount()
+        }
+
+        if (
+          status === 'CHANNEL_ERROR' ||
+          status === 'TIMED_OUT'
+        ) {
+          console.warn(
+            'Premium chat unread subscription:',
+            status
+          )
+        }
+      })
+
+    void loadUnreadCount()
+
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      (state) => {
+        if (state === 'active') {
+          void loadUnreadCount()
+        }
+      }
+    )
 
     return () => {
       isActive = false
+      latestRequestId += 1
+
+      appStateSubscription.remove()
       void supabase.removeChannel(channel)
     }
   }, [])

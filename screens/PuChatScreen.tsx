@@ -16,6 +16,8 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 
 import { supabase } from '../services/supabase'
 
+let puChatChannelSequence = 0
+
 type ChatAssignment = {
   id: string
   client_id: string
@@ -141,22 +143,37 @@ export default function PuChatScreen() {
     }, [loadChat])
   )
 
-  useEffect(() => {
-    if (!assignment?.id) {
+  useFocusEffect(
+  useCallback(() => {
+    if (!assignment?.id || !currentUserId) {
       return
     }
 
+    let isActive = true
+
+    const assignmentId = assignment.id
+    const clientId = assignment.client_id
+
+    puChatChannelSequence += 1
+
+    const channelName =
+      `pu-conversation-${assignmentId}-${Date.now()}-${puChatChannelSequence}`
+
     const channel = supabase
-      .channel(`coach-chat-${assignment.id}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'coach_messages',
-          filter: `assignment_id=eq.${assignment.id}`,
+          filter: `assignment_id=eq.${assignmentId}`,
         },
         (payload) => {
+          if (!isActive) {
+            return
+          }
+
           const newMessage = payload.new as ChatMessage
 
           setMessages((currentMessages) => {
@@ -171,22 +188,27 @@ export default function PuChatScreen() {
             return [...currentMessages, newMessage]
           })
 
-          // If the premium user is currently viewing the chat, mark it read
-          if (assignment.client_id === currentUserId) {
-            void markChatAsRead(assignment.id)
+          if (
+            clientId === currentUserId &&
+            newMessage.sender_id !== currentUserId
+          ) {
+            void markChatAsRead(assignmentId)
           }
-
-          setTimeout(() => {
-            listRef.current?.scrollToEnd({ animated: true })
-          }, 100)
         }
       )
       .subscribe()
 
     return () => {
+      isActive = false
       void supabase.removeChannel(channel)
     }
-  }, [assignment?.id, assignment?.client_id, currentUserId, markChatAsRead])
+  }, [
+    assignment?.id,
+    assignment?.client_id,
+    currentUserId,
+    markChatAsRead,
+  ])
+)
 
   async function sendMessage() {
     const trimmedMessage = messageText.trim()
