@@ -14,7 +14,8 @@
           "cameraPermission": "Allow BiteWise to use your camera to scan food barcodes.",
           "barcodeScannerEnabled": true
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "ios": {
       "supportsTablet": true

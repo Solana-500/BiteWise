@@ -18,12 +18,16 @@ import {
 } from '@react-navigation/native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { useCoachUnread } from '../context/CoachUnreadContext'
 import { supabase } from '../services/supabase'
+
+let coachConversationChannelSequence = 0
 
 type CoachAssignment = {
   id: string
   client_id: string
   coach_id: string
+  coach_last_read_at: string | null
 }
 
 type CoachMessage = {
@@ -42,13 +46,17 @@ function formatMessageTime(createdAt: string) {
 }
 
 export default function CoachConversationScreen() {
-  const navigation = useNavigation<any>()
-  const route = useRoute<any>()
+  const navigation = useNavigation()
+  const route = useRoute()
+  const { markConversationAsRead } = useCoachUnread()
 
   const {
     clientId,
     clientName = 'Premium member',
-  } = route.params
+  } = route.params as {
+    clientId: string
+    clientName?: string
+  }
 
   const [assignment, setAssignment] = useState<CoachAssignment | null>(null)
   const [messages, setMessages] = useState<CoachMessage[]>([])
@@ -80,22 +88,20 @@ export default function CoachConversationScreen() {
 
       setCurrentUserId(user.id)
 
-      // Find the existing assignment for this coach-client pair
       const { data: existingAssignment, error: assignmentError } =
         await supabase
           .from('coach_assignments')
-          .select('id, client_id, coach_id')
+          .select('id, client_id, coach_id, coach_last_read_at')
           .eq('coach_id', user.id)
           .eq('client_id', clientId)
-          .maybeSingle<CoachAssignment>()
+          .maybeSingle()
 
       if (assignmentError) {
         throw assignmentError
       }
 
-      let activeAssignment = existingAssignment
+      let activeAssignment = existingAssignment as CoachAssignment | null
 
-      // Create an assignment record only if one does not already exist
       if (!activeAssignment) {
         const { data: newAssignment, error: createError } = await supabase
           .from('coach_assignments')
@@ -103,14 +109,14 @@ export default function CoachConversationScreen() {
             coach_id: user.id,
             client_id: clientId,
           })
-          .select('id, client_id, coach_id')
-          .single<CoachAssignment>()
+          .select('id, client_id, coach_id, coach_last_read_at')
+          .single()
 
         if (createError) {
           throw createError
         }
 
-        activeAssignment = newAssignment
+        activeAssignment = newAssignment as CoachAssignment
       }
 
       setAssignment(activeAssignment)
@@ -126,6 +132,8 @@ export default function CoachConversationScreen() {
       }
 
       setMessages((messageData ?? []) as CoachMessage[])
+
+      await markConversationAsRead(activeAssignment.id)
     } catch (error: any) {
       console.error('Load coach chat error:', error)
 
@@ -136,7 +144,7 @@ export default function CoachConversationScreen() {
     } finally {
       setLoading(false)
     }
-  }, [clientId])
+  }, [clientId, markConversationAsRead])
 
   useFocusEffect(
     useCallback(() => {
@@ -145,12 +153,18 @@ export default function CoachConversationScreen() {
   )
 
   useEffect(() => {
-    if (!assignment?.id) {
+    if (!assignment?.id || !currentUserId) {
       return
     }
 
-    const channel = supabase
-      .channel(`coach-chat-${assignment.id}`)
+    coachConversationChannelSequence += 1
+
+const channelName =
+  `coach-conversation-${assignment.id}-${Date.now()}-${coachConversationChannelSequence}`
+
+const channel = supabase
+  .channel(channelName)
+  
       .on(
         'postgres_changes',
         {
@@ -172,6 +186,10 @@ export default function CoachConversationScreen() {
             return [...currentMessages, newMessage]
           })
 
+          if (newMessage.sender_id !== currentUserId) {
+            void markConversationAsRead(assignment.id)
+          }
+
           setTimeout(() => {
             listRef.current?.scrollToEnd({ animated: true })
           }, 100)
@@ -182,7 +200,7 @@ export default function CoachConversationScreen() {
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [assignment?.id])
+  }, [assignment?.id, currentUserId, markConversationAsRead])
 
   async function sendMessage() {
     const trimmedMessage = messageText.trim()
@@ -257,17 +275,15 @@ export default function CoachConversationScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1E5C35" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1E5C35" />
+      </View>
     )
   }
 
   if (!assignment) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
+      <SafeAreaView style={styles.screen}>
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backButton}
@@ -300,7 +316,7 @@ export default function CoachConversationScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -325,6 +341,7 @@ export default function CoachConversationScreen() {
 
         <View style={styles.noticeCard}>
           <Text style={styles.noticeTitle}>Coach conversation</Text>
+
           <Text style={styles.noticeText}>
             Provide supportive wellness guidance. Do not use this chat for
             medical emergencies.
@@ -347,6 +364,7 @@ export default function CoachConversationScreen() {
           ListEmptyComponent={
             <View style={styles.emptyChatCard}>
               <Text style={styles.emptyChatTitle}>Start coaching</Text>
+
               <Text style={styles.emptyChatText}>
                 Send your Premium member a welcome message or ask about their
                 health goals.
@@ -360,20 +378,18 @@ export default function CoachConversationScreen() {
             style={styles.messageInput}
             value={messageText}
             onChangeText={setMessageText}
-            placeholder={`Message ${clientName}...`}
-            placeholderTextColor="#8D8A9A"
+            placeholder="Write a message..."
+            placeholderTextColor="#8A9A90"
             multiline
-            maxLength={1000}
-            editable={!sending}
           />
 
           <TouchableOpacity
             style={[
               styles.sendButton,
-              (!messageText.trim() || sending) && styles.sendButtonDisabled,
+              sending && styles.sendButtonDisabled,
             ]}
-            disabled={!messageText.trim() || sending}
             onPress={() => void sendMessage()}
+            disabled={sending}
             accessibilityRole="button"
             accessibilityLabel="Send message"
           >

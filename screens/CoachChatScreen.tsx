@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -14,14 +14,36 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import CoachBottomTabBar from '../components/CoachBottomTabBar'
+import { useCoachUnread } from '../context/CoachUnreadContext'
 import { supabase } from '../services/supabase'
+
+type CoachStackParamList = {
+  CoachChat: undefined
+  CoachConversation: {
+    assignmentId: string
+    clientId: string
+    clientName: string
+  }
+  CoachHome: undefined
+  CoachContent: undefined
+  CoachClients: undefined
+  CoachProfile: undefined
+}
+
+type CoachChatNavigationProp = NativeStackNavigationProp<
+  CoachStackParamList,
+  'CoachChat'
+>
 
 type CoachAssignment = {
   id: string
   client_id: string
   created_at: string
+  coach_last_read_at: string | null
 }
 
 type ClientProfile = {
@@ -45,6 +67,7 @@ type ConversationItem = {
   fitnessGoal: string
   latestMessage: string
   latestMessageAt: string | null
+  unreadCount: number
 }
 
 function getInitials(name: string) {
@@ -84,7 +107,11 @@ function formatConversationTime(dateString: string | null) {
 }
 
 export default function CoachChatScreen() {
-  const navigation = useNavigation<any>()
+  const navigation = useNavigation<CoachChatNavigationProp>()
+  const {
+    unreadCounts,
+    refreshUnreadCounts,
+  } = useCoachUnread()
 
   const [assignments, setAssignments] = useState<CoachAssignment[]>([])
   const [profiles, setProfiles] = useState<ClientProfile[]>([])
@@ -106,7 +133,7 @@ export default function CoachChatScreen() {
 
       const { data: assignmentData, error: assignmentError } = await supabase
         .from('coach_assignments')
-        .select('id, client_id, created_at')
+        .select('id, client_id, created_at, coach_last_read_at')
         .eq('coach_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -164,16 +191,68 @@ export default function CoachChatScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadConversations()
-    }, [loadConversations])
+      void refreshUnreadCounts()
+    }, [loadConversations, refreshUnreadCounts])
   )
+
+  const assignmentIdsKey = useMemo(() => {
+    return assignments
+      .map((assignment) => assignment.id)
+      .sort()
+      .join(',')
+  }, [assignments])
+
+  useEffect(() => {
+    if (!assignmentIdsKey) {
+      return
+    }
+
+    const assignmentIds = assignmentIdsKey.split(',')
+
+    const channel = supabase
+      .channel('coach-chat-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'coach_messages',
+        },
+        (payload) => {
+          const newMessage = payload.new as CoachMessage
+
+          if (!assignmentIds.includes(newMessage.assignment_id)) {
+            return
+          }
+
+          setMessages((currentMessages) => {
+            if (
+              currentMessages.some((message) => message.id === newMessage.id)
+            ) {
+              return currentMessages
+            }
+
+            return [newMessage, ...currentMessages]
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [assignmentIdsKey])
 
   async function handleRefresh() {
     setRefreshing(true)
-    await loadConversations()
+    await Promise.all([
+      loadConversations(),
+      refreshUnreadCounts(),
+    ])
     setRefreshing(false)
   }
 
-  const conversations = useMemo<ConversationItem[]>(() => {
+  const conversations = useMemo(() => {
     const profilesById = new Map(
       profiles.map((profile) => [profile.id, profile])
     )
@@ -181,9 +260,11 @@ export default function CoachChatScreen() {
     return assignments.map((assignment) => {
       const profile = profilesById.get(assignment.client_id)
 
-      const latestMessage = messages.find(
+      const assignmentMessages = messages.filter(
         (message) => message.assignment_id === assignment.id
       )
+
+      const latestMessage = assignmentMessages[0]
 
       return {
         assignmentId: assignment.id,
@@ -192,52 +273,35 @@ export default function CoachChatScreen() {
         fitnessGoal: profile?.fitness_goal || 'Goal not set',
         latestMessage: latestMessage?.message_text || 'No messages yet',
         latestMessageAt: latestMessage?.created_at || null,
+        unreadCount: unreadCounts[assignment.id] ?? 0,
       }
     })
-  }, [assignments, messages, profiles])
+  }, [assignments, messages, profiles, unreadCounts])
 
   function openConversation(conversation: ConversationItem) {
-  navigation.navigate(
-    'CoachConversation' as never,
-    {
+    navigation.navigate('CoachConversation', {
       assignmentId: conversation.assignmentId,
       clientId: conversation.clientId,
       clientName: conversation.clientName,
-    } as never
-  )
-}
+    })
+  }
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1E5C35" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1E5C35" />
+      </View>
     )
   }
 
-    return (
-    <View style={styles.screen}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Go back to coach dashboard"
-        >
-          <Text style={styles.backButtonText}>‹ Dashboard</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.topBarTitle}>Messages</Text>
-
-        <View style={styles.topBarSpacer} />
-      </View>
-
+  return (
+  <SafeAreaView
+    edges={['top', 'left', 'right']}
+    style={styles.safeArea}
+  >
       <ScrollView
+        style={styles.screen}
         contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -246,6 +310,21 @@ export default function CoachChatScreen() {
           />
         }
       >
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back to coach dashboard"
+          >
+            <Text style={styles.backButtonText}>‹ Dashboard</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.topBarTitle}>Messages</Text>
+
+          <View style={styles.topBarSpacer} />
+        </View>
+
         <Text style={styles.pageTitle}>Client messages</Text>
 
         <Text style={styles.pageSubtitle}>
@@ -268,10 +347,9 @@ export default function CoachChatScreen() {
           </View>
         ) : (
           conversations.map((conversation) => (
-            <TouchableOpacity
+            <Pressable
               key={conversation.assignmentId}
               style={styles.conversationCard}
-              activeOpacity={0.75}
               onPress={() => openConversation(conversation)}
               accessibilityRole="button"
               accessibilityLabel={`Open messages with ${conversation.clientName}`}
@@ -284,7 +362,7 @@ export default function CoachChatScreen() {
 
               <View style={styles.conversationContent}>
                 <View style={styles.conversationTopRow}>
-                  <Text style={styles.clientName} numberOfLines={1}>
+                  <Text style={styles.clientName}>
                     {conversation.clientName}
                   </Text>
 
@@ -293,94 +371,43 @@ export default function CoachChatScreen() {
                   </Text>
                 </View>
 
-                <Text style={styles.goalText} numberOfLines={1}>
+                <Text style={styles.goalText}>
                   {conversation.fitnessGoal}
                 </Text>
 
-                <Text style={styles.messagePreview} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.messagePreview,
+                    conversation.unreadCount > 0 &&
+                      styles.messagePreviewUnread,
+                  ]}
+                  numberOfLines={1}
+                >
                   {conversation.latestMessage}
                 </Text>
               </View>
 
+              {conversation.unreadCount > 0 ? (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {conversation.unreadCount > 99
+                      ? '99+'
+                      : conversation.unreadCount}
+                  </Text>
+                </View>
+              ) : null}
+
               <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
+            </Pressable>
           ))
         )}
-              </ScrollView>
-      </SafeAreaView>
+      </ScrollView>
 
-      <SafeAreaView
-        edges={['bottom']}
-        style={styles.bottomTabSafeArea}
-      >
-        <View style={styles.bottomTabBar}>
-          <CoachTab
-            label="Home"
-            icon="🏠"
-            onPress={() => navigation.navigate('CoachHome')}
-          />
-
-          <CoachTab
-            label="Content"
-            icon="📋"
-            onPress={() => navigation.navigate('CoachContent')}
-          />
-
-          <CoachTab
-            label="Clients"
-            icon="👥"
-            onPress={() => navigation.navigate('CoachClients')}
-          />
-
-          <CoachTab
-            label="Messages"
-            icon="💬"
-            active
-            onPress={() => {}}
-          />
-
-          <CoachTab
-            label="Profile"
-            icon="👤"
-            onPress={() => navigation.navigate('CoachProfile')}
-          />
-        </View>
-      </SafeAreaView>
-    </View>
-  )
-}
-
-type CoachTabProps = {
-  label: string
-  icon: string
-  active?: boolean
-  onPress: () => void
-}
-
-function CoachTab({
-  label,
-  icon,
-  active = false,
-  onPress,
-}: CoachTabProps) {
-  const color = active ? '#1E5C35' : '#7C8F83'
-
-  return (
-    <Pressable
-      style={styles.tabItem}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: active }}
-    >
-      <Text style={[styles.tabIcon, { color }]}>
-        {icon}
-      </Text>
-
-      <Text style={[styles.tabLabel, { color }]}>
-        {label}
-      </Text>
-    </Pressable>
+      <CoachBottomTabBar
+        activeTab="CoachChat"
+        onNavigate={(route) => navigation.navigate(route)}
+      />
+    </SafeAreaView>
   )
 }
 
@@ -494,6 +521,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
   },
+  messagePreviewUnread: {
+    color: '#16281D',
+    fontWeight: '700',
+  },
+  unreadBadge: {
+    alignItems: 'center',
+    backgroundColor: '#D9482B',
+    borderRadius: 999,
+    justifyContent: 'center',
+    marginLeft: 8,
+    minWidth: 22,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+  },
   chevron: {
     color: '#1E5C35',
     fontSize: 26,
@@ -532,36 +578,5 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 7,
     textAlign: 'center',
-  },
-    bottomTabSafeArea: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E2ECE6',
-  },
-
-  bottomTabBar: {
-    minHeight: 60,
-    paddingTop: 8,
-    paddingBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-
-  tabItem: {
-    flex: 1,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  tabIcon: {
-    fontSize: 19,
-  },
-
-  tabLabel: {
-    marginTop: 3,
-    fontSize: 11,
-    fontWeight: '700',
   },
 })

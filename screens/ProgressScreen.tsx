@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +13,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
-import PremiumUpsellCard from '../components/PremiumUpsellCard'
+import PremiumUpsellCard from '../context/PremiumUpsellCard'
 
 import { supabase } from '../services/supabase'
 import type { MainTabParamList, RootStackParamList } from '../types/navigation'
@@ -63,11 +63,33 @@ function getWeekStartDate() {
   const today = getStartOfToday()
   const day = today.getDay()
 
-  // Monday is the first day of the week.
   const daysSinceMonday = day === 0 ? 6 : day - 1
   today.setDate(today.getDate() - daysSinceMonday)
 
   return today
+}
+
+function getMonthStartDate(month: Date) {
+  return new Date(month.getFullYear(), month.getMonth(), 1)
+}
+
+function getMonthEndDate(month: Date) {
+  return new Date(
+    month.getFullYear(),
+    month.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  )
+}
+
+function formatMonthTitle(month: Date) {
+  return new Intl.DateTimeFormat('en-SG', {
+    month: 'long',
+    year: 'numeric',
+  }).format(month)
 }
 
 function formatNumber(value: number | null | undefined) {
@@ -81,14 +103,14 @@ function formatNumber(value: number | null | undefined) {
 }
 
 function formatShortDate(dateString: string) {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-SG', {
     day: 'numeric',
     month: 'short',
   }).format(new Date(dateString))
 }
 
 function formatDateTime(dateString: string) {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-SG', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
@@ -156,7 +178,7 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
 
     return {
       key: dayKey,
-      label: new Intl.DateTimeFormat('en-US', {
+      label: new Intl.DateTimeFormat('en-SG', {
         weekday: 'narrow',
       }).format(date),
       date: dayKey,
@@ -167,14 +189,52 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
   })
 }
 
-  export default function ProgressScreen() {
+function getBestExerciseDay(logs: ExerciseLog[]) {
+  const dayTotals = new Map<string, number>()
+
+  logs.forEach((log) => {
+    const dayKey = getDayKey(new Date(log.logged_at))
+    const minutes = Number(log.duration_minutes ?? 0)
+
+    dayTotals.set(dayKey, (dayTotals.get(dayKey) ?? 0) + minutes)
+  })
+
+  let bestDay: { date: string; minutes: number } | null = null
+
+  dayTotals.forEach((minutes, date) => {
+    const currentBest = bestDay
+
+    if (!currentBest || minutes > currentBest.minutes) {
+      bestDay = { date, minutes }
+    }
+  })
+
+  return bestDay as { date: string; minutes: number } | null
+}
+
+function getActiveDays(logs: { logged_at: string }[]) {
+  const uniqueDays = new Set(
+    logs.map((log) => getDayKey(new Date(log.logged_at)))
+  )
+
+  return uniqueDays.size
+}
+
+export default function ProgressScreen() {
   const navigation = useNavigation<ProgressNavigationProp>()
 
   const [waterLogs, setWaterLogs] = useState<WaterLog[]>([])
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([])
+  const [monthlyWaterLogs, setMonthlyWaterLogs] = useState<WaterLog[]>([])
+  const [monthlyExerciseLogs, setMonthlyExerciseLogs] = useState<ExerciseLog[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [isPremium, setIsPremium] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+  })
+  const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false)
 
   const loadProgressData = useCallback(async () => {
     try {
@@ -248,16 +308,114 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
     }
   }, [])
 
+  const loadMonthlyProgressData = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        setMonthlyWaterLogs([])
+        setMonthlyExerciseLogs([])
+        return
+      }
+
+      const monthStart = getMonthStartDate(selectedMonth)
+      const monthEnd = getMonthEndDate(selectedMonth)
+
+      const [waterResult, exerciseResult] = await Promise.all([
+        supabase
+          .from('water_logs')
+          .select('id, amount_ml, logged_at')
+          .eq('user_id', user.id)
+          .gte('logged_at', monthStart.toISOString())
+          .lte('logged_at', monthEnd.toISOString())
+          .order('logged_at', { ascending: false }),
+
+        supabase
+          .from('exercise_logs')
+          .select(`
+            id,
+            exercise_type,
+            activity_name,
+            duration_minutes,
+            distance_km,
+            sets,
+            repetitions_per_set,
+            weight_kg,
+            calories_burned,
+            logged_at
+          `)
+          .eq('user_id', user.id)
+          .gte('logged_at', monthStart.toISOString())
+          .lte('logged_at', monthEnd.toISOString())
+          .order('logged_at', { ascending: false }),
+      ])
+
+      if (waterResult.error) {
+        throw waterResult.error
+      }
+
+      if (exerciseResult.error) {
+        throw exerciseResult.error
+      }
+
+      setMonthlyWaterLogs((waterResult.data ?? []) as WaterLog[])
+      setMonthlyExerciseLogs((exerciseResult.data ?? []) as ExerciseLog[])
+    } catch (error) {
+      console.error('Could not load monthly progress data:', error)
+    }
+  }, [selectedMonth])
+
   useFocusEffect(
     useCallback(() => {
       void loadProgressData()
     }, [loadProgressData])
   )
 
+  useEffect(() => {
+    void loadMonthlyProgressData()
+  }, [loadMonthlyProgressData])
+
   async function handleRefresh() {
     setRefreshing(true)
-    await loadProgressData()
+    await Promise.all([
+      loadProgressData(),
+      loadMonthlyProgressData(),
+    ])
     setRefreshing(false)
+  }
+
+  function goToPreviousMonth() {
+    setSelectedMonth((currentMonth) => {
+      return new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() - 1,
+        1
+      )
+    })
+  }
+
+  function goToNextMonth() {
+    const now = new Date()
+    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    setSelectedMonth((selected) => {
+      if (selected >= currentMonth) {
+        return selected
+      }
+
+      return new Date(
+        selected.getFullYear(),
+        selected.getMonth() + 1,
+        1
+      )
+    })
+  }
+
+  function toggleMonthlyReport() {
+    setIsMonthlyReportOpen((isOpen) => !isOpen)
   }
 
   const todayWater = useMemo(() => {
@@ -309,6 +467,66 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
     return exerciseLogs.slice(0, MAX_RECENT_ACTIVITIES)
   }, [exerciseLogs])
 
+  const monthlyWaterTotal = useMemo(() => {
+    return monthlyWaterLogs.reduce(
+      (total, log) => total + Number(log.amount_ml ?? 0),
+      0
+    )
+  }, [monthlyWaterLogs])
+
+  const monthlyWaterAverage = useMemo(() => {
+    const uniqueDays = new Set(
+      monthlyWaterLogs.map((log) => getDayKey(new Date(log.logged_at)))
+    )
+
+    const daysLogged = uniqueDays.size || 1
+
+    return Math.round(monthlyWaterTotal / daysLogged)
+  }, [monthlyWaterLogs, monthlyWaterTotal])
+
+  const monthlyExerciseSessions = monthlyExerciseLogs.length
+
+  const monthlyActiveMinutes = useMemo(() => {
+    return monthlyExerciseLogs.reduce(
+      (total, log) => total + Number(log.duration_minutes ?? 0),
+      0
+    )
+  }, [monthlyExerciseLogs])
+
+  const monthlyCardioSessions = useMemo(() => {
+    return monthlyExerciseLogs.filter(
+      (log) => getExerciseCategory(log) === 'Cardio'
+    ).length
+  }, [monthlyExerciseLogs])
+
+  const monthlyStrengthSessions = useMemo(() => {
+    return monthlyExerciseLogs.filter(
+      (log) => getExerciseCategory(log) === 'Strength'
+    ).length
+  }, [monthlyExerciseLogs])
+
+  const monthlyCalories = useMemo(() => {
+    return monthlyExerciseLogs.reduce(
+      (total, log) => total + Number(log.calories_burned ?? 0),
+      0
+    )
+  }, [monthlyExerciseLogs])
+
+  const monthlyActiveDays = useMemo(() => {
+    return getActiveDays(monthlyExerciseLogs)
+  }, [monthlyExerciseLogs])
+
+  const monthlyBestDay = useMemo(() => {
+    return getBestExerciseDay(monthlyExerciseLogs)
+  }, [monthlyExerciseLogs])
+
+  const currentMonth = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+  }, [])
+
+  const isNextMonthDisabled = selectedMonth >= currentMonth
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -330,45 +548,49 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
       }
     >
       <View style={styles.topBar}>
-      <TouchableOpacity
-      style={styles.backHomeButton}
-      onPress={() => navigation.goBack()}
-      accessibilityRole="button"
-      accessibilityLabel="Go back"
-    >
-      <Text style={styles.backHomeText}>‹ Home</Text>
-    </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backHomeButton}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack()
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Text style={styles.backHomeText}>‹ Home</Text>
+        </TouchableOpacity>
 
-  <Text style={styles.topBarTitle}>Progress</Text>
+        <Text style={styles.topBarTitle}>Progress</Text>
 
-  <View style={styles.topBarSpacer} />
-</View>
+        <View style={styles.topBarSpacer} />
+      </View>
 
-<Text style={styles.screenSubtitle}>
-  A simple overview of your wellness this week.
-</Text>
+      <Text style={styles.screenSubtitle}>
+        A simple overview of your wellness this week.
+      </Text>
 
       <View
-  style={[
-    styles.freePlanBadge,
-    isPremium && styles.premiumPlanBadge,
-  ]}
->
-  <Text
-    style={[
-      styles.freePlanBadgeText,
-      isPremium && styles.premiumPlanBadgeText,
-    ]}
-  >
-    {isPremium ? '✦ PREMIUM PLAN' : 'FREE PLAN'}
-  </Text>
+        style={[
+          styles.freePlanBadge,
+          isPremium && styles.premiumPlanBadge,
+        ]}
+      >
+        <Text
+          style={[
+            styles.freePlanBadgeText,
+            isPremium && styles.premiumPlanBadgeText,
+          ]}
+        >
+          {isPremium ? '✦ PREMIUM PLAN' : 'FREE PLAN'}
+        </Text>
 
-  <Text style={styles.freePlanText}>
-    {isPremium
-      ? 'Your full wellness and progress summary'
-      : 'Your basic weekly wellness summary'}
-  </Text>
-</View>
+        <Text style={styles.freePlanText}>
+          {isPremium
+            ? 'Your full wellness and progress summary'
+            : 'Your basic weekly wellness summary'}
+        </Text>
+      </View>
 
       <Text style={styles.sectionTitle}>Today</Text>
 
@@ -409,7 +631,7 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
         </View>
 
         <Text style={styles.progressText}>
-          {Math.round(waterProgress * 100)}% of today&apos;s target
+          {Math.round(waterProgress * 100)}% of today's target
         </Text>
       </View>
 
@@ -525,6 +747,172 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
         </View>
       </View>
 
+      {isPremium ? (
+        <View style={styles.monthlyCard}>
+          <View style={styles.monthlyHeader}>
+            <View style={styles.monthlyHeaderText}>
+              <Text style={styles.monthlyTitle}>Monthly progress</Text>
+              <Text style={styles.monthlySubtitle}>
+                Review your wellness trends by month
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.monthlyToggleButton}
+              onPress={toggleMonthlyReport}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isMonthlyReportOpen
+                  ? 'Hide monthly progress report'
+                  : 'Show monthly progress report'
+              }
+            >
+              <Text style={styles.monthlyToggleText}>
+                {isMonthlyReportOpen ? 'Hide' : 'View'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.monthSelector}>
+            <TouchableOpacity
+              style={styles.monthArrowButton}
+              onPress={goToPreviousMonth}
+              accessibilityRole="button"
+              accessibilityLabel="Go to previous month"
+            >
+              <Text style={styles.monthArrowText}>‹</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.selectedMonthText}>
+              {formatMonthTitle(selectedMonth)}
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                styles.monthArrowButton,
+                isNextMonthDisabled && styles.monthArrowDisabled,
+              ]}
+              onPress={goToNextMonth}
+              disabled={isNextMonthDisabled}
+              accessibilityRole="button"
+              accessibilityLabel="Go to next month"
+            >
+              <Text
+                style={[
+                  styles.monthArrowText,
+                  isNextMonthDisabled && styles.monthArrowDisabledText,
+                ]}
+              >
+                ›
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {isMonthlyReportOpen ? (
+            <View style={styles.monthlyReportBody}>
+              <View style={styles.monthlyStatsGrid}>
+                <View style={styles.monthlyStatCard}>
+                  <Text style={styles.monthlyStatIcon}>🏃</Text>
+                  <Text style={styles.monthlyStatValue}>
+                    {monthlyExerciseSessions}
+                  </Text>
+                  <Text style={styles.monthlyStatLabel}>Workouts</Text>
+                </View>
+
+                <View style={styles.monthlyStatCard}>
+                  <Text style={styles.monthlyStatIcon}>⏱</Text>
+                  <Text style={styles.monthlyStatValue}>
+                    {monthlyActiveMinutes}
+                  </Text>
+                  <Text style={styles.monthlyStatLabel}>Active minutes</Text>
+                </View>
+
+                <View style={styles.monthlyStatCard}>
+                  <Text style={styles.monthlyStatIcon}>🔥</Text>
+                  <Text style={styles.monthlyStatValue}>
+                    {Math.round(monthlyCalories)}
+                  </Text>
+                  <Text style={styles.monthlyStatLabel}>Calories</Text>
+                </View>
+
+                <View style={styles.monthlyStatCard}>
+                  <Text style={styles.monthlyStatIcon}>✅</Text>
+                  <Text style={styles.monthlyStatValue}>
+                    {monthlyActiveDays}
+                  </Text>
+                  <Text style={styles.monthlyStatLabel}>Active days</Text>
+                </View>
+              </View>
+
+              <View style={styles.monthlyInsightCard}>
+                <Text style={styles.monthlyInsightTitle}>
+                  Activity balance
+                </Text>
+
+                <Text style={styles.monthlyInsightText}>
+                  {monthlyCardioSessions} cardio ·{' '}
+                  {monthlyStrengthSessions} strength sessions
+                </Text>
+
+                <View style={styles.monthlyBalanceTrack}>
+                  <View
+                    style={[
+                      styles.monthlyBalanceFill,
+                      {
+                        width: `${
+                          monthlyExerciseSessions > 0
+                            ? (monthlyCardioSessions /
+                                monthlyExerciseSessions) *
+                              100
+                            : 0
+                        }%`,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <View style={styles.monthlyBalanceLabels}>
+                  <Text style={styles.monthlyBalanceLabel}>Cardio</Text>
+                  <Text style={styles.monthlyBalanceLabel}>Strength</Text>
+                </View>
+              </View>
+
+              <View style={styles.monthlyInsightCard}>
+                <Text style={styles.monthlyInsightTitle}>Hydration</Text>
+
+                <Text style={styles.monthlyInsightText}>
+                  {monthlyWaterTotal.toLocaleString()} ml logged · average{' '}
+                  {monthlyWaterAverage.toLocaleString()} ml per logged day
+                </Text>
+              </View>
+
+              <View style={styles.monthlyInsightCard}>
+                <Text style={styles.monthlyInsightTitle}>
+                  Best workout day
+                </Text>
+
+                {monthlyBestDay ? (
+                  <Text style={styles.monthlyInsightText}>
+                    {formatShortDate(monthlyBestDay.date)} ·{' '}
+                    {monthlyBestDay.minutes} active minutes
+                  </Text>
+                ) : (
+                  <Text style={styles.monthlyInsightText}>
+                    No workouts logged for this month yet.
+                  </Text>
+                )}
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.monthlyCollapsedText}>
+              Tap <Text style={styles.monthlyCollapsedHighlight}>View</Text>{' '}
+              to see your detailed{' '}
+              {formatMonthTitle(selectedMonth)} wellness report.
+            </Text>
+          )}
+        </View>
+      ) : null}
+
       <View style={styles.recentHeaderRow}>
         <Text style={styles.sectionTitle}>Recent activity</Text>
 
@@ -603,13 +991,14 @@ function buildWeekDays(exerciseLogs: ExerciseLog[]): DayActivity[] {
           })}
         </View>
       )}
+
       {!isPremium ? (
-  <PremiumUpsellCard
-    onPress={() =>
-      navigation.getParent()?.navigate('SubPremium' as never)
-    }
-  />
-) : null}
+        <PremiumUpsellCard
+          onPress={() =>
+            navigation.getParent()?.navigate('SubPremium' as never)
+          }
+        />
+      ) : null}
     </ScrollView>
   )
 }
@@ -619,12 +1008,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FAF6',
   },
   container: {
-  backgroundColor: '#F5FAF6',
-  flexGrow: 1,
-  padding: 20,
-  paddingBottom: 40,
-  paddingTop: 52,
-},
+    backgroundColor: '#F5FAF6',
+    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 40,
+    paddingTop: 52,
+  },
   loadingContainer: {
     alignItems: 'center',
     backgroundColor: '#F5FAF6',
@@ -870,6 +1259,167 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 8,
   },
+
+  monthlyCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2ECE6',
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 24,
+    padding: 18,
+  },
+  monthlyHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  monthlyHeaderText: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  monthlyTitle: {
+    color: '#16281D',
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  monthlySubtitle: {
+    color: '#5C7267',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 4,
+  },
+  monthlyToggleText: {
+    color: '#1E5C35',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  monthlyToggleButton: {
+    backgroundColor: '#EAF3EC',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  monthlyCollapsedText: {
+    color: '#5C7267',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 14,
+  },
+  monthlyCollapsedHighlight: {
+    color: '#1E5C35',
+    fontWeight: '900',
+  },
+  monthSelector: {
+    alignItems: 'center',
+    backgroundColor: '#F5FAF6',
+    borderColor: '#E2ECE6',
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    padding: 6,
+  },
+  monthArrowButton: {
+    alignItems: 'center',
+    borderRadius: 10,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  monthArrowText: {
+    color: '#1E5C35',
+    fontSize: 26,
+    fontWeight: '300',
+  },
+  monthArrowDisabled: {
+    opacity: 0.35,
+  },
+  monthArrowDisabledText: {
+    color: '#A9BDB1',
+  },
+  selectedMonthText: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  monthlyReportBody: {
+    marginTop: 16,
+  },
+  monthlyStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  monthlyStatCard: {
+    alignItems: 'center',
+    backgroundColor: '#F5FAF6',
+    borderColor: '#E2ECE6',
+    borderRadius: 16,
+    borderWidth: 1,
+    minHeight: 112,
+    paddingHorizontal: 8,
+    paddingVertical: 14,
+    width: '48.5%',
+  },
+  monthlyStatIcon: {
+    fontSize: 21,
+  },
+  monthlyStatValue: {
+    color: '#1E5C35',
+    fontSize: 24,
+    fontWeight: '900',
+    marginTop: 6,
+  },
+  monthlyStatLabel: {
+    color: '#5C7267',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 3,
+    textAlign: 'center',
+  },
+  monthlyInsightCard: {
+    backgroundColor: '#F5FAF6',
+    borderColor: '#E2ECE6',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 14,
+  },
+  monthlyInsightTitle: {
+    color: '#16281D',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  monthlyInsightText: {
+    color: '#5C7267',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  monthlyBalanceTrack: {
+    backgroundColor: '#E2ECE6',
+    borderRadius: 999,
+    height: 10,
+    marginTop: 14,
+    overflow: 'hidden',
+  },
+  monthlyBalanceFill: {
+    backgroundColor: '#1E5C35',
+    borderRadius: 999,
+    height: '100%',
+  },
+  monthlyBalanceLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  monthlyBalanceLabel: {
+    color: '#708277',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
   recentHeaderRow: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -988,46 +1538,45 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-topBar: {
-  alignItems: 'center',
-  flexDirection: 'row',
-  height: 70,
-  justifyContent: 'space-between',
-},
-backHomeButton: {
-  alignItems: 'flex-start',
-  height: 40,
-  justifyContent: 'center',
-  width: 72,
-},
-backHomeText: {
-  color: '#1E5C35',
-  fontSize: 15,
-  fontWeight: '800',
-  lineHeight: 20,
-},
-topBarTitle: {
-  color: '#16281D',
-  fontSize: 18,
-  fontWeight: '800',
-},
-topBarSpacer: {
-  height: 40,
-  width: 72,
-},
-screenSubtitle: {
-  color: '#5C7267',
-  fontSize: 13,
-  lineHeight: 18,
-  marginTop: 10,
-  textAlign: 'center',
-},
-premiumPlanBadge: {
-  backgroundColor: '#FFF7DC',
-  borderColor: '#F4C95D',
-},
-
-premiumPlanBadgeText: {
-  color: '#8A6410',
-},
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: 70,
+    justifyContent: 'space-between',
+  },
+  backHomeButton: {
+    alignItems: 'flex-start',
+    height: 40,
+    justifyContent: 'center',
+    width: 72,
+  },
+  backHomeText: {
+    color: '#1E5C35',
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  topBarTitle: {
+    color: '#16281D',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  topBarSpacer: {
+    height: 40,
+    width: 72,
+  },
+  screenSubtitle: {
+    color: '#5C7267',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  premiumPlanBadge: {
+    backgroundColor: '#FFF7DC',
+    borderColor: '#F4C95D',
+  },
+  premiumPlanBadgeText: {
+    color: '#8A6410',
+  },
 })

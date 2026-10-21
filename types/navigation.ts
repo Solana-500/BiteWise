@@ -106,6 +106,11 @@ export type RootStackParamList = {
   Feedback: undefined
   Progress: undefined
 
+  RateCoach: {
+    coachId: string
+    coachName: string
+  }
+
   ExerciseLibrary: {
     category: ExerciseCategory
   }

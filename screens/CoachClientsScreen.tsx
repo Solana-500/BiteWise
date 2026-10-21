@@ -13,6 +13,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
+import CoachBottomTabBar from '../components/CoachBottomTabBar';
 
 type ClientProfile = {
   id: string
@@ -250,40 +251,10 @@ export default function CoachClientsScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      <SafeAreaView edges={['bottom']} style={styles.bottomTabSafeArea}>
-        <View style={styles.bottomTabBar}>
-          <CoachTab
-            label="Home"
-            icon="🏠"
-            onPress={() => navigation.navigate('CoachHome')}
-          />
-
-          <CoachTab
-            label="Content"
-            icon="📋"
-            onPress={() => navigation.navigate('CoachContent')}
-          />
-
-          <CoachTab
-            label="Clients"
-            icon="👥"
-            active
-            onPress={() => {}}
-          />
-
-          <CoachTab
-            label="Messages"
-            icon="💬"
-            onPress={() => navigation.navigate('CoachChat')}
-          />
-
-          <CoachTab
-            label="Profile"
-            icon="👤"
-            onPress={() => navigation.navigate('CoachProfile')}
-          />
-        </View>
-      </SafeAreaView>
+      <CoachBottomTabBar
+        activeTab="CoachClients"
+        onNavigate={(route) => navigation.navigate(route)}
+      />
     </View>
   )
 }
