@@ -25,6 +25,7 @@ import AdminHomeScreen from './screens/AdminHomeScreen'
 import AdminMoreScreen from './screens/AdminMoreScreen'
 import AdminUsersScreen from './screens/AdminUserListScreen'
 import PuHomeScreen from './screens/PuHomeScreen'
+import AiMealPlanningScreen from './screens/AiMealPlanningScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
 import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
@@ -650,6 +651,16 @@ export default function App() {
                 component={PremiumTabs}
                 options={{ headerShown: false }}
               />
+              
+              <Stack.Screen
+                name="AiMealPlanning"
+                component={AiMealPlanningScreen}
+                options={{
+                  title: 'AI Meal Planning',
+                  headerShown: true,
+                }}
+              />
+
               <Stack.Screen
                 name="SubPremium"
                 component={SubPremiumScreen}

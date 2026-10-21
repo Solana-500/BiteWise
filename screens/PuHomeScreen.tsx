@@ -364,6 +364,31 @@ async function fetchAiRecommendation() {
             </Pressable>
           </View>
         </View>
+        
+            <Pressable
+              style={styles.summaryLinkCard}
+              onPress={() =>
+                navigation
+                  .getParent()
+                  ?.getParent()
+                  ?.navigate('AiMealPlanning')
+              }
+              accessibilityRole="button"
+              accessibilityLabel="Open AI Meal Planning"
+            >
+              <View style={styles.summaryLinkHeaderRow}>
+                <Text style={styles.summaryLinkHeading}>
+                  AI Meal Planning
+                </Text>
+                <Text style={styles.chevron}>{'›'}</Text>
+              </View>
+            
+              <Text style={styles.recommendationText}>
+                Generate a personalised 7-day meal plan based on
+                your fitness goals and dietary preferences.
+              </Text>
+            </Pressable>
+
       </ScrollView>
     </SafeAreaView>
   )
