@@ -47,9 +47,11 @@ import CoachWorkoutPlanBuilderScreen from './screens/CoachWorkoutPlanBuilderScre
 import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen'
 import ResetPasswordScreen from './screens/ResetPasswordScreen'
 import PUPaymentScreen from './screens/PUPaymentScreen'
+import RateCoachScreen from './screens/RateCoachScreen'
 
 import { useCoachUnreadCount } from './hooks/useCoachUnreadCount'
 import { supabase } from './services/supabase'
+import { CoachUnreadProvider } from './context/CoachUnreadContext'
 import type {
   HomeStackParamList,
   MainTabParamList,
@@ -201,35 +203,30 @@ function PremiumHomeStackNavigator() {
 }
 
 function PremiumTabs() {
-  const insets = useSafeAreaInsets()
   const unreadCount = useCoachUnreadCount()
 
   return (
-    <PremiumTab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#1E5C35',
-        tabBarInactiveTintColor: '#7C8F83',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-          marginTop: 0,
-        },
-        tabBarItemStyle: {
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        tabBarStyle: {
-          height: 60 + insets.bottom,
-          paddingTop: 5,
-          paddingBottom: Math.max(insets.bottom, 8),
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E2ECE6',
-        },
-      }}
-    >
+  <PremiumTab.Navigator
+    safeAreaInsets={{
+      bottom: 12,
+    }}
+    screenOptions={{
+      headerShown: false,
+      tabBarActiveTintColor: '#1E5C35',
+      tabBarInactiveTintColor: '#7C8F83',
+
+      tabBarLabelStyle: {
+        fontSize: 11,
+        fontWeight: '700',
+      },
+
+      tabBarStyle: {
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E2ECE6',
+      },
+    }}
+  >
       <PremiumTab.Screen
         name="PuHome"
         component={PremiumHomeStackNavigator}
@@ -520,12 +517,13 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            animation: 'none',
-            headerShown: true,
-            headerStyle: {
+      <CoachUnreadProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              animation: 'none',
+              headerShown: true,
+              headerStyle: {
               backgroundColor: '#F5FAF6',
             },
             headerTintColor: '#1E5C35',
@@ -674,6 +672,11 @@ export default function App() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
+                name="RateCoach"
+                component={RateCoachScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="FoodLogging"
                 component={FoodLoggingScreen}
                 options={{
@@ -760,6 +763,7 @@ export default function App() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
+      </CoachUnreadProvider>
     </SafeAreaProvider>
   )
 }

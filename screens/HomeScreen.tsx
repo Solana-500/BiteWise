@@ -14,7 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
 import type { HomeStackParamList } from '../types/navigation'
-import PremiumUpsellCard from '../components/PremiumUpsellCard'
+import PremiumUpsellCard from '../context/PremiumUpsellCard'
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>
 

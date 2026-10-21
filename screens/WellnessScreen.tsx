@@ -22,7 +22,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { supabase } from '../services/supabase'
-import PremiumUpsellCard from '../components/PremiumUpsellCard'
+import PremiumUpsellCard from '../context/PremiumUpsellCard'
 import type {
   ExerciseCategory,
   MainTabParamList,

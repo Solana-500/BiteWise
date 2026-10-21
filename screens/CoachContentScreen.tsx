@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from '@react-navigation/native'
 import { supabase } from '../services/supabase'
+import CoachBottomTabBar from '../components/CoachBottomTabBar';
 
 type Props = {
   navigation: any
@@ -278,34 +279,10 @@ export default function CoachContentScreen({ navigation }: Props) {
         </ScrollView>
       </SafeAreaView>
 
-      <View style={styles.bottomTabBar}>
-        <CoachTab
-          label="Home"
-          icon="🏠"
-          onPress={() => navigation.navigate('CoachHome')}
-        />
-        <CoachTab
-          label="Content"
-          icon="📋"
-          active
-          onPress={() => {}}
-        />
-        <CoachTab
-          label="Clients"
-          icon="👥"
-          onPress={() => navigation.navigate('CoachClients')}
-        />
-        <CoachTab
-          label="Messages"
-          icon="💬"
-          onPress={() => navigation.navigate('CoachChat')}
-        />
-        <CoachTab
-          label="Profile"
-          icon="👤"
-          onPress={() => navigation.navigate('CoachProfile')}
-        />
-      </View>
+      <CoachBottomTabBar
+  activeTab="CoachContent"
+  onNavigate={(route) => navigation.navigate(route)}
+/>
     </View>
   )
 }
