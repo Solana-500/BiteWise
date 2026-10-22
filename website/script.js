@@ -96,24 +96,33 @@ async function loadLandingPageContent() {
         "landing-hero-secondary-button"
     );
 
-    if (hero.title && title) {
-        title.textContent = hero.title;
+    if (title) {
+        title.textContent = hero.title || "";
     }
 
-    if (hero.description && description) {
-        description.textContent = hero.description;
+    if (description) {
+        description.textContent = hero.description || "";
     }
 
-    if (hero.image && image) {
-        image.src = hero.image;
+    if (image) {
+        image.removeAttribute("src");
+
+        if (hero.image) {
+            image.src = hero.image;
+
+            // Start rotating screenshots after loading the editor image.
+            startAppPreview("app-preview-image", hero.image);
+        } else {
+            startAppPreview("app-preview-image");
+        }
     }
 
-    if (hero.primaryButton && primaryButton) {
-        primaryButton.textContent = hero.primaryButton;
+    if (primaryButton) {
+        primaryButton.textContent = hero.primaryButton || "";
     }
 
-    if (hero.secondaryButton && secondaryButton) {
-        secondaryButton.textContent = hero.secondaryButton;
+    if (secondaryButton) {
+        secondaryButton.textContent = hero.secondaryButton || "";
     }
 
     renderLandingFeatures(landing.content.features);
@@ -165,71 +174,60 @@ function fillFeatureCard(card, feature) {
     }
 }
 
-// Show the Features saved in the admin portal.
-// The element that holds the feature cards needs id="landing-features".
+
 function renderLandingFeatures(features) {
     const container = document.getElementById("landing-features");
-    const items = features?.items;
 
-    // Nothing saved yet (or no container): keep the cards already in the HTML
-    if (!container || !Array.isArray(items)) {
-        return;
-    }
-
-    // Copy an existing card so the new cards keep the page's own styling
-    const template = container.firstElementChild?.cloneNode(true);
+    if (!container) return;
 
     container.replaceChildren();
 
-    items.forEach((feature) => {
-        const card = template
-            ? template.cloneNode(true)
-            : createFeatureCard();
+    const items = features?.items;
 
+    if (!Array.isArray(items) || items.length === 0) {
+        return;
+    }
+
+    items.forEach((feature) => {
+        const card = createFeatureCard();
         fillFeatureCard(card, feature);
         container.appendChild(card);
     });
 }
 
+
 function renderLandingHowItWorks(howItWorks) {
     const container = document.getElementById("landing-how-it-works");
-    const items = howItWorks?.items;
 
-    // Keep the existing HTML if no saved steps are available
-    if (!container || !Array.isArray(items)) {
-        return;
-    }
-
-    // Use the first existing step as the styling template
-    const template = container.firstElementChild?.cloneNode(true);
+    if (!container) return;
 
     container.replaceChildren();
 
+    const items = howItWorks?.items;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        return;
+    }
+
     items.forEach((step, index) => {
-        const card = template
-            ? template.cloneNode(true)
-            : document.createElement("div");
+        const card = document.createElement("div");
+        card.className = "step-card";
 
-        const stepNumber = card.querySelector(".step-number");
+        const stepNumber = document.createElement("div");
+        stepNumber.className = "step-number";
+        stepNumber.textContent = index + 1;
 
-        if (stepNumber) {
-            stepNumber.textContent = index + 1;
-        }
+        const heading = document.createElement("h3");
+        heading.textContent = step.title || "";
 
-        const heading = card.querySelector("h1, h2, h3, h4, h5, h6");
-        const description = card.querySelector("p");
+        const description = document.createElement("p");
+        description.textContent = step.description || "";
 
-        if (heading) {
-            heading.textContent = step.title || "";
-        }
-
-        if (description) {
-            description.textContent = step.description || "";
-        }
-
+        card.append(stepNumber, heading, description);
         container.appendChild(card);
     });
 }
+
 
 
 async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
@@ -238,6 +236,12 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
     );
 
     if (!container) return;
+
+    container.replaceChildren();
+
+    if (!Array.isArray(selectedCoachIds) || selectedCoachIds.length === 0) {
+        return;
+    }
 
     const { data: coaches, error } = await supabaseClient
         .from("profiles")
@@ -250,7 +254,6 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         return;
     }
 
-    // Load ratings currently visible to this website.
     const { data: reviews, error: reviewError } = await supabaseClient
         .from("coach_reviews")
         .select("coach_id, rating");
@@ -260,9 +263,8 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         return;
     }
 
-    // Calculate each coach's average rating.
-    const coachesWithRatings = coaches.map((coach) => {
-        const coachReviews = reviews.filter(
+    const coachesWithRatings = (coaches || []).map((coach) => {
+        const coachReviews = (reviews || []).filter(
             (review) => review.coach_id === coach.id
         );
 
@@ -280,8 +282,6 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         };
     });
 
-    // Display only the coaches selected by the admin,
-    // preserving their selection order.
     const featuredCoaches = selectedCoachIds
         .map((id) =>
             coachesWithRatings.find((coach) => coach.id === id)
@@ -289,104 +289,77 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         .filter(Boolean)
         .slice(0, 3);
 
-    const template = container
-        .querySelector(".coach-card")
-        ?.cloneNode(true);
-
-    if (!template) {
-        console.error("No .coach-card template found in the HTML.");
-        return;
-    }
-
-    container.replaceChildren();
-
-    // Show a message if no coaches have been selected.
     if (featuredCoaches.length === 0) {
-        const message = document.createElement("p");
-        message.textContent = "Featured coaches will be announced soon.";
-        container.appendChild(message);
         return;
     }
 
     featuredCoaches.forEach((coach) => {
-        const card = template.cloneNode(true);
+        const card = document.createElement("div");
+        card.className = "coach-card";
 
-        const avatar = card.querySelector(".coach-avatar");
-        const name = card.querySelector("h3");
-        const specialty = card.querySelector(".coach-specialty");
-        const rating = card.querySelector(".coach-rating");
-        const stars = card.querySelector(".coach-stars");
-        const ratingValue = rating?.querySelector("span:last-child");
-        const profileLink = card.querySelector(".profile-link");
+        const avatar = document.createElement("div");
+        avatar.className = "coach-avatar";
+        avatar.textContent = (coach.full_name || "HC")
+            .split(/\s+/)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
 
-        if (avatar) {
-            avatar.textContent = coach.full_name
-                .split(/\s+/)
-                .map((part) => part[0])
-                .join("")
-                .slice(0, 2)
-                .toUpperCase();
-        }
+        const name = document.createElement("h3");
+        name.textContent = coach.full_name || "Health Coach";
 
-        if (name) {
-            name.textContent = coach.full_name;
-        }
+        const specialty = document.createElement("p");
+        specialty.className = "coach-specialty";
+        specialty.textContent =
+            coach.coaching_specialty || "Health Coach";
 
-        if (specialty) {
-            specialty.textContent =
-                coach.coaching_specialty || "Health Coach";
-        }
+        const ratingContainer = document.createElement("div");
+        ratingContainer.className = "coach-rating";
+
+        const stars = document.createElement("span");
+        stars.className = "coach-stars";
+
+        const ratingValue = document.createElement("span");
 
         if (coach.averageRating !== null) {
-            if (stars) stars.textContent = "★★★★★";
-
-            if (ratingValue) {
-                ratingValue.textContent =
-                    `${coach.averageRating.toFixed(1)} (${coach.reviewCount})`;
-            }
+            stars.textContent = "★★★★★";
+            ratingValue.textContent =
+                `${coach.averageRating.toFixed(1)} (${coach.reviewCount})`;
         } else {
-            if (stars) stars.textContent = "No ratings";
-
-            if (ratingValue) {
-                ratingValue.textContent = "";
-            }
+            stars.textContent = "No ratings";
+            ratingValue.textContent = "";
         }
 
-        // Prevent links from pointing to the hardcoded placeholder.
-        if (profileLink) {
-            profileLink.href = "#";
-
-            profileLink.addEventListener("click", (event) => {
-                event.preventDefault();
-                console.log("Selected coach:", coach.id);
-            });
-        }
-
+        ratingContainer.append(stars, ratingValue);
+        card.append(avatar, name, specialty, ratingContainer);
         container.appendChild(card);
     });
 }
 
+
+
 function renderLandingPlans(plans) {
     const pricingGrid = document.querySelector(".pricing-grid");
 
-    if (!pricingGrid || !Array.isArray(plans)) {
-        return;
-    }
+    if (!pricingGrid) return;
 
     pricingGrid.replaceChildren();
+
+    if (!Array.isArray(plans) || plans.length === 0) {
+        return;
+    }
 
     plans.forEach((plan, index) => {
         const isPremium =
             plan.name?.toLowerCase().includes("premium") ||
             index > 0;
 
-        // Plan card
         const card = document.createElement("div");
         card.className = isPremium
             ? "pricing-card premium-card"
             : "pricing-card";
 
-        // Optional badge
         if (plan.badge) {
             const badge = document.createElement("span");
             badge.className = "popular-badge";
@@ -394,12 +367,10 @@ function renderLandingPlans(plans) {
             card.appendChild(badge);
         }
 
-        // Plan name
         const name = document.createElement("p");
         name.className = "plan-name";
         name.textContent = plan.name || "Plan";
 
-        // Price
         const priceContainer = document.createElement("div");
         priceContainer.className = "price";
 
@@ -417,18 +388,16 @@ function renderLandingPlans(plans) {
 
         priceContainer.append(amount, period);
 
-        // Features
         const featureList = document.createElement("ul");
         featureList.className = "plan-features";
 
         (Array.isArray(plan.features) ? plan.features : [])
-            .forEach(feature => {
+            .forEach((feature) => {
                 const item = document.createElement("li");
                 item.textContent = feature;
                 featureList.appendChild(item);
             });
 
-        // Button
         const button = document.createElement("a");
         button.href = "#";
         button.className = isPremium
@@ -446,6 +415,7 @@ function renderLandingPlans(plans) {
         pricingGrid.appendChild(card);
     });
 }
+
 
 // ==============================================
 // USER REGISTRATION (2 parts: create account, then profile setup)
@@ -1260,51 +1230,39 @@ const appScreens = [
 ];
 
 
-function startAppPreview(imageId) {
-
-    const previewImage =
-        document.getElementById(imageId);
-
+function startAppPreview(imageId, initialImage = null) {
+    const previewImage = document.getElementById(imageId);
 
     if (!previewImage) {
         return;
     }
 
-
     let currentScreen = 0;
 
+    // Use the editor-selected image first when provided.
+    if (initialImage) {
+        previewImage.src = initialImage;
+
+        const matchingIndex = appScreens.indexOf(initialImage);
+        if (matchingIndex !== -1) {
+            currentScreen = matchingIndex;
+        }
+    } else {
+        previewImage.src = appScreens[currentScreen];
+    }
 
     setInterval(() => {
-
         previewImage.classList.add("fade-out");
 
-
         setTimeout(() => {
-
-            currentScreen =
-                (currentScreen + 1) %
-                appScreens.length;
-
-
-            previewImage.src =
-                appScreens[currentScreen];
-
-
-            previewImage.classList.remove(
-                "fade-out"
-            );
-
+            currentScreen = (currentScreen + 1) % appScreens.length;
+            previewImage.src = appScreens[currentScreen];
+            previewImage.classList.remove("fade-out");
         }, 400);
-
     }, 3500);
-
 }
 
-
-// The landing page image is managed by the content editor.
-// Keep the download page's existing screenshot rotation.
 startAppPreview("download-preview-image");
-
 
 
 // ==============================================
@@ -2219,22 +2177,16 @@ function closeForgotPasswordModal() {
 // OPEN BUTTONS
 // ==============================================
 
-registerButtons.forEach(
-    (button) => {
+document.addEventListener("click", function(event) {
+    const button = event.target.closest(".open-register");
 
-        button.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                openRegisterModal();
-
-            }
-        );
-
+    if (!button) {
+        return;
     }
-);
+
+    event.preventDefault();
+    openRegisterModal();
+});
 
 
 loginButtons.forEach(
