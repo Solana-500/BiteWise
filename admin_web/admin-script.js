@@ -10,6 +10,9 @@ import {
     loadSuspendedCoaches
 } from "./boundary/coaches-boundary.js";
 
+import {
+    loadLandingPage
+} from "./boundary/landing-boundary.js";
 
 /* =========================================
    ADMIN ACCESS CHECK
@@ -61,6 +64,8 @@ async function checkAdminAccess() {
     await loadSuspendedCoaches();
 
     await loadUsersPage();
+    
+    await loadLandingPage();
 }
 
 

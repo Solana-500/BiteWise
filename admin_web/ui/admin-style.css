@@ -1425,3 +1425,1235 @@ button {
     outline: none;
     border-color: #2f6b49;
 }
+
+
+/* =========================================
+   LANDING PAGE MANAGEMENT
+========================================= */
+
+/* Main content area */
+.landing-content {
+    padding: 28px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.landing-content .page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.landing-content .page-heading h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    color: #1f2937;
+}
+
+.landing-content .page-heading p,
+.landing-content .editor-heading p,
+.landing-content .panel-description,
+.landing-content .preview-heading p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Top action buttons */
+.landing-content .page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.landing-content .button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-content .button-primary {
+    background-color: #185d35;
+    color: #ffffff;
+    border: 1px solid #185d35;
+}
+
+.landing-content .button-primary:hover {
+    background: #124a2a;
+}
+
+.landing-content .button-secondary {
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.landing-content .button-secondary:hover {
+    background: #f3f4f6;
+}
+
+/* Publication status card */
+.landing-content .status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.landing-content .status-card > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.landing-content .status-label {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.landing-content #landing-status {
+    color: #23784a;
+    font-size: 15px;
+}
+
+.landing-content #landing-message {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Editor and preview columns */
+.landing-management-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: start;
+    gap: 24px;
+}
+
+.landing-editor-panel,
+.landing-preview-panel {
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.editor-heading {
+    margin-bottom: 22px;
+}
+
+.editor-heading h2,
+.preview-heading h2 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    color: #1f2937;
+}
+
+/* Section tabs */
+.landing-section-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.landing-section-tab {
+    padding: 9px 12px;
+    background: #ffffff;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-section-tab:hover {
+    background: #f3f4f6;
+}
+
+.landing-section-tab.active {
+    color: #23784a;
+    background: #e8f5ee;
+    border-color: #b7dfc6;
+    font-weight: 600;
+}
+
+/* Tab panels */
+.landing-tab-panel {
+    min-width: 0;
+}
+
+.landing-tab-panel[hidden] {
+    display: none !important;
+}
+
+.landing-tab-panel > h2 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    color: #1f2937;
+}
+
+.landing-tab-panel .panel-description {
+    margin-bottom: 24px;
+}
+
+/* ==============================================
+   FEATURE AND HOW IT WORKS EDITOR CARDS
+============================================== */
+
+.feature-editor-card,
+.step-editor-card {
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #f3f4f6;
+}
+
+.feature-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feature-editor-header h3 {
+    margin: 0 auto 0 0;
+}
+
+/* Disabled feature fields */
+.feature-editor-card input:disabled,
+.feature-editor-card textarea:disabled,
+.feature-editor-card select:disabled {
+    cursor: not-allowed;
+}
+
+.feature-edit-actions,
+.feature-edit-mode-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.feature-edit-actions {
+    margin-left: auto;
+}
+
+/* Shared button appearance */
+.feature-editor-header button {
+    flex-shrink: 0;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+/* Keep hidden controls hidden */
+.feature-editor-header button[hidden],
+.limit-message[hidden] {
+    display: none !important;
+}
+
+/* Hide the Save/Cancel group when both buttons are hidden */
+.feature-edit-mode-actions:has(button[hidden]:first-child):has(button[hidden]:last-child) {
+    display: none;
+}
+
+/* EDIT — blue */
+.feature-editor-header [data-edit-feature],
+.feature-editor-header [data-edit-step] {
+    color: #2563eb;
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.feature-editor-header [data-edit-feature]:hover,
+.feature-editor-header [data-edit-step]:hover {
+    color: #1d4ed8;
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+}
+
+/* SAVE — green */
+.feature-editor-header [data-save-feature],
+.feature-editor-header [data-save-step] {
+    color: #15803d;
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.feature-editor-header [data-save-feature]:hover,
+.feature-editor-header [data-save-step]:hover {
+    color: #166534;
+    background-color: #dcfce7;
+    border-color: #86efac;
+}
+
+/* CANCEL — neutral grey */
+.feature-editor-header [data-cancel-feature],
+.feature-editor-header [data-cancel-step] {
+    color: #475569;
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+}
+
+.feature-editor-header [data-cancel-feature]:hover,
+.feature-editor-header [data-cancel-step]:hover {
+    color: #334155;
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* REMOVE — red */
+.feature-editor-header [data-remove-feature],
+.feature-editor-header [data-remove-step] {
+    color: #dc2626;
+    background-color: #ffffff;
+    border-color: #fecaca;
+}
+
+.feature-editor-header [data-remove-feature]:hover,
+.feature-editor-header [data-remove-step]:hover {
+    color: #b91c1c;
+    background-color: #fef2f2;
+    border-color: #f87171;
+}
+
+/* ADD FEATURE / STEP — green */
+#add-feature-button,
+#add-step-button {
+    color: #ffffff;
+    background-color: #185d35;
+    border: 1px solid #185d35;
+}
+
+#add-feature-button:hover,
+#add-step-button:hover {
+    color: #ffffff;
+    background-color: #124a2a;
+    border-color: #124a2a;
+}
+
+#add-feature-button:disabled,
+#add-step-button:disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+/* Add-step limit message */
+.limit-message {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Featured Health Coaches Editor */
+#coaches-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.coach-selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.coach-selection-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.coach-selection-count {
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #edf3eb;
+    color: #456744;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.coach-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.coach-editor-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: border-color 0.2s ease,
+                background-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.coach-editor-card:hover {
+    border-color: #a3b79e;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.coach-editor-card.selected {
+    border-color: #6f916b;
+    background: #f6f9f4;
+}
+
+.coach-editor-card input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: #557a55;
+    cursor: pointer;
+}
+
+.coach-editor-card input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+}
+
+.coach-card-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.coach-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #e8efe5;
+    color: #496b45;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.coach-card-details {
+    min-width: 0;
+}
+
+.coach-card-details h4 {
+    margin: 0 0 4px;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.coach-card-specialty,
+.coach-card-rating {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.coach-card-specialty {
+    color: #64748b;
+}
+
+.coach-card-rating {
+    margin-top: 3px;
+    color: #8a6a25;
+}
+
+.coach-rank {
+    flex-shrink: 0;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.coach-selection-note,
+.coach-empty-message {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .coach-editor-card {
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .coach-card-main {
+        gap: 10px;
+    }
+
+    .coach-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 12px;
+    }
+}
+
+
+
+/* ==============================================
+   SUBSCRIPTION PLAN EDITOR CARDS
+============================================== */
+
+.plan-editor-card {
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #f3f4f6;
+}
+
+/* Plan header */
+.plan-editor-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.plan-editor-header h3 {
+    margin: 0;
+    margin-right: auto;
+}
+
+.plan-edit-actions,
+.plan-edit-mode-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.plan-edit-actions {
+    margin-left: auto;
+}
+
+/* Hide Save/Cancel group when both buttons are hidden */
+.plan-edit-mode-actions:has(button[hidden]:first-child):has(button[hidden]:last-child) {
+    display: none;
+}
+
+/* Shared header button appearance */
+.plan-editor-header button {
+    flex-shrink: 0;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+/* EDIT — blue */
+.plan-editor-header [data-edit-plan] {
+    color: #2563eb;
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.plan-editor-header [data-edit-plan]:hover {
+    color: #1d4ed8;
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+}
+
+/* SAVE — green */
+.plan-editor-header [data-save-plan] {
+    color: #15803d;
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.plan-editor-header [data-save-plan]:hover {
+    color: #166534;
+    background-color: #dcfce7;
+    border-color: #86efac;
+}
+
+/* CANCEL — neutral grey */
+.plan-editor-header [data-cancel-plan] {
+    color: #475569;
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+}
+
+.plan-editor-header [data-cancel-plan]:hover {
+    color: #334155;
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* REMOVE PLAN — red */
+.plan-editor-header [data-remove-plan] {
+    color: #dc2626;
+    background-color: #ffffff;
+    border-color: #fecaca;
+}
+
+.plan-editor-header [data-remove-plan]:hover {
+    color: #b91c1c;
+    background-color: #fef2f2;
+    border-color: #f87171;
+}
+
+/* Hidden buttons should remain hidden */
+.plan-editor-header button[hidden] {
+    display: none;
+}
+
+/* ==============================================
+   PLAN EDITOR FIELDS
+============================================== */
+
+.plan-editor-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.plan-editor-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.plan-editor-fields input,
+.plan-editor-fields select,
+.plan-editor-fields textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #111827;
+    font: inherit;
+    font-weight: 400;
+}
+
+.plan-editor-fields input:disabled,
+.plan-editor-fields select:disabled,
+.plan-editor-fields textarea:disabled {
+    background-color: #e5e7eb;
+    color: #4b5563;
+    cursor: not-allowed;
+}
+
+.plan-editor-fields input:focus,
+.plan-editor-fields select:focus,
+.plan-editor-fields textarea:focus {
+    outline: 2px solid #bfdbfe;
+    border-color: #2563eb;
+}
+
+/* ==============================================
+   PLAN FEATURES
+============================================== */
+
+.plan-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.plan-feature-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plan-feature-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Add/remove feature buttons */
+.plan-editor-card [data-add-plan-feature],
+.plan-editor-card [data-remove-plan-feature] {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.plan-editor-card [data-add-plan-feature] {
+    margin-top: 12px;
+    color: #ffffff;
+    background-color: #185d35;
+    border: 1px solid #185d35;
+}
+
+.plan-editor-card [data-add-plan-feature]:hover {
+    color: #ffffff;
+    background-color: #124a2a;
+    border-color: #124a2a;
+}
+
+.plan-editor-card [data-remove-plan-feature] {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.plan-editor-card [data-remove-plan-feature]:hover {
+    background-color: #fef2f2;
+    border-color: #f87171;
+}
+
+/* ADD PLAN — green */
+#add-plan-button {
+    padding: 10px 16px;
+    border: 1px solid #185d35;
+    border-radius: 8px;
+    background-color: #185d35;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+#add-plan-button:hover {
+    background-color: #124a2a;
+    border-color: #124a2a;
+}
+
+#add-plan-button:disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+}
+
+/* Responsive layout */
+@media (max-width: 640px) {
+    .plan-editor-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .plan-editor-header {
+        align-items: flex-start;
+    }
+
+    .plan-edit-actions,
+    .plan-edit-mode-actions {
+        flex-wrap: wrap;
+    }
+}
+
+
+/* ==============================================
+   REFINED SUBSCRIPTION PLAN EDITOR
+============================================== */
+
+.plan-editor-card {
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.plan-editor-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Header */
+.plan-editor-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.plan-editor-header h3 {
+    color: #111827;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Fields */
+.plan-editor-fields {
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.plan-editor-fields label {
+    color: #374151;
+    line-height: 1.5;
+}
+
+.plan-editor-fields input,
+.plan-editor-fields select,
+.plan-editor-fields textarea {
+    min-height: 42px;
+    border-color: #d1d5db;
+    border-radius: 8px;
+    transition: border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.plan-editor-fields input:focus,
+.plan-editor-fields select:focus,
+.plan-editor-fields textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Feature list section */
+.plan-editor-card > h4 {
+    margin: 24px 0 8px;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.plan-feature-list {
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.plan-feature-row {
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    background: #f8fafc;
+}
+
+.plan-feature-row input {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+}
+
+/* Feature action buttons */
+.plan-editor-card [data-add-plan-feature],
+.plan-editor-card [data-remove-plan-feature] {
+    min-height: 36px;
+    border-radius: 7px;
+}
+
+.plan-editor-card [data-remove-plan-feature] {
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+/* Disabled fields */
+.plan-editor-fields input:disabled,
+.plan-editor-fields select:disabled,
+.plan-editor-fields textarea:disabled,
+.plan-feature-row input:disabled {
+    opacity: 1;
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .plan-editor-card {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    .plan-feature-row {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .plan-editor-header {
+        gap: 12px;
+    }
+}
+
+
+/* Editor labels and fields */
+.landing-editor-panel label {
+    display: block;
+    margin: 18px 0 8px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.landing-editor-panel input[type="text"],
+.landing-editor-panel input[type="number"],
+.landing-editor-panel input[type="url"],
+.landing-editor-panel textarea,
+.landing-editor-panel select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 13px;
+}
+
+.landing-editor-panel textarea {
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.landing-editor-panel input:focus,
+.landing-editor-panel textarea:focus,
+.landing-editor-panel select:focus {
+    outline: none;
+    border-color: #399563;
+    box-shadow: 0 0 0 3px rgba(57, 149, 99, 0.12);
+}
+
+/* Dynamic editor lists */
+.landing-editor-panel .editor-list {
+    margin-bottom: 16px;
+}
+
+.landing-editor-panel .placeholder-message {
+    padding: 22px;
+    margin: 0;
+    text-align: center;
+    color: #6b7280;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.landing-editor-panel .add-button {
+    margin-top: 8px;
+}
+
+/* Live preview panel */
+.landing-preview-panel {
+    min-width: 0;
+    position: sticky;
+    top: 24px;
+}
+
+.preview-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.preview-indicator {
+    padding: 5px 10px;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Refresh button */
+.icon-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Preview expand button */
+.preview-expand-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.preview-expand-button:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.preview-expand-button:focus-visible {
+    outline: 2px solid #278653;
+    outline-offset: 2px;
+}
+
+/* Preview iframe */
+#landing-preview-frame {
+    display: block;
+    width: 100%;
+    height: 650px;
+    box-sizing: border-box;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.landing-preview-panel .preview-note {
+    margin: 12px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* Respect the HTML hidden attribute */
+.landing-content [hidden] {
+    display: none !important;
+}
+
+/* =========================================
+   EXPANDED PREVIEW MODE
+========================================= */
+
+/* Make preview occupy the available width */
+.landing-management-layout.preview-mode {
+    display: block;
+}
+
+.landing-management-layout.preview-mode .landing-editor-panel {
+    display: none;
+}
+
+.landing-management-layout.preview-mode .landing-preview-panel {
+    display: block;
+    position: static;
+    width: 100%;
+    max-width: none;
+}
+
+/* Give the expanded iframe more height */
+.landing-management-layout.preview-mode #landing-preview-frame {
+    height: 80vh;
+    min-height: 600px;
+}
+
+/* Hide the expand button while preview is expanded */
+.landing-management-layout.preview-mode #preview-button {
+    display: none !important;
+}
+
+/* Keep Back to Editor visible when not hidden */
+#back-to-editor-button:not([hidden]) {
+    display: inline-block;
+}
+
+
+/* Publish confirmation button */
+#confirm-publish {
+    color: #ffffff;
+    background-color: #185d35;
+    border: 1px solid #185d35;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#confirm-publish:hover {
+    background-color: #124a2a;
+    border-color: #124a2a;
+}
+
+#confirm-publish:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =========================================
+   RESPONSIVE LAYOUT
+========================================= */
+
+@media (max-width: 1200px) {
+    .landing-management-layout:not(.preview-mode) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .landing-management-layout:not(.preview-mode) .landing-preview-panel {
+        position: static;
+    }
+
+    .landing-management-layout:not(.preview-mode) #landing-preview-frame {
+        height: 550px;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing-content {
+        padding: 16px;
+    }
+
+    .landing-editor-panel,
+    .landing-preview-panel {
+        padding: 18px;
+    }
+
+    .landing-content .page-heading {
+        flex-direction: column;
+    }
+
+    .landing-content .page-actions {
+        width: 100%;
+    }
+
+    .landing-content .page-actions .button {
+        flex: 1;
+    }
+
+    .landing-content .status-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .landing-section-tabs {
+        gap: 6px;
+    }
+
+    .landing-section-tab {
+        padding: 8px 10px;
+    }
+
+    .landing-content:not(.preview-mode) #landing-preview-frame {
+        height: 450px;
+    }
+
+    .preview-heading {
+        flex-wrap: wrap;
+    }
+
+    .preview-controls {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 600px) {
+    .landing-management-layout.preview-mode #landing-preview-frame {
+        height: 75vh;
+        min-height: 450px;
+    }
+
+    .preview-controls {
+        gap: 8px;
+    }
+}
+
+/* Notification */
+.admin-notification {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 380px;
+    padding: 16px 20px;
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #fca5a5;
+    border-left: 5px solid #dc2626;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.admin-notification[hidden] {
+    display: none;
+}
+
+.admin-notification button {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+}
+
+#admin-notification-message {
+    flex: 1;
+}

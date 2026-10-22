@@ -1,0 +1,822 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Landing Page Management | BiteWise</title>
+
+    <link rel="stylesheet" href="./admin-style.css">
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-landing.html" class="nav-item active">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+
+            </nav>
+
+            <button type="button"
+                class="logout-button"
+                id="logout-button">
+                <span>↪</span>
+                Log Out
+            </button>
+
+        </aside>
+
+
+        <!-- MAIN AREA -->
+        <div class="admin-main">
+
+            <!-- HEADER -->
+            <header class="admin-header">
+
+                <div class="header-title">
+                    <h2>Landing Page Management</h2>
+                </div>
+
+                <div class="admin-profile">
+                    <div class="admin-avatar">A</div>
+
+                    <div class="admin-profile-text">
+                        <strong>System Administrator</strong>
+                        <span>Admin</span>
+                    </div>
+                </div>
+
+            </header>
+
+
+            <!-- PAGE CONTENT -->
+            <main class="landing-content">
+
+                <!-- PAGE HEADING -->
+                <section class="page-heading">
+
+                    <div>
+                        <h1>Manage Landing Page</h1>
+                        <p>
+                            Edit and preview the content displayed
+                            to visitors on BiteWise.
+                        </p>
+                    </div>
+
+                    <div class="page-actions">
+
+                        <button type="button"
+                            class="button button-secondary"
+                            id="save-draft-button">
+                            Save Draft
+                        </button>
+
+                        <button type="button"
+                            class="button button-primary"
+                            id="publish-button">
+                            Publish Changes
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PUBLICATION STATUS -->
+                <section class="status-card">
+
+                    <div>
+                        <span class="status-label">
+                            Publication status
+                        </span>
+
+                        <strong id="landing-status">
+                            Loading...
+                        </strong>
+                    </div>
+
+                    <p id="landing-message" role="status">
+                        Loading landing page status...
+                    </p>
+
+                </section>
+
+
+                <!-- EDITOR AND PREVIEW -->
+                <section
+                    class="landing-management-layout"
+                    id="landing-management-layout">
+
+                    <!-- LEFT: CONTENT EDITOR -->
+                    <div class="landing-editor-panel">
+
+                        <div class="editor-heading">
+                            <h2>Page Content</h2>
+                            <p>Select a section to edit.</p>
+                        </div>
+
+
+                        <!-- SECTION TABS -->
+                        <div
+                            class="landing-section-tabs"
+                            role="tablist"
+                            aria-label="Landing page sections">
+
+                            <button
+                                type="button"
+                                class="landing-section-tab active"
+                                id="tab-hero"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="panel-hero"
+                                data-landing-tab="hero">
+                                Hero
+                            </button>
+
+                            <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-features"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-features"
+                                data-landing-tab="features">
+                                Features
+                            </button>
+
+                            <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-howItWorks"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-howItWorks"
+                                data-landing-tab="howItWorks">
+                                How It Works
+                            </button>
+
+                            <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-reviews"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-reviews"
+                                data-landing-tab="reviews">
+                                Reviews
+                            </button>
+
+                            <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-coaches"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-coaches"
+                                data-landing-tab="coaches">
+                                Coaches
+                            </button>
+
+                            <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-plans"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-plans"
+                                data-landing-tab="plans">
+                                Pricing
+                            </button>
+
+                            <!-- <button
+                                type="button"
+                                class="landing-section-tab"
+                                id="tab-bottomCta"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="panel-bottomCta"
+                                data-landing-tab="bottomCta">
+                                Bottom CTA
+                            </button> -->
+
+                        </div>
+
+
+                        <!-- HERO PANEL -->
+                        <section
+                            class="landing-tab-panel active"
+                            id="panel-hero"
+                            role="tabpanel"
+                            aria-labelledby="tab-hero"
+                            data-landing-panel="hero">
+
+                            <h2>Hero Section</h2>
+
+                            <p class="panel-description">
+                                Manage the main introduction visitors see first.
+                            </p>
+
+                            <label for="hero-title">Heading</label>
+
+                            <textarea
+                                id="hero-title"
+                                rows="2"
+                                placeholder="Enter the main heading"></textarea>
+
+                            <label for="hero-description">Description</label>
+
+                            <textarea
+                                id="hero-description"
+                                rows="4"
+                                placeholder="Enter the introduction"></textarea>
+
+                            <label for="hero-image">
+                                Image path or URL
+                            </label>
+
+                            <input
+                                type="text"
+                                id="hero-image"
+                                placeholder="images/FuHomePage.jpg">
+
+                            <label for="hero-primary-button">
+                                Primary button text
+                            </label>
+
+                            <input
+                                type="text"
+                                id="hero-primary-button"
+                                placeholder="Get Started">
+
+                            <label for="hero-secondary-button">
+                                Secondary button text
+                            </label>
+
+                            <input
+                                type="text"
+                                id="hero-secondary-button"
+                                placeholder="Learn More">
+
+                        </section>
+
+
+                        <!-- FEATURES PANEL -->
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-features"
+                            role="tabpanel"
+                            aria-labelledby="tab-features"
+                            data-landing-panel="features"
+                            hidden>
+
+                            <h2>Features</h2>
+
+                            <p class="panel-description">
+                                Manage the feature cards displayed on the page.
+                            </p>
+
+                            <div
+                                id="features-editor"
+                                class="editor-list">
+
+                                <p class="placeholder-message">
+                                    Feature cards will load here.
+                                </p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="button button-secondary add-button"
+                                id="add-feature-button">
+                                + Add Feature
+                            </button>
+
+                            <p id="feature-limit-message" class="limit-message" hidden>
+                                Maximum of 6 features reached.
+                            </p>
+
+                        </section>
+
+
+                        <!-- HOW IT WORKS PANEL -->
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-howItWorks"
+                            role="tabpanel"
+                            aria-labelledby="tab-howItWorks"
+                            data-landing-panel="howItWorks"
+                            hidden>
+
+                            <h2>How It Works</h2>
+
+                            <p class="panel-description">
+                                Manage the steps explaining how BiteWise works.
+                            </p>
+
+                            <div
+                                id="steps-editor"
+                                class="editor-list">
+
+                                <p class="placeholder-message">
+                                    Steps will load here.
+                                </p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="button button-secondary add-button"
+                                id="add-step-button">
+                                + Add Step
+                            </button>
+
+                            <p id="step-limit-message" class="limit-message" hidden>
+                                Maximum of 5 steps reached.
+                            </p>
+
+                        </section>
+
+
+                        <!-- REVIEWS PANEL -->
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-reviews"
+                            role="tabpanel"
+                            aria-labelledby="tab-reviews"
+                            data-landing-panel="reviews"
+                            hidden>
+
+                            <h2>Featured Reviews</h2>
+
+                            <p class="panel-description">
+                                Select genuine user feedback to feature.
+                            </p>
+
+                            <div
+                                id="reviews-editor"
+                                class="editor-list">
+
+                                <p class="placeholder-message">
+                                    Available reviews will load here.
+                                </p>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- COACHES PANEL -->
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-coaches"
+                            role="tabpanel"
+                            aria-labelledby="tab-coaches"
+                            data-landing-panel="coaches"
+                            hidden>
+
+                            <h2>Featured Health Coaches</h2>
+
+                            <p class="panel-description">
+                                Select approved coaches to feature.
+                            </p>
+
+                            <div
+                                id="coaches-editor"
+                                class="editor-list">
+
+                                <p class="placeholder-message">
+                                    Approved coaches will load here.
+                                </p>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- PRICING PANEL -->
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-plans"
+                            role="tabpanel"
+                            aria-labelledby="tab-plans"
+                            data-landing-panel="plans"
+                            hidden>
+
+                            <h2>Subscription Plans</h2>
+
+                            <p class="panel-description">
+                                Edit the plan information displayed to visitors.
+                            </p>
+
+                            <div
+                                id="plans-editor"
+                                class="editor-list">
+
+                                <p class="placeholder-message">
+                                    Plan details will load here.
+                                </p>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- BOTTOM CTA PANEL
+                        <section
+                            class="landing-tab-panel"
+                            id="panel-bottomCta"
+                            role="tabpanel"
+                            aria-labelledby="tab-bottomCta"
+                            data-landing-panel="bottomCta"
+                            hidden>
+
+                            <h2>Bottom Call-to-Action</h2>
+
+                            <p class="panel-description">
+                                Manage the final invitation for visitors to join BiteWise.
+                            </p>
+
+                            <label for="cta-title">Heading</label>
+
+                            <textarea
+                                id="cta-title"
+                                rows="2"
+                                placeholder="Ready to start your nutrition journey?"></textarea>
+
+                            <label for="cta-description">Description</label>
+
+                            <textarea
+                                id="cta-description"
+                                rows="3"
+                                placeholder="Create your BiteWise account today."></textarea>
+
+                            <label for="cta-button">Button text</label>
+
+                            <input
+                                type="text"
+                                id="cta-button"
+                                placeholder="Get Started">
+
+                        </section> -->
+
+                    </div>
+
+
+                    <!-- RIGHT: LIVE PREVIEW -->
+                    <aside class="landing-preview-panel">
+
+                        <!-- PREVIEW HEADING AND CONTROLS -->
+                        <div class="preview-heading">
+
+                            <div>
+                                <h2>Live Preview</h2>
+                                <p>
+                                    Preview your landing page layout.
+                                </p>
+                            </div>
+
+                            <div class="preview-controls">
+
+                                <span class="preview-indicator">
+                                    Draft
+                                </span>
+                                
+                                <button
+                                    type="button"
+                                    id="refresh-preview-button"
+                                    class="secondary-button icon-button"
+                                    aria-label="Refresh preview"
+                                    title="Refresh preview"
+                                >
+                                    &#8635;
+                                </button>
+
+                                <!-- EXPAND BUTTON -->
+                                <button
+                                    type="button"
+                                    class="preview-expand-button"
+                                    id="preview-button"
+                                    aria-label="Expand landing page preview"
+                                    aria-controls="landing-preview-frame"
+                                    aria-expanded="false"
+                                    title="Expand preview">
+                                    ⤢
+                                </button>
+
+                                <!-- BACK TO EDITOR BUTTON -->
+                                <button
+                                    type="button"
+                                    class="button button-secondary"
+                                    id="back-to-editor-button"
+                                    hidden>
+                                    Back to Editor
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- WEBSITE PREVIEW -->
+                        <iframe
+                            id="landing-preview-frame"
+                            src="../../website/index.html?preview=draft"
+                        ></iframe>
+
+                        <p class="preview-note">
+                            Preview your landing page before publishing changes.
+                        </p>
+
+                    </aside>
+
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- LANDING PAGE TAB AND PREVIEW INTERACTIONS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // =====================================
+            // 1. SECTION TAB SWITCHING
+            // =====================================
+
+            const tabs = document.querySelectorAll(
+                ".landing-section-tab"
+            );
+
+            const panels = document.querySelectorAll(
+                ".landing-tab-panel"
+            );
+
+            tabs.forEach((tab) => {
+
+                tab.addEventListener("click", () => {
+
+                    const selected = tab.dataset.landingTab;
+
+                    tabs.forEach((item) => {
+
+                        const isActive = item === tab;
+
+                        item.classList.toggle("active", isActive);
+
+                        item.setAttribute(
+                            "aria-selected",
+                            String(isActive)
+                        );
+
+                    });
+
+                    panels.forEach((panel) => {
+
+                        const isActive =
+                            panel.dataset.landingPanel === selected;
+
+                        panel.classList.toggle("active", isActive);
+                        panel.hidden = !isActive;
+
+                    });
+
+                });
+
+            });
+
+
+            // =====================================
+            // 2. PREVIEW EXPAND / COLLAPSE
+            // =====================================
+
+            const layout = document.getElementById(
+                "landing-management-layout"
+            );
+
+            const previewButton = document.getElementById(
+                "preview-button"
+            );
+
+            const backButton = document.getElementById(
+                "back-to-editor-button"
+            );
+
+            const previewIndicator = document.querySelector(
+                ".preview-indicator"
+            );
+
+            // Expand preview
+            previewButton.addEventListener("click", () => {
+
+                layout.classList.add("preview-mode");
+
+                // Hide the expand icon
+                previewButton.hidden = true;
+
+                // Show the return button
+                backButton.hidden = false;
+
+                previewButton.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+
+                if (previewIndicator) {
+                    previewIndicator.textContent = "Preview Mode";
+                }
+
+            });
+
+
+            // Return to editor
+            backButton.addEventListener("click", () => {
+
+                layout.classList.remove("preview-mode");
+
+                // Restore the expand icon
+                previewButton.hidden = false;
+
+                // Hide the return button
+                backButton.hidden = true;
+
+                previewButton.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+
+                if (previewIndicator) {
+                    previewIndicator.textContent = "Draft";
+                }
+
+            });
+
+        });
+    </script>
+
+    <!-- PUBLISH CONFIRMATION MODAL -->
+    <div id="publish-confirm-modal" class="modal-overlay">
+
+        <div
+            class="modal-box confirmation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="publish-confirm-title"
+        >
+
+            <button
+                type="button"
+                class="modal-close"
+                id="publish-confirm-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2 id="publish-confirm-title">
+                Publish Landing Page Changes?
+            </h2>
+
+            <p>
+                Are you sure you want to publish these changes?
+                The updated landing page will become visible
+                to visitors of the public website.
+            </p>
+
+            <div class="confirmation-actions">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-publish"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="primary-button"
+                    id="confirm-publish"
+                >
+                    Publish
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- LOGOUT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="logout-modal">
+
+        <div class="confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="logout-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <div class="logout-modal-icon">↪</div>
+
+            <h2>Log Out?</h2>
+
+            <p>
+                Are you sure you want to log out of the
+                BiteWise Admin Portal?
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-logout">
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-logout">
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="admin-notification" class="admin-notification" role="alert" aria-live="assertive" hidden>
+        <span id="admin-notification-message"></span>
+        <button type="button" id="admin-notification-close" aria-label="Close notification">
+            &times;
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../admin-script.js"></script>
+    
+</body>
+</html>
