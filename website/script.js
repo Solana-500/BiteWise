@@ -104,18 +104,19 @@ async function loadLandingPageContent() {
         description.textContent = hero.description || "";
     }
 
+    
     if (image) {
-        image.removeAttribute("src");
+        const savedImages = Array.isArray(hero.images)
+            ? hero.images.filter(Boolean)
+            : hero.image
+                ? [hero.image]
+                : [];
 
-        if (hero.image) {
-            image.src = hero.image;
-
-            // Start rotating screenshots after loading the editor image.
-            startAppPreview("app-preview-image", hero.image);
-        } else {
-            startAppPreview("app-preview-image");
+        if (savedImages.length) {
+            startAppPreview("app-preview-image", savedImages);
         }
     }
+
 
     if (primaryButton) {
         primaryButton.textContent = hero.primaryButton || "";
@@ -1230,39 +1231,32 @@ const appScreens = [
 ];
 
 
-function startAppPreview(imageId, initialImage = null) {
-    const previewImage = document.getElementById(imageId);
 
-    if (!previewImage) {
-        return;
-    }
+function startAppPreview(imageId, images = appScreens) {
+    const previewImage = document.getElementById(imageId);
+    if (!previewImage) return;
+
+    const screens = Array.isArray(images)
+        ? images.filter(Boolean)
+        : [];
+
+    const imagesToShow = screens.length ? screens : appScreens;
+
+    if (!imagesToShow.length) return;
 
     let currentScreen = 0;
-
-    // Use the editor-selected image first when provided.
-    if (initialImage) {
-        previewImage.src = initialImage;
-
-        const matchingIndex = appScreens.indexOf(initialImage);
-        if (matchingIndex !== -1) {
-            currentScreen = matchingIndex;
-        }
-    } else {
-        previewImage.src = appScreens[currentScreen];
-    }
+    previewImage.src = imagesToShow[currentScreen];
 
     setInterval(() => {
         previewImage.classList.add("fade-out");
 
         setTimeout(() => {
-            currentScreen = (currentScreen + 1) % appScreens.length;
-            previewImage.src = appScreens[currentScreen];
+            currentScreen = (currentScreen + 1) % imagesToShow.length;
+            previewImage.src = imagesToShow[currentScreen];
             previewImage.classList.remove("fade-out");
         }, 400);
     }, 3500);
 }
-
-startAppPreview("download-preview-image");
 
 
 // ==============================================
@@ -1616,9 +1610,8 @@ loginForm?.addEventListener(
             // ==================================
 
             if (profile.app_role === "admin") {
-
                 window.location.href =
-                    "../admin_web/admin-dashboard.html";
+                    "/admin_web/ui/admin-dashboard.html";
 
                 return;
             }
