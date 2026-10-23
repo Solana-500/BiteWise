@@ -1615,6 +1615,108 @@ button {
     margin-bottom: 24px;
 }
 
+
+/* ==============================================
+   HERO IMAGE UPLOAD
+============================================== */
+
+#hero-image-upload {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    color: #334155;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#hero-image-upload:hover {
+    border-color: #64748b;
+    background-color: #f1f5f9;
+}
+
+#hero-image-preview-container {
+    margin-top: 16px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background-color: #f8fafc;
+}
+
+#hero-image-preview {
+    display: block;
+    max-width: 100%;
+    width: 240px;
+    max-height: 240px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+#hero-image-preview-container[hidden] {
+    display: none;
+}
+
+
+/* Hero image gallery */
+.hero-image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.hero-image-card {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #f3f4f6;
+}
+
+.hero-image-card img {
+    display: block;
+    width: 100%;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+
+.hero-image-card .remove-hero-image-button {
+    width: 100%;
+    margin-top: 8px;
+}
+
+
+/* HERO IMAGE — Remove button */
+.hero-image-card [data-remove-hero-image] {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background-color: #ffffff;
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.hero-image-card [data-remove-hero-image]:hover {
+    color: #b91c1c;
+    background-color: #fef2f2;
+    border-color: #f87171;
+}
+
+
+
 /* ==============================================
    FEATURE AND HOW IT WORKS EDITOR CARDS
 ============================================== */

@@ -285,14 +285,17 @@
                                 rows="4"
                                 placeholder="Enter the introduction"></textarea>
 
-                            <label for="hero-image">
-                                Image path or URL
-                            </label>
-
+                            
+                            <label for="hero-image-upload">Upload hero images</label>
                             <input
-                                type="text"
-                                id="hero-image"
-                                placeholder="images/FuHomePage.jpg">
+                                type="file"
+                                id="hero-image-upload"
+                                accept="image/png, image/jpeg, image/webp"
+                                multiple
+                            >
+
+                            <div id="hero-image-gallery" class="hero-image-gallery"></div>
+
 
                             <label for="hero-primary-button">
                                 Primary button text

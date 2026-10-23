@@ -1,5 +1,6 @@
 import {
     getLandingDraft,
+    uploadLandingHeroImage,
     saveHeroDraft,
     saveFeaturesDraft,
     saveHowItWorksDraft,
@@ -11,6 +12,10 @@ import {
 
 export async function loadLandingDraft() {
     return await getLandingDraft();
+}
+
+export async function uploadLandingHeroImageFile(file) {
+    return await uploadLandingHeroImage(file);
 }
 
 export async function saveLandingHero(hero) {

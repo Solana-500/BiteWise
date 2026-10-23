@@ -1,5 +1,6 @@
 import {
     loadLandingDraft,
+    uploadLandingHeroImageFile,
     saveLandingHero,
     saveLandingFeatures,
     saveLandingHowItWorks,
@@ -116,8 +117,75 @@ const heroTitle =
 const heroDescription =
     document.getElementById("hero-description");
 
-const heroImage =
-    document.getElementById("hero-image");
+const heroImageUpload = 
+    document.getElementById("hero-image-upload");
+
+const heroImageGallery = document.getElementById("hero-image-gallery");
+
+
+const defaultHeroImages = [
+    "../../website/images/FuHomePage.jpg",
+    "../../website/images/FuFoodDiaryPage.jpg",
+    "../../website/images/FuLogFoodPage.jpg",
+    "../../website/images/PuHomePage.jpg"
+];
+
+let uploadedHeroImages = [...defaultHeroImages];
+
+
+heroImageUpload?.addEventListener("change", async () => {
+    const files = Array.from(heroImageUpload.files || []);
+
+    if (!files.length) return;
+
+    const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    for (const file of files) {
+        if (!validTypes.includes(file.type)) {
+            showNotification(
+                "Please select only JPG, PNG, or WebP images."
+            );
+            heroImageUpload.value = "";
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification(
+                "Each image must be smaller than 5 MB."
+            );
+            heroImageUpload.value = "";
+            return;
+        }
+    }
+
+    heroImageUpload.disabled = true;
+
+    try {
+        for (const file of files) {
+
+            const imageUrl = await uploadLandingHeroImageFile(file);
+            uploadedHeroImages.push(imageUrl);
+
+            renderHeroImageGallery();
+        }
+
+    } catch (error) {
+        console.error("Hero image upload failed:", error);
+        showNotification(
+            "An image upload failed. Please try again."
+        );
+    } finally {
+        heroImageUpload.disabled = false;
+        heroImageUpload.value = "";
+    }
+});
+
+
+
 
 const primaryButton =
     document.getElementById("hero-primary-button");
@@ -201,6 +269,8 @@ async function loadLandingPage() {
         const landing = await loadLandingDraft();
         const content = landing.content || {};
         const hero = content.hero || {};
+        console.log("Saved hero data:", hero);
+        console.log("Default hero images:", defaultHeroImages);
         loadFeaturesEditor(content);
         loadHowItWorksEditor(content);
         await loadCoachesEditor(content);
@@ -209,7 +279,21 @@ async function loadLandingPage() {
         // Fill in Hero editor fields
         heroTitle.value = hero.title || "";
         heroDescription.value = hero.description || "";
-        heroImage.value = hero.image || "";
+
+        
+        if (Array.isArray(hero.images)) {
+            // Respect the saved gallery, including an intentionally empty one.
+            uploadedHeroImages = [...hero.images];
+        } else if (hero.image) {
+            // Support older content with a single image.
+            uploadedHeroImages = [hero.image];
+        } else {
+            // Initialize defaults only when no gallery has been configured.
+            uploadedHeroImages = [...defaultHeroImages];
+        }
+
+        renderHeroImageGallery();
+
         primaryButton.value = hero.primaryButton || "";
         secondaryButton.value = hero.secondaryButton || "";
 
@@ -241,7 +325,8 @@ async function handleSaveDraft() {
     const hero = {
         title: heroTitle.value.trim(),
         description: heroDescription.value.trim(),
-        image: heroImage.value.trim(),
+        images: [...uploadedHeroImages],
+        image: uploadedHeroImages[0] || "",
         primaryButton: primaryButton.value.trim(),
         secondaryButton: secondaryButton.value.trim()
     };
@@ -338,6 +423,37 @@ function refreshLandingPreview() {
         previewFrame.src = previewFrame.src;
     }
 }
+
+
+function renderHeroImageGallery() {
+    if (!heroImageGallery) return;
+
+    heroImageGallery.replaceChildren();
+
+    uploadedHeroImages.forEach((imageUrl, index) => {
+        const card = document.createElement("div");
+        card.className = "hero-image-card";
+
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = `Hero image ${index + 1}`;
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.textContent = "Remove";
+        removeButton.className = "remove-hero-image-button";
+        removeButton.setAttribute("data-remove-hero-image", "");
+
+        removeButton.addEventListener("click", () => {
+            uploadedHeroImages.splice(index, 1);
+            renderHeroImageGallery();
+        });
+
+        card.append(image, removeButton);
+        heroImageGallery.appendChild(card);
+    });
+}
+
 
 
 // Read the current values from the editor

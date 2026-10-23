@@ -27,6 +27,28 @@ export async function getLandingDraft() {
     };
 }
 
+export async function uploadLandingHeroImage(file) {
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+    const filePath = `hero/${crypto.randomUUID()}.${fileExtension}`;
+
+    const { data, error } = await supabaseClient.storage
+        .from("landing-page-images")
+        .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data: publicUrlData } = supabaseClient.storage
+        .from("landing-page-images")
+        .getPublicUrl(data.path);
+
+    return publicUrlData.publicUrl;
+}
+
 export async function saveHeroDraft(hero) {
     const { data: draft, error: draftError } = await supabaseClient
         .from("landing_page_content")
