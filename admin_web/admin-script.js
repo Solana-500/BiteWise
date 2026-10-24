@@ -14,6 +14,46 @@ import {
     loadLandingPage
 } from "./boundary/landing-boundary.js";
 
+
+/* =========================================
+   ADMIN PROFILE
+========================================= */
+
+async function loadAdminProfile(user, profile) {
+    const avatar = document.getElementById("admin-avatar");
+    const nameElement = document.getElementById("admin-profile-name");
+    const roleElement = document.getElementById("admin-profile-role");
+
+    // Use the name from the user's profile if available.
+    const { data: adminDetails, error } = await supabaseClient
+        .from("profiles")
+        .select("full_name, app_role")
+        .eq("id", user.id)
+        .single();
+
+    if (error) {
+        console.error("Unable to load admin profile:", error.message);
+    }
+
+    const adminName = adminDetails?.full_name?.trim()
+        || user.user_metadata?.full_name?.trim()
+        || user.email
+        || "Administrator";
+
+    if (avatar) {
+        avatar.textContent = adminName.charAt(0).toUpperCase();
+    }
+
+    if (nameElement) {
+        nameElement.textContent = adminName;
+    }
+
+    if (roleElement) {
+        roleElement.textContent = "Admin";
+    }
+}
+
+
 /* =========================================
    ADMIN ACCESS CHECK
 ========================================= */
@@ -55,6 +95,8 @@ async function checkAdminAccess() {
     }
 
     console.log("Admin access verified.");
+
+    await loadAdminProfile(user, profile);
 
     // Load dashboard and management pages
     await loadDashboardStatistics();

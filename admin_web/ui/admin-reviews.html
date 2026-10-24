@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Moderation | BiteWise</title>
+    <link rel="stylesheet" href="./admin-style.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item active">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+            </nav>
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logout-button"
+            >
+                <span>↪</span>
+                Log Out
+            </button>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <div class="admin-main">
+
+            <!-- HEADER -->
+            <header class="admin-header">
+                <div class="header-title">
+                    <h2>Reviews</h2>
+                </div>
+
+                <div class="admin-profile">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+
+                    <div class="admin-profile-text">
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- REVIEW MODERATION CONTENT -->
+            <main class="review-moderation-content">
+
+                <section class="review-page-heading">
+                    <div>
+                        <h1>Review Moderation</h1>
+                        <p>
+                            Review user feedback and manage reported or inappropriate content.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Dynamic summary cards -->
+                <section class="review-summary-grid">
+
+                    <article class="review-summary-card">
+                        <span class="review-summary-icon">◷</span>
+                        <div>
+                            <p>Pending Reviews</p>
+                            <strong id="pending-review-count">—</strong>
+                            <span>Awaiting moderation</span>
+                        </div>
+                    </article>
+
+                    <article class="review-summary-card">
+                        <span class="review-summary-icon reported-icon">!</span>
+                        <div>
+                            <p>Reported Reviews</p>
+                            <strong id="reported-review-count">—</strong>
+                            <span>Require investigation</span>
+                        </div>
+                    </article>
+
+                    <article class="review-summary-card">
+                        <span class="review-summary-icon published-icon">✓</span>
+                        <div>
+                            <p>Published Reviews</p>
+                            <strong id="published-review-count">—</strong>
+                            <span>Currently visible</span>
+                        </div>
+                    </article>
+
+                </section>
+
+                <!-- Moderation queue -->
+                <section class="review-moderation-panel">
+
+                    <div class="review-panel-heading">
+                        <div>
+                            <h2>Review Queue</h2>
+                            <p>Inspect reviews and choose the appropriate action.</p>
+                        </div>
+                    </div>
+
+                    <div class="review-toolbar">
+
+                        <div class="review-filter-tabs">
+                            <button
+                                type="button"
+                                class="review-filter-tab active"
+                                data-review-filter="pending">
+                                Pending
+                                <span class="filter-count" id="pending-tab-count">—</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="review-filter-tab"
+                                data-review-filter="reported">
+                                Reported
+                                <span class="filter-count" id="reported-tab-count">—</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="review-filter-tab"
+                                data-review-filter="published">
+                                Published
+                                <span class="filter-count" id="published-tab-count">—</span>
+                            </button>
+                        </div>
+
+                        <div class="review-search">
+                            <label for="review-search-input">Search reviews</label>
+                            <input
+                                type="search"
+                                id="review-search-input"
+                                placeholder="Search reviewer or review text...">
+                        </div>
+
+                    </div>
+
+                    <!-- JavaScript will render the review cards here -->
+                    <div
+                        class="moderation-review-list"
+                        id="moderation-review-list"
+                        aria-live="polite">
+
+                        <p class="review-loading-state" id="review-loading-state">
+                            Loading reviews...
+                        </p>
+
+                    </div>
+
+                    <div class="review-empty-state" id="review-empty-state" hidden>
+                        <span>☆</span>
+                        <h3>No reviews found</h3>
+                        <p>There are no reviews matching this filter or search.</p>
+                    </div>
+
+                </section>
+
+            </main>
+
+        </div>
+    </div>
+
+    <!-- LOGOUT MODAL -->
+    <div class="modal-overlay" id="logout-modal">
+        <div class="confirmation-modal">
+
+            <button type="button"
+                class="modal-close"
+                id="logout-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <div class="logout-modal-icon">↪</div>
+
+            <h2>Log Out?</h2>
+
+            <p>
+                Are you sure you want to log out of the BiteWise Admin Portal?
+            </p>
+
+            <div class="modal-actions">
+                <button type="button"
+                    class="modal-cancel-button"
+                    id="cancel-logout">
+                    Cancel
+                </button>
+
+                <button type="button"
+                    class="modal-logout-button"
+                    id="confirm-logout">
+                    Log Out
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../admin-script.js"></script>
+
+</body>
+</html>
