@@ -106,38 +106,6 @@
                     </div>
                 </section>
 
-                <!-- Dynamic summary cards -->
-                <section class="review-summary-grid">
-
-                    <article class="review-summary-card">
-                        <span class="review-summary-icon">◷</span>
-                        <div>
-                            <p>Pending Reviews</p>
-                            <strong id="pending-review-count">—</strong>
-                            <span>Awaiting moderation</span>
-                        </div>
-                    </article>
-
-                    <article class="review-summary-card">
-                        <span class="review-summary-icon reported-icon">!</span>
-                        <div>
-                            <p>Reported Reviews</p>
-                            <strong id="reported-review-count">—</strong>
-                            <span>Require investigation</span>
-                        </div>
-                    </article>
-
-                    <article class="review-summary-card">
-                        <span class="review-summary-icon published-icon">✓</span>
-                        <div>
-                            <p>Published Reviews</p>
-                            <strong id="published-review-count">—</strong>
-                            <span>Currently visible</span>
-                        </div>
-                    </article>
-
-                </section>
-
                 <!-- Moderation queue -->
                 <section class="review-moderation-panel">
 
@@ -174,19 +142,43 @@
                                 Published
                                 <span class="filter-count" id="published-tab-count">—</span>
                             </button>
+
+                            <button
+                                type="button"
+                                class="review-filter-tab"
+                                data-review-filter="rejected">
+                                Rejected
+                                <span class="filter-count" id="rejected-tab-count">—</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="review-filter-tab"
+                                data-review-filter="hidden">
+                                Hidden
+                                <span class="filter-count" id="hidden-tab-count">—</span>
+                            </button>
+
+
                         </div>
 
                         <div class="review-search">
-                            <label for="review-search-input">Search reviews</label>
                             <input
                                 type="search"
                                 id="review-search-input"
-                                placeholder="Search reviewer or review text...">
+                                placeholder="Search reviews...">
+                        </div>
+                        
+                        <div class="review-filters">
+                            <select id="review-type-filter">
+                                <option value="all">All Types</option>
+                                <option value="app">App Review</option>
+                                <option value="coach">Coach Review</option>
+                            </select>
                         </div>
 
                     </div>
 
-                    <!-- JavaScript will render the review cards here -->
                     <div
                         class="moderation-review-list"
                         id="moderation-review-list"

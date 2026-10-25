@@ -14,6 +14,9 @@ import {
     loadLandingPage
 } from "./boundary/landing-boundary.js";
 
+import {
+    loadReviewsPage
+} from "./boundary/reviews-boundary.js";
 
 /* =========================================
    ADMIN PROFILE
@@ -98,16 +101,42 @@ async function checkAdminAccess() {
 
     await loadAdminProfile(user, profile);
 
-    // Load dashboard and management pages
-    await loadDashboardStatistics();
+    // // Load dashboard and management pages
+    // await loadDashboardStatistics();
 
-    await loadCoachApplications();
-    await loadApprovedCoaches();
-    await loadSuspendedCoaches();
+    // await loadCoachApplications();
+    // await loadApprovedCoaches();
+    // await loadSuspendedCoaches();
 
-    await loadUsersPage();
+    // await loadUsersPage();
     
-    await loadLandingPage();
+    // await loadLandingPage();
+
+    // await loadReviewsPage();
+
+    
+    // Load only the module belonging to the current page.
+    if (document.getElementById("total-users")) {
+        await loadDashboardStatistics();
+    }
+
+    if (document.querySelector(".coach-tab")) {
+        await loadCoachApplications();
+        await loadApprovedCoaches();
+        await loadSuspendedCoaches();
+    }
+
+    if (document.getElementById("users-table-body")) {
+        await loadUsersPage();
+    }
+
+    if (document.getElementById("moderation-review-list")) {
+        await loadReviewsPage();
+    }
+
+    if (document.getElementById("landing-page-editor")) {
+        await loadLandingPage();
+    }
 }
 
 

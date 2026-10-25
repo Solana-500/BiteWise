@@ -1405,8 +1405,7 @@ plansEditor?.addEventListener("click", event => {
     }
 });
 
-
-// Initialise page 
+// Initialise page
 loadLandingPage();
 
 export {
