@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native'
+import type { CoachRecipeDraft } from '../services/coachRecipeDrafts'
 
 export type HomeStackParamList = {
   HomeMain: undefined
@@ -196,6 +197,16 @@ CoachMealPlanReview: {
   assignmentId: string
   clientId: string
   clientName: string
+}
+
+CoachRecipes: undefined
+
+CoachRecipesBuilder: {
+  recipe?: CoachRecipeDraft
+} | undefined
+
+CoachRecipesReview: {
+  recipe: CoachRecipeDraft
 }
 
   AdminHome: undefined

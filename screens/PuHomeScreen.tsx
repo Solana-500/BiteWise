@@ -27,6 +27,17 @@ type NutritionRowProps = {
   goal: number
 }
 
+type DailyFoodLog = {
+  id: string
+  food_name: string
+  calories: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+  meal_type: string | null
+  logged_at: string
+}
+
 function NutritionRow({ label, value, goal }: NutritionRowProps) {
   return (
     <View style={styles.nutritionRow}>
@@ -46,11 +57,11 @@ export default function PuHomeScreen({ navigation }: Props) {
 
   const [calories, setCalories] = useState({ consumed: 0, goal: 0 })
 
-  const [meals] = useState<Meal[]>([
-    { label: 'Breakfast', description: 'Meal description' },
-    { label: 'Lunch', description: 'Meal description' },
-    { label: 'Dinner', description: 'Meal description' },
-  ])
+  const [meals, setMeals] = useState<Meal[]>([
+  { label: 'Breakfast', description: 'No food logged yet' },
+  { label: 'Lunch', description: 'No food logged yet' },
+  { label: 'Dinner', description: 'No food logged yet' },
+])
 
   const [nutrition, setNutrition] = useState({
     protein: { value: 0, goal: 0 },
@@ -110,12 +121,18 @@ async function fetchAiRecommendation() {
 
       const { data: profile, error: profileError } = await supabase
   .from('profiles')
-  .select('full_name, subscription_tier, assigned_coach_id')
+  .select(`
+    full_name,
+    subscription_tier,
+    assigned_coach_id,
+    daily_calorie_target
+  `)
   .eq('id', user.id)
   .maybeSingle<{
     full_name: string | null
     subscription_tier: string | null
     assigned_coach_id: string | null
+    daily_calorie_target: number | null
   }>()
 
     if (profileError) {
@@ -158,14 +175,118 @@ async function fetchAiRecommendation() {
       }
     }
 
-      // Temporary values until food_logs / progress_logs are connected.
-      setCalories({ consumed: 0, goal: 0 })
-      setNutrition({
-        protein: { value: 0, goal: 0 },
-        carb: { value: 0, goal: 0 },
-        fat: { value: 0, goal: 0 },
-        fiber: { value: 0, goal: 0 },
-      })
+     // Load food logged during today's local calendar day.
+      const now = new Date()
+
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      )
+
+      const startOfTomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      )
+
+      const { data: foodData, error: foodError } = await supabase
+        .from('food_logs')
+        .select(`
+          id,
+          food_name,
+          calories,
+          protein_g,
+          carbs_g,
+          fat_g,
+          meal_type,
+          logged_at
+        `)
+        .eq('user_id', user.id)
+        .gte('logged_at', startOfToday.toISOString())
+        .lt('logged_at', startOfTomorrow.toISOString())
+        .order('logged_at', { ascending: true })
+
+      if (foodError) {
+        throw foodError
+      }
+
+      const todayFoods = (foodData ?? []) as DailyFoodLog[]
+
+      const mealLabels: Meal['label'][] = [
+  'Breakfast',
+  'Lunch',
+  'Dinner',
+]
+
+setMeals(
+  mealLabels.map((label) => {
+    const foodsForMeal = todayFoods.filter(
+      (food) =>
+        food.meal_type?.trim().toLowerCase() === label.toLowerCase()
+    )
+
+    const description = foodsForMeal
+      .map((food) => food.food_name?.trim())
+      .filter(Boolean)
+      .join(', ')
+
+    return {
+      label,
+      description: description || 'No food logged yet',
+    }
+  })
+)
+
+      function numericValue(value: unknown) {
+        const number = Number(value ?? 0)
+        return Number.isFinite(number) ? number : 0
+      }
+
+      const totals = todayFoods.reduce(
+        (total, food) => ({
+          calories: total.calories + numericValue(food.calories),
+          protein: total.protein + numericValue(food.protein_g),
+          carbs: total.carbs + numericValue(food.carbs_g),
+          fat: total.fat + numericValue(food.fat_g),
+        }),
+        {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+        }
+      )
+
+      const savedCalorieTarget = Number(
+  profile?.daily_calorie_target ?? 0
+)
+
+const dailyCalorieTarget =
+  Number.isFinite(savedCalorieTarget) && savedCalorieTarget > 0
+    ? savedCalorieTarget
+    : 0
+
+setCalories({
+  consumed: Math.round(totals.calories),
+  goal: dailyCalorieTarget,
+})
+
+      setNutrition((current) => ({
+        ...current,
+        protein: {
+          ...current.protein,
+          value: Math.round(totals.protein * 10) / 10,
+        },
+        carb: {
+          ...current.carb,
+          value: Math.round(totals.carbs * 10) / 10,
+        },
+        fat: {
+          ...current.fat,
+          value: Math.round(totals.fat * 10) / 10,
+        },
+      }))
      
     } catch (error) {
       console.error('Unable to load premium user dashboard:', error)
@@ -176,10 +297,15 @@ async function fetchAiRecommendation() {
 
   const firstName = userName.trim().split(/\s+/)[0] || 'User'
 
-  const caloriePercent =
-    calories.goal > 0
-      ? Math.min(100, Math.round((calories.consumed / calories.goal) * 100))
-      : 0
+  const hasCalorieTarget =
+  Number.isFinite(calories.goal) && calories.goal > 0
+
+const caloriePercent = hasCalorieTarget
+  ? Math.max(
+      0,
+      Math.round((calories.consumed / calories.goal) * 100)
+    )
+  : null
 
   if (loading) {
     return (
@@ -250,7 +376,14 @@ async function fetchAiRecommendation() {
         <View style={styles.progressTopRow}>
           <View style={styles.ringOuter}>
             <View style={styles.ringInner}>
-              <Text style={styles.ringPercentText}>{caloriePercent}%</Text>
+              <Text
+  style={styles.ringPercentText}
+  adjustsFontSizeToFit
+  minimumFontScale={0.65}
+  numberOfLines={1}
+>
+  {caloriePercent !== null ? `${caloriePercent}%` : '—'}
+</Text>
             </View>
           </View>
 
@@ -258,8 +391,10 @@ async function fetchAiRecommendation() {
             <Text style={styles.calorieLabel}>Calorie Progress</Text>
 
             <Text style={styles.calorieValue}>
-              {calories.consumed} / {calories.goal} kcal
-            </Text>
+            {calories.goal > 0
+              ? `${calories.consumed.toLocaleString()} / ${calories.goal.toLocaleString()} kcal`
+              : `${calories.consumed.toLocaleString()} kcal consumed today`}
+          </Text>
           </View>
 
           <Pressable
@@ -280,19 +415,21 @@ async function fetchAiRecommendation() {
           <Text style={styles.mealsHeading}>Today&apos;s Meals</Text>
 
           <View style={styles.activePlanChip}>
-            <Text style={styles.activePlanChipText}>Active Meal Plan</Text>
+            <Text style={styles.activePlanChipText}>Today's Food Log</Text>
           </View>
         </View>
 
           {meals.map((meal) => (
-            <View key={meal.label} style={styles.mealRow}>
-              <Text style={styles.mealLabel}>{meal.label}</Text>
+  <View key={meal.label} style={styles.mealRow}>
+    <Text style={styles.mealLabel}>
+      {meal.label}
+    </Text>
 
-              <Text style={styles.mealDescription} numberOfLines={1}>
-                {meal.description}
-              </Text>
-            </View>
-          ))}
+    <Text style={styles.mealDescription}>
+      {meal.description}
+    </Text>
+  </View>
+))}
 
           <Pressable
             style={styles.logMealButton}
@@ -574,10 +711,12 @@ content: {
     backgroundColor: '#F5FAF6',
   },
   ringPercentText: {
-    color: '#1E5C35',
-    fontSize: 12,
-    fontWeight: '800',
-  },
+  color: '#1E5C35',
+  fontSize: 12,
+  fontWeight: '800',
+  textAlign: 'center',
+  width: '100%',
+},
   calorieTextBlock: {
     flex: 1,
   },
@@ -616,22 +755,23 @@ content: {
   },
 
   mealRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  mealLabel: {
-    width: 78,
-    color: '#16281D',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  mealDescription: {
-    flex: 1,
-    color: '#7C8F83',
-    fontSize: 13,
-  },
-
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  marginBottom: 10,
+},
+mealLabel: {
+  width: 78,
+  color: '#16281D',
+  fontSize: 13,
+  fontWeight: '700',
+  lineHeight: 20,
+},
+mealDescription: {
+  flex: 1,
+  color: '#7C8F83',
+  fontSize: 13,
+  lineHeight: 20,
+},
   logMealButton: {
     marginTop: 8,
     alignSelf: 'flex-start',
