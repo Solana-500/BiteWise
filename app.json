@@ -15,7 +15,8 @@
           "barcodeScannerEnabled": true
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-status-bar"
     ],
     "ios": {
       "supportsTablet": true

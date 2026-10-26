@@ -48,6 +48,9 @@ import CoachWorkoutPlanReviewScreen from './screens/CoachWorkoutPlanReviewScreen
 import ResetPasswordScreen from './screens/ResetPasswordScreen'
 import PUPaymentScreen from './screens/PUPaymentScreen'
 import RateCoachScreen from './screens/RateCoachScreen'
+import CoachRecipesScreen from './screens/CoachRecipesScreen'
+import CoachRecipesBuilderScreen from './screens/CoachRecipesBuilderScreen'
+import CoachRecipesReviewScreen from './screens/CoachRecipesReviewScreen'
 
 import { useCoachUnreadCount } from './hooks/useCoachUnreadCount'
 import { supabase } from './services/supabase'
@@ -379,16 +382,25 @@ export default function App() {
       }
     }
 
-    Linking.getInitialURL()
-      .then(handleRecoveryLink)
-      .catch(() => {
-        console.warn('Unable to check initial recovery link')
-      })
-      .finally(() => {
-        if (active) {
-          setCheckingRecoveryLink(false)
-        }
-      })
+    async function checkInitialRecoveryLink() {
+  try {
+    const initialUrl = await Linking.getInitialURL()
+
+    if (!active) {
+      return
+    }
+
+    await handleRecoveryLink(initialUrl)
+  } catch (error) {
+    console.warn('Unable to check initial recovery link', error)
+  } finally {
+    if (active) {
+      setCheckingRecoveryLink(false)
+    }
+  }
+}
+
+void checkInitialRecoveryLink()
 
     const subscription = Linking.addEventListener('url', ({ url }) => {
       void handleRecoveryLink(url)
@@ -641,6 +653,23 @@ export default function App() {
               <Stack.Screen
                 name="CoachWorkoutPlanReview"
                 component={CoachWorkoutPlanReviewScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachRecipes"
+                component={CoachRecipesScreen}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="CoachRecipesBuilder"
+                component={CoachRecipesBuilderScreen}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="CoachRecipesReview"
+                component={CoachRecipesReviewScreen}
                 options={{ headerShown: false }}
               />
             </>
