@@ -22,6 +22,7 @@ import {
     loadContentPage
 } from "./boundary/content-boundary.js";
 
+
 /* =========================================
    ADMIN PROFILE
 ========================================= */
@@ -134,6 +135,7 @@ async function checkAdminAccess() {
 }
 
 
+
 /* =========================================
    DASHBOARD STATISTICS
 ========================================= */
@@ -220,6 +222,70 @@ async function loadDashboardStatistics() {
             if (pendingCoaches) {
                 pendingCoaches.textContent =
                     pendingCoachCount ?? 0;
+            }
+        }
+
+
+        // Pending meal plans
+        const {
+            count: pendingMealCount,
+            error: pendingMealError
+        } = await supabaseClient
+            .from("meal_plans")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("status", "pending_review");
+
+
+        // Pending workout plans
+        const {
+            count: pendingWorkoutCount,
+            error: pendingWorkoutError
+        } = await supabaseClient
+            .from("workout_plans")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("status", "pending_review");
+
+
+        // Display combined pending content count
+        if (pendingMealError) {
+            console.error(
+                "Error loading pending meal plans:",
+                pendingMealError.message
+            );
+        }
+
+        if (pendingWorkoutError) {
+            console.error(
+                "Error loading pending workout plans:",
+                pendingWorkoutError.message
+            );
+        }
+
+        if (!pendingMealError && !pendingWorkoutError) {
+            const totalPendingContent =
+                (pendingMealCount ?? 0) +
+                (pendingWorkoutCount ?? 0);
+
+            const pendingContent =
+                document.getElementById("pending-content");
+
+            const pendingContentSmall =
+                document.getElementById("pending-content-small");
+
+            if (pendingContent) {
+                pendingContent.textContent =
+                    totalPendingContent;
+            }
+
+            if (pendingContentSmall) {
+                pendingContentSmall.textContent =
+                    totalPendingContent;
             }
         }
 
