@@ -239,23 +239,23 @@ const previewFrame =
     document.getElementById("landing-preview-frame");
 
 
-// Notification
-const notificationElement = document.getElementById("admin-notification");
-const notificationMessage = document.getElementById("admin-notification-message");
-const notificationCloseButton = document.getElementById("admin-notification-close");
+// // Notification
+// const notificationElement = document.getElementById("admin-notification");
+// const notificationMessage = document.getElementById("admin-notification-message");
+// const notificationCloseButton = document.getElementById("admin-notification-close");
 
-function showNotification(message) {
-    if (!notificationElement || !notificationMessage) return;
+// function showNotification(message) {
+//     if (!notificationElement || !notificationMessage) return;
 
-    notificationMessage.textContent = message;
-    notificationElement.hidden = false;
-}
+//     notificationMessage.textContent = message;
+//     notificationElement.hidden = false;
+// }
 
-if (notificationCloseButton) {
-    notificationCloseButton.addEventListener("click", () => {
-        notificationElement.hidden = true;
-    });
-}
+// if (notificationCloseButton) {
+//     notificationCloseButton.addEventListener("click", () => {
+//         notificationElement.hidden = true;
+//     });
+// }
 
 // ==============================================
 // FUNCTIONS

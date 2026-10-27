@@ -3747,3 +3747,1091 @@ button {
         padding-left: 66px;
     }
 }
+
+
+
+
+/* =========================================
+   CONTENT MANAGEMENT
+========================================= */
+
+.content-management-page {
+    padding: 34px 38px 50px;
+}
+
+.content-management-page .management-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 26px;
+}
+
+.content-management-page .management-heading h1 {
+    margin-bottom: 7px;
+    font-size: 26px;
+}
+
+.content-management-page .management-heading p {
+    color: #78817b;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   CONTENT TABS
+========================================= */
+
+.content-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #dfe6e1;
+}
+
+.content-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: transparent;
+    color: #6d766f;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.content-tab:hover {
+    color: #185d35;
+}
+
+.content-tab.active {
+    color: #185d35;
+    border-bottom-color: #185d35;
+}
+
+.content-tab .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 23px;
+    padding: 3px 7px;
+    background: #edf2ee;
+    color: #68716b;
+    border-radius: 20px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.content-tab.active .tab-count {
+    background: #e3f0e7;
+    color: #185d35;
+}
+
+
+/* =========================================
+   CONTENT TAB PANELS
+========================================= */
+
+.content-tab-panel {
+    display: none;
+}
+
+.content-tab-panel.active {
+    display: block;
+}
+
+
+/* =========================================
+   CONTENT CARD HEADER
+========================================= */
+
+.content-management-page .management-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 22px;
+    border-bottom: 1px solid #e8ede9;
+}
+
+.content-management-page .management-card-header h2 {
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.content-management-page .management-card-header p {
+    color: #8a928d;
+    font-size: 12px;
+}
+
+
+/* =========================================
+   CONTENT SEARCH AND FILTER
+========================================= */
+
+.content-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.content-filters input,
+.content-filters select {
+    box-sizing: border-box;
+    height: 46px;
+    padding: 10px 13px;
+    background: #ffffff;
+    color: #303832;
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+    outline: none;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.content-filters input {
+    width: 240px;
+}
+
+.content-filters select {
+    min-width: 145px;
+    cursor: pointer;
+}
+
+.content-filters input:focus,
+.content-filters select:focus {
+    border-color: #6c9b7d;
+    box-shadow: 0 0 0 3px rgba(24, 93, 53, 0.08);
+}
+
+
+/* =========================================
+   CONTENT TABLE
+========================================= */
+
+.content-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.content-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.content-table th {
+    padding: 13px 20px;
+    background: #fafcfa;
+    color: #7b847e;
+    border-bottom: 1px solid #e8ede9;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.content-table td {
+    padding: 18px 20px;
+    color: #3e4741;
+    border-bottom: 1px solid #edf0ee;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.content-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.content-table tbody tr:not(.table-empty-row):hover {
+    background: #fbfcfb;
+}
+
+
+/* =========================================
+   CONTENT EMPTY STATE
+========================================= */
+
+.content-table .table-empty-row td {
+    padding: 55px 20px;
+}
+
+.content-table .table-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #929a95;
+    text-align: center;
+}
+
+.content-table .table-empty-state strong {
+    color: #606962;
+    font-size: 13px;
+}
+
+.content-table .table-empty-state span {
+    font-size: 12px;
+}
+
+
+/* =========================================
+   CONTENT ACTION BUTTONS
+========================================= */
+
+.content-management-page .content-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.content-management-page .content-view-button {
+    padding: 8px 13px;
+
+    background: #ffffff;
+    color: #185d35;
+
+    border: 1px solid #b9d0c0;
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.content-management-page .content-view-button:hover {
+    background: #edf6f0;
+}
+
+.content-management-page .content-view-button:focus-visible {
+    outline: 2px solid #166534;
+    outline-offset: 2px;
+}
+
+
+/* =========================================
+   CONTENT STATUS
+========================================= */
+
+.content-status {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.content-status.pending {
+    background: #fff4d8;
+    color: #8a6518;
+}
+
+.content-status.approved {
+    background: #e5f3e9;
+    color: #185d35;
+}
+
+.content-status.rejected {
+    background: #f4e8e8;
+    color: #9a4141;
+}
+
+
+
+/* ==============================================
+   CONTENT DETAILS & FEEDBACK MODALS
+============================================== */
+
+/* Modal overlay */
+#content-details-modal:not([hidden]),
+#content-feedback-modal:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    padding: 24px;
+    background-color: rgba(15, 23, 42, 0.5);
+    overflow-y: auto;
+}
+
+#content-details-modal[hidden],
+#content-feedback-modal[hidden] {
+    display: none;
+}
+
+/* Modal container */
+#content-details-modal .modal-box,
+#content-feedback-modal .modal-box {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+#content-details-modal .content-details-modal-box {
+    max-width: 760px;
+}
+
+/* Header */
+#content-details-modal .modal-header,
+#content-feedback-modal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Default header title: feedback modal */
+#content-feedback-modal .modal-header h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Content details header */
+#content-details-modal .content-details-header {
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 26px;
+}
+
+#content-details-modal .content-details-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+#content-details-modal #content-details-title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.4px;
+}
+
+/* Coach and submission metadata */
+#content-details-modal .content-details-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+#content-details-modal #content-details-coach {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#content-details-modal .content-meta-separator {
+    color: #9ca3af;
+}
+
+/* Content type badges */
+#content-details-modal .content-type-tag {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+#content-details-modal .content-type-tag.workout-tag {
+    color: #216544;
+    background-color: #e4f2e9;
+}
+
+#content-details-modal .content-type-tag.meal-tag {
+    color: #8a5a16;
+    background-color: #fff0d6;
+}
+
+/* Close buttons */
+#content-details-modal .modal-close-button,
+#content-feedback-modal .modal-close-button {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+#content-details-modal .modal-close-button {
+    margin-top: 0;
+    font-size: 23px;
+    line-height: 1;
+}
+
+#content-details-modal .modal-close-button:hover,
+#content-feedback-modal .modal-close-button:hover {
+    color: #111827;
+}
+
+@media (max-width: 600px) {
+    #content-details-modal .content-details-header {
+        padding: 18px;
+        gap: 12px;
+    }
+
+    #content-details-modal #content-details-title {
+        font-size: 19px;
+    }
+
+    #content-details-modal .content-details-meta,
+    #content-details-modal #content-details-coach {
+        font-size: 12px;
+    }
+
+    #content-details-modal .content-details-meta {
+        gap: 6px;
+    }
+}
+
+/* Modal body and shared detail rows */
+#content-details-modal .modal-body,
+#content-feedback-modal .modal-body {
+    padding: 24px;
+}
+
+#content-details-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.content-detail-item {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) 2fr;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f1f3;
+}
+
+.content-detail-item:last-child {
+    border-bottom: none;
+}
+
+.content-detail-label {
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.content-detail-value {
+    color: #111827;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* ==============================================
+   WORKOUT PLAN SUMMARY CARDS
+============================================== */
+
+#content-details-modal .workout-plan-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 26px;
+}
+
+#content-details-modal .workout-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #f9fafb;
+}
+
+#content-details-modal .workout-summary-card span {
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+#content-details-modal .workout-summary-card strong {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* ==============================================
+   TRAINING PREFERENCES
+============================================== */
+
+#content-details-modal .workout-plan-preferences {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-bottom: 26px;
+}
+
+#content-details-modal .workout-preference {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+#content-details-modal .workout-preference > strong {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+#content-details-modal .workout-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#content-details-modal .workout-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background-color: #ffffff;
+    color: #374151;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* ==============================================
+   WORKOUT SESSIONS & EXERCISES
+============================================== */
+
+#content-details-modal .workout-sessions-section {
+    margin-top: 12px;
+}
+
+#content-details-modal .workout-sessions-section h3 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#content-details-modal .workout-sessions-count {
+    margin: 0 0 16px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+#content-details-modal .workout-session {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background-color: #ffffff;
+}
+
+#content-details-modal .workout-session summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    cursor: pointer;
+    list-style: none;
+}
+
+#content-details-modal .workout-session summary::-webkit-details-marker {
+    display: none;
+}
+
+#content-details-modal .workout-session summary::after {
+    content: "+";
+    flex-shrink: 0;
+    color: #6b7280;
+    font-size: 20px;
+}
+
+#content-details-modal .workout-session[open] summary::after {
+    content: "−";
+}
+
+#content-details-modal .workout-session summary > span:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+#content-details-modal .workout-session summary strong {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#content-details-modal .workout-session summary small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+#content-details-modal .workout-session summary > span:nth-child(2) {
+    color: #6b7280;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+#content-details-modal .workout-session-exercises {
+    padding: 0 16px 12px;
+    border-top: 1px solid #f0f1f3;
+}
+
+#content-details-modal .workout-exercise {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f1f3;
+}
+
+#content-details-modal .workout-exercise:last-child {
+    border-bottom: none;
+}
+
+#content-details-modal .workout-exercise > div:first-child {
+    min-width: 0;
+}
+
+#content-details-modal .workout-exercise strong {
+    display: block;
+    color: #111827;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#content-details-modal .workout-exercise small {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+#content-details-modal .workout-exercise p {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+#content-details-modal .workout-exercise-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+#content-details-modal .workout-exercise-stats span {
+    padding: 5px 8px;
+    border-radius: 5px;
+    background-color: #f3f4f6;
+    color: #374151;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+
+/* ==============================================
+   MODAL FOOTERS & BUTTONS
+============================================== */
+
+#content-details-modal .modal-footer,
+#content-feedback-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 18px 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+#content-details-modal .modal-footer button,
+#content-feedback-modal .modal-footer button {
+    padding: 9px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+/* Approve */
+#content-details-modal #content-details-approve {
+    background-color: #20613f;
+    border-color: #20613f;
+    color: #ffffff;
+}
+
+#content-details-modal #content-details-approve:hover {
+    background-color: #174b30;
+    border-color: #174b30;
+    color: #ffffff;
+}
+
+/* Reject */
+#content-details-modal #content-details-reject,
+#content-feedback-modal #content-feedback-confirm {
+    background-color: #ffffff;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+#content-details-modal #content-details-reject:hover,
+#content-feedback-modal #content-feedback-confirm:hover {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+/* Cancel */
+#content-feedback-modal #content-feedback-cancel {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+#content-feedback-modal #content-feedback-cancel:hover {
+    background-color: #f3f4f6;
+}
+
+/* Disabled buttons */
+#content-details-modal .modal-footer button:disabled,
+#content-feedback-modal .modal-footer button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+
+/* ==============================================
+   REJECTION FEEDBACK MODAL
+============================================== */
+
+/* Description */
+#content-feedback-modal .content-feedback-description {
+    margin: 0 0 22px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Feedback label */
+#content-feedback-modal .content-feedback-body label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#content-feedback-modal .required-indicator {
+    color: #b42318;
+}
+
+/* Text area */
+#content-feedback-modal #content-admin-feedback {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 140px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#content-feedback-modal #content-admin-feedback::placeholder {
+    color: #9ca3af;
+}
+
+#content-feedback-modal #content-admin-feedback:focus {
+    outline: none;
+    border-color: #20613f;
+    box-shadow: 0 0 0 3px rgba(32, 97, 63, 0.12);
+}
+
+#content-details-modal .content-details-error {
+    color: #b91c1c;
+    font-size: 14px;
+}
+
+/* Reject Content button */
+#content-feedback-modal #content-feedback-confirm {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #b42318;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#content-feedback-modal #content-feedback-confirm:hover {
+    background: #912018;
+}
+
+#content-feedback-modal #content-feedback-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* REQUEST CHANGES BUTTON */
+#content-details-modal #content-details-reject {
+    padding: 10px 20px;
+    border: 1px solid #d97706;
+    border-radius: 8px;
+    background: #fff;
+    color: #b45309;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+#content-details-modal #content-details-reject:hover {
+    background: #fffbeb;
+    border-color: #b45309;
+}
+
+/* SEND FEEDBACK BUTTON */
+#content-feedback-modal #content-feedback-confirm {
+    padding: 10px 20px;
+    border: 1px solid #b45309;
+    border-radius: 8px;
+    background: #b45309;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#content-feedback-modal #content-feedback-confirm:hover {
+    color: #ffffff;
+    background: #92400e;
+}
+
+#content-feedback-modal #content-feedback-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Admin change-request feedback */
+
+.admin-change-request {
+    display: block;
+    margin-top: 20px;
+    padding: 12px 16px;
+    border: 1px solid #dce8df;
+    border-left: 3px solid #20613f;
+    border-radius: 8px;
+    background: #f5f8f5;
+    text-align: left;
+}
+
+.admin-change-request-heading {
+    margin: 0;
+    padding: 0 0 8px;
+    border-bottom: 1px solid #dce8df;
+    text-align: left;
+}
+
+.admin-change-request-label {
+    display: block;
+    margin: 0;
+    color: #205b3b;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.admin-change-request-heading p {
+    margin: 4px 0 0;
+    color: #647067;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.admin-change-request-message {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 10px 0 0;
+    border: 0;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left !important;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* Meal plan coach notes */
+
+.meal-coach-notes {
+    margin: 20px 0;
+}
+
+.meal-coach-notes .content-detail-label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+
+
+.meal-coach-notes-content {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 12px 14px;
+    border-left: 3px solid #20613f;
+    border-radius: 0 8px 8px 0;
+    background: #f4f7f5;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+
+.meal-coach-notes {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin: 20px 0;
+    padding: 0;
+}
+
+
+
+/* ==============================================
+   RESPONSIVE MODALS
+============================================== */
+
+@media (max-width: 600px) {
+    #content-details-modal:not([hidden]),
+    #content-feedback-modal:not([hidden]) {
+        padding: 12px;
+    }
+
+    #content-details-modal .modal-box,
+    #content-feedback-modal .modal-box {
+        max-height: 92vh;
+    }
+
+    .content-detail-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    #content-details-modal .workout-plan-summary,
+    #content-details-modal .workout-plan-preferences {
+        grid-template-columns: 1fr;
+    }
+
+    #content-details-modal .workout-exercise {
+        flex-direction: column;
+    }
+
+    #content-details-modal .workout-exercise-stats {
+        justify-content: flex-start;
+    }
+
+    #content-details-modal .modal-header,
+    #content-feedback-modal .modal-header,
+    #content-details-modal .modal-body,
+    #content-feedback-modal .modal-body,
+    #content-details-modal .modal-footer,
+    #content-feedback-modal .modal-footer {
+        padding: 16px;
+    }
+}
+
+
+/* =========================================
+   CONTENT RESPONSIVE
+========================================= */
+
+@media (max-width: 760px) {
+    .content-management-page {
+        padding: 26px 20px;
+    }
+
+    .content-tabs {
+        overflow-x: auto;
+    }
+
+    .content-management-page .management-card-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .content-filters {
+        flex-wrap: wrap;
+    }
+
+    .content-filters input {
+        width: 100%;
+    }
+
+    .content-filters select {
+        flex: 1;
+    }
+}

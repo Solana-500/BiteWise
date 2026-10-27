@@ -18,6 +18,10 @@ import {
     loadReviewsPage
 } from "./boundary/reviews-boundary.js";
 
+import {
+    loadContentPage
+} from "./boundary/content-boundary.js";
+
 /* =========================================
    ADMIN PROFILE
 ========================================= */
@@ -100,20 +104,6 @@ async function checkAdminAccess() {
     console.log("Admin access verified.");
 
     await loadAdminProfile(user, profile);
-
-    // // Load dashboard and management pages
-    // await loadDashboardStatistics();
-
-    // await loadCoachApplications();
-    // await loadApprovedCoaches();
-    // await loadSuspendedCoaches();
-
-    // await loadUsersPage();
-    
-    // await loadLandingPage();
-
-    // await loadReviewsPage();
-
     
     // Load only the module belonging to the current page.
     if (document.getElementById("total-users")) {
@@ -136,6 +126,10 @@ async function checkAdminAccess() {
 
     if (document.getElementById("landing-page-editor")) {
         await loadLandingPage();
+    }
+
+    if (document.getElementById("content-table-body")) {
+        await loadContentPage();
     }
 }
 
