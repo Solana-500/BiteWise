@@ -11,6 +11,413 @@ const supabaseClient = supabase.createClient(
 );
 
 
+/* ==============================================
+   LANDING PAGE CONTENT
+============================================== */
+
+async function loadLandingPageContent() {
+    const params = new URLSearchParams(
+        window.location.search
+    );
+
+    const previewMode = params.get("preview") === "draft";
+
+    let statusToLoad = "published";
+
+    // Only allow an authenticated admin to request a draft.
+    if (previewMode) {
+        try {
+            const { data: userData, error: userError } =
+                await supabaseClient.auth.getUser();
+
+            if (!userError && userData.user) {
+                const { data: profile, error: profileError } =
+                    await supabaseClient
+                        .from("profiles")
+                        .select("app_role")
+                        .eq("id", userData.user.id)
+                        .maybeSingle();
+
+                if (!profileError && profile?.app_role === "admin") {
+                    statusToLoad = "draft";
+                }
+            }
+        } catch (error) {
+            console.error("Unable to verify preview access:", error);
+        }
+    }
+
+    // Request the selected version.
+    let { data: landing, error } = await supabaseClient
+        .from("landing_page_content")
+        .select("id, status, content")
+        .eq("status", statusToLoad)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Failed to load landing page content:", error);
+        return;
+    }
+
+    // If an admin has no draft yet, preview the published version.
+    if (!landing && statusToLoad === "draft") {
+        const result = await supabaseClient
+            .from("landing_page_content")
+            .select("id, status, content")
+            .eq("status", "published")
+            .maybeSingle();
+
+        if (result.error) {
+            console.error(
+                "Failed to load published landing page:",
+                result.error
+            );
+            return;
+        }
+
+        landing = result.data;
+    }
+
+    if (!landing?.content) {
+        return;
+    }
+
+    const hero = landing.content.hero || {};
+
+    const title = document.getElementById("landing-hero-title");
+    const description = document.getElementById(
+        "landing-hero-description"
+    );
+    const image = document.getElementById("app-preview-image");
+    const primaryButton = document.getElementById(
+        "landing-hero-primary-button"
+    );
+    const secondaryButton = document.getElementById(
+        "landing-hero-secondary-button"
+    );
+
+    if (title) {
+        title.textContent = hero.title || "";
+    }
+
+    if (description) {
+        description.textContent = hero.description || "";
+    }
+
+    
+    if (image) {
+        const savedImages = Array.isArray(hero.images)
+            ? hero.images.filter(Boolean)
+            : hero.image
+                ? [hero.image]
+                : [];
+
+        if (savedImages.length) {
+            startAppPreview("app-preview-image", savedImages);
+        }
+    }
+
+
+    if (primaryButton) {
+        primaryButton.textContent = hero.primaryButton || "";
+    }
+
+    if (secondaryButton) {
+        secondaryButton.textContent = hero.secondaryButton || "";
+    }
+
+    renderLandingFeatures(landing.content.features);
+    renderLandingHowItWorks(landing.content.howItWorks);
+    renderLandingFeaturedCoaches(
+        landing.content.featuredCoaches?.coachIds || []
+    );
+    renderLandingPlans(landing.content.plans);
+}
+
+// Build a feature card when the page has no card to copy
+function createFeatureCard() {
+    const card = document.createElement("div");
+    card.className = "feature-card";
+
+    const icon = document.createElement("div");
+    icon.className = "feature-icon";
+
+    card.append(
+        icon,
+        document.createElement("h3"),
+        document.createElement("p")
+    );
+
+    return card;
+}
+
+// Put one saved feature (icon, title, description) into a card
+function fillFeatureCard(card, feature) {
+    const heading = card.querySelector("h1, h2, h3, h4, h5, h6");
+    const description = card.querySelector("p");
+
+    const icon =
+        card.querySelector("[class*='icon']") ||
+        Array.from(card.children).find(
+            (child) => child !== heading && child !== description
+        );
+
+    if (icon) {
+        icon.textContent = feature.icon || "";
+    }
+
+    if (heading) {
+        heading.textContent = feature.title || "";
+    }
+
+    if (description) {
+        description.textContent = feature.description || "";
+    }
+}
+
+
+function renderLandingFeatures(features) {
+    const container = document.getElementById("landing-features");
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    const items = features?.items;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        return;
+    }
+
+    items.forEach((feature) => {
+        const card = createFeatureCard();
+        fillFeatureCard(card, feature);
+        container.appendChild(card);
+    });
+}
+
+
+function renderLandingHowItWorks(howItWorks) {
+    const container = document.getElementById("landing-how-it-works");
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    const items = howItWorks?.items;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        return;
+    }
+
+    items.forEach((step, index) => {
+        const card = document.createElement("div");
+        card.className = "step-card";
+
+        const stepNumber = document.createElement("div");
+        stepNumber.className = "step-number";
+        stepNumber.textContent = index + 1;
+
+        const heading = document.createElement("h3");
+        heading.textContent = step.title || "";
+
+        const description = document.createElement("p");
+        description.textContent = step.description || "";
+
+        card.append(stepNumber, heading, description);
+        container.appendChild(card);
+    });
+}
+
+
+
+async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
+    const container = document.getElementById(
+        "landing-featured-coaches"
+    );
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!Array.isArray(selectedCoachIds) || selectedCoachIds.length === 0) {
+        return;
+    }
+
+    const { data: coaches, error } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name, coaching_specialty")
+        .eq("app_role", "coach")
+        .eq("approval_status", "approved");
+
+    if (error) {
+        console.error("Failed to load featured coaches:", error);
+        return;
+    }
+
+    const { data: reviews, error: reviewError } = await supabaseClient
+        .from("coach_reviews")
+        .select("coach_id, rating");
+
+    if (reviewError) {
+        console.error("Failed to load coach ratings:", reviewError);
+        return;
+    }
+
+    const coachesWithRatings = (coaches || []).map((coach) => {
+        const coachReviews = (reviews || []).filter(
+            (review) => review.coach_id === coach.id
+        );
+
+        const averageRating = coachReviews.length
+            ? coachReviews.reduce(
+                (sum, review) => sum + Number(review.rating),
+                0
+            ) / coachReviews.length
+            : null;
+
+        return {
+            ...coach,
+            averageRating,
+            reviewCount: coachReviews.length
+        };
+    });
+
+    const featuredCoaches = selectedCoachIds
+        .map((id) =>
+            coachesWithRatings.find((coach) => coach.id === id)
+        )
+        .filter(Boolean)
+        .slice(0, 3);
+
+    if (featuredCoaches.length === 0) {
+        return;
+    }
+
+    featuredCoaches.forEach((coach) => {
+        const card = document.createElement("div");
+        card.className = "coach-card";
+
+        const avatar = document.createElement("div");
+        avatar.className = "coach-avatar";
+        avatar.textContent = (coach.full_name || "HC")
+            .split(/\s+/)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+
+        const name = document.createElement("h3");
+        name.textContent = coach.full_name || "Health Coach";
+
+        const specialty = document.createElement("p");
+        specialty.className = "coach-specialty";
+        specialty.textContent =
+            coach.coaching_specialty || "Health Coach";
+
+        const ratingContainer = document.createElement("div");
+        ratingContainer.className = "coach-rating";
+
+        const stars = document.createElement("span");
+        stars.className = "coach-stars";
+
+        const ratingValue = document.createElement("span");
+
+        if (coach.averageRating !== null) {
+            stars.textContent = "★★★★★";
+            ratingValue.textContent =
+                `${coach.averageRating.toFixed(1)} (${coach.reviewCount})`;
+        } else {
+            stars.textContent = "No ratings";
+            ratingValue.textContent = "";
+        }
+
+        ratingContainer.append(stars, ratingValue);
+        card.append(avatar, name, specialty, ratingContainer);
+        container.appendChild(card);
+    });
+}
+
+
+
+function renderLandingPlans(plans) {
+    const pricingGrid = document.querySelector(".pricing-grid");
+
+    if (!pricingGrid) return;
+
+    pricingGrid.replaceChildren();
+
+    if (!Array.isArray(plans) || plans.length === 0) {
+        return;
+    }
+
+    plans.forEach((plan, index) => {
+        const isPremium =
+            plan.name?.toLowerCase().includes("premium") ||
+            index > 0;
+
+        const card = document.createElement("div");
+        card.className = isPremium
+            ? "pricing-card premium-card"
+            : "pricing-card";
+
+        if (plan.badge) {
+            const badge = document.createElement("span");
+            badge.className = "popular-badge";
+            badge.textContent = plan.badge;
+            card.appendChild(badge);
+        }
+
+        const name = document.createElement("p");
+        name.className = "plan-name";
+        name.textContent = plan.name || "Plan";
+
+        const priceContainer = document.createElement("div");
+        priceContainer.className = "price";
+
+        const amount = document.createElement("span");
+        amount.className = "price-amount";
+
+        const price = Number(plan.price);
+        amount.textContent = Number.isFinite(price)
+            ? `$${price}`
+            : "$0";
+
+        const period = document.createElement("span");
+        period.className = "price-period";
+        period.textContent = `/ ${plan.period || "month"}`;
+
+        priceContainer.append(amount, period);
+
+        const featureList = document.createElement("ul");
+        featureList.className = "plan-features";
+
+        (Array.isArray(plan.features) ? plan.features : [])
+            .forEach((feature) => {
+                const item = document.createElement("li");
+                item.textContent = feature;
+                featureList.appendChild(item);
+            });
+
+        const button = document.createElement("a");
+        button.href = "#";
+        button.className = isPremium
+            ? "plan-button premium-button open-register"
+            : "plan-button free-button open-register";
+        button.textContent = plan.button || "Get Started";
+
+        card.append(
+            name,
+            priceContainer,
+            featureList,
+            button
+        );
+
+        pricingGrid.appendChild(card);
+    });
+}
+
+
 // ==============================================
 // USER REGISTRATION (2 parts: create account, then profile setup)
 // ==============================================
@@ -824,50 +1231,32 @@ const appScreens = [
 ];
 
 
-function startAppPreview(imageId) {
 
-    const previewImage =
-        document.getElementById(imageId);
+function startAppPreview(imageId, images = appScreens) {
+    const previewImage = document.getElementById(imageId);
+    if (!previewImage) return;
 
+    const screens = Array.isArray(images)
+        ? images.filter(Boolean)
+        : [];
 
-    if (!previewImage) {
-        return;
-    }
+    const imagesToShow = screens.length ? screens : appScreens;
 
+    if (!imagesToShow.length) return;
 
     let currentScreen = 0;
-
+    previewImage.src = imagesToShow[currentScreen];
 
     setInterval(() => {
-
         previewImage.classList.add("fade-out");
 
-
         setTimeout(() => {
-
-            currentScreen =
-                (currentScreen + 1) %
-                appScreens.length;
-
-
-            previewImage.src =
-                appScreens[currentScreen];
-
-
-            previewImage.classList.remove(
-                "fade-out"
-            );
-
+            currentScreen = (currentScreen + 1) % imagesToShow.length;
+            previewImage.src = imagesToShow[currentScreen];
+            previewImage.classList.remove("fade-out");
         }, 400);
-
     }, 3500);
-
 }
-
-
-startAppPreview("app-preview-image");
-startAppPreview("download-preview-image");
-
 
 
 // ==============================================
@@ -1221,9 +1610,8 @@ loginForm?.addEventListener(
             // ==================================
 
             if (profile.app_role === "admin") {
-
                 window.location.href =
-                    "../admin_web/admin-dashboard.html";
+                    "/admin_web/ui/admin-dashboard.html";
 
                 return;
             }
@@ -1782,22 +2170,16 @@ function closeForgotPasswordModal() {
 // OPEN BUTTONS
 // ==============================================
 
-registerButtons.forEach(
-    (button) => {
+document.addEventListener("click", function(event) {
+    const button = event.target.closest(".open-register");
 
-        button.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                openRegisterModal();
-
-            }
-        );
-
+    if (!button) {
+        return;
     }
-);
+
+    event.preventDefault();
+    openRegisterModal();
+});
 
 
 loginButtons.forEach(
@@ -2849,3 +3231,5 @@ if (pageParams.get("login") === "1") {
         window.location.pathname
     );
 }
+
+loadLandingPageContent();
