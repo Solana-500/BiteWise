@@ -13,7 +13,7 @@
 
     <link
         rel="stylesheet"
-        href="admin-style.css"
+        href="./admin-style.css"
     >
 </head>
 
@@ -42,7 +42,7 @@
                     Dashboard
                 </a>
 
-                <a href="#" class="nav-item">
+                <a href="admin-users.html" class="nav-item">
                     <span class="nav-icon">♙</span>
                     Users
                 </a>
@@ -52,9 +52,14 @@
                     Health Coaches
                 </a>
 
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">▤</span>
+                <a href="admin-content.html" class="nav-item">
+                    <span class="nav-icon">▣</span>
                     Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
                 </a>
 
                 <a href="#" class="nav-item">
@@ -62,7 +67,7 @@
                     Categories
                 </a>
 
-                <a href="#" class="nav-item">
+                <a href="admin-reviews.html" class="nav-item">
                     <span class="nav-icon">☆</span>
                     Reviews
                 </a>
@@ -110,18 +115,20 @@
                     <h2>Dashboard</h2>
                 </div>
 
+                
                 <div class="admin-profile">
 
-                    <div class="admin-avatar">
+                    <div class="admin-avatar" id="admin-avatar">
                         A
                     </div>
 
                     <div class="admin-profile-text">
-                        <strong>System Administrator</strong>
-                        <span>Admin</span>
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
                     </div>
 
                 </div>
+
 
             </header>
 
@@ -294,7 +301,7 @@
 
                         <div class="attention-list">
 
-                            <a href="#" class="attention-item">
+                            <a href="admin-coaches.html" class="attention-item">
 
                                 <div>
                                     <strong>
@@ -317,7 +324,7 @@
                             </a>
 
 
-                            <a href="#" class="attention-item">
+                            <a href="admin-content.html" class="attention-item">
 
                                 <div>
                                     <strong>
@@ -404,7 +411,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="admin-script.js"></script>
+    <script type="module" src="../admin-script.js"></script>
 
 </body>
 
