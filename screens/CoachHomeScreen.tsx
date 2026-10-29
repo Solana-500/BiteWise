@@ -24,16 +24,25 @@ type CoachProfile = {
 
 export default function CoachHomeScreen({ navigation }: Props) {
   const { totalUnreadCount } = useCoachUnread();
+
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState('Coach');
   const [specialty, setSpecialty] = useState('');
 
+  const [ratingsError, setRatingsError] = useState(false);
+
+  const [latestRating, setLatestRating] = useState<{
+    rating: number;
+    review_text: string | null;
+  } | null>(null);
+
   const [stats, setStats] = useState({
-  clients: 0,
-  pendingContent: 0,
-  approvedContent: 0,
-  recentRatings: 0,
-});
+    clients: 0,
+    pendingContent: 0,
+    approvedContent: 0,
+    recentRatings: 0,
+  });
+
 
   useEffect(() => {
     loadCoachHome();
@@ -77,6 +86,33 @@ export default function CoachHomeScreen({ navigation }: Props) {
         throw clientCountResult.error;
       }
 
+      const {
+        data: latestReviewData,
+        count: reviewCount,
+        error: reviewsError,
+      } = await supabase
+        .from('coach_reviews')
+        .select('rating, review_text', {
+          count: 'exact',
+        })
+        .eq('coach_id', user.id)
+        .order('updated_at', {
+          ascending: false,
+        })
+        .limit(1);
+
+      setRatingsError(Boolean(reviewsError));
+
+      if (reviewsError) {
+        console.error(
+          'Unable to load coach rating summary:',
+          reviewsError.message
+        );
+        setLatestRating(null);
+      } else {
+        setLatestRating(latestReviewData?.[0] ?? null);
+      }
+
       setCoachName(profileResult.data?.full_name || 'Coach');
       setSpecialty(profileResult.data?.coaching_specialty || '');
 
@@ -84,8 +120,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
         clients: clientCountResult.count ?? 0,
         pendingContent: 0,
         approvedContent: 0,
-        recentRatings: 0,
+        recentRatings: reviewsError ? 0 : reviewCount ?? 0,
       });
+
     } catch (error) {
       console.error('Unable to load coach dashboard:', error);
     } finally {
@@ -172,7 +209,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
           <View style={styles.featureGrid}>
             <Pressable
               style={styles.featureCard}
-              onPress={() => navigation.navigate('CoachContent')}
+              onPress={() => navigation.navigate('CoachContentStatus')}
             >
               <Text style={styles.featureEmoji}>📝</Text>
               <Text style={styles.featureTitle}>Content Status</Text>
@@ -208,9 +245,14 @@ export default function CoachHomeScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('CoachRatings')}
             >
               <Text style={styles.featureEmoji}>⭐</Text>
-              <Text style={styles.featureTitle}>Recent Ratings</Text>
+              <Text style={styles.featureTitle}>Client Ratings</Text>
+
               <Text style={styles.featureSubtitle}>
-                {stats.recentRatings} new
+                {ratingsError
+                  ? 'Open to retry loading ratings'
+                  : `${stats.recentRatings} ${
+                      stats.recentRatings === 1 ? 'review' : 'reviews'
+                    } received`}
               </Text>
             </Pressable>
           </View>
@@ -249,10 +291,18 @@ export default function CoachHomeScreen({ navigation }: Props) {
 
             <View style={styles.activityTextBlock}>
               <Text style={styles.activityTitle}>
-                {stats.recentRatings} Recent Ratings
+                Latest Client Feedback
               </Text>
-              <Text style={styles.activitySubtitle} numberOfLines={1}>
-                User rated you 4 · Coach has been so supportive in my journey.
+
+              <Text style={styles.activitySubtitle} numberOfLines={2}>
+                {ratingsError
+                  ? 'Unable to load feedback. Open Client Ratings to retry.'
+                  : latestRating
+                    ? `${latestRating.rating}/5 · ${
+                        latestRating.review_text?.trim() ||
+                        'Rating received without written feedback.'
+                      }`
+                    : 'No client ratings received yet.'}
               </Text>
             </View>
 

@@ -209,6 +209,10 @@ CoachRecipesReview: {
   recipe: CoachRecipeDraft
 }
 
+CoachRatings: undefined
+CoachContentStatus: undefined
+CoachCredentials: undefined
+
   AdminHome: undefined
   AdminMore: undefined
   AdminTabs: NavigatorScreenParams<AdminTabParamList> | undefined
