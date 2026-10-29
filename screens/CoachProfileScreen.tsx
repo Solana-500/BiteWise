@@ -408,8 +408,22 @@ export default function CoachProfileScreen({ navigation }: Props) {
           </View>
 
           <Text style={styles.sectionTitle}>Account</Text>
-          <Pressable style={styles.accountCard} onPress={() => Alert.alert('Credentials', 'Certificate upload will be connected next.')} accessibilityRole="button" accessibilityLabel="Manage uploaded certificate">
-            <View><Text style={styles.accountTitle}>Credentials</Text><Text style={styles.accountSubtitle}>Manage your uploaded certificate</Text></View>
+          <Pressable
+            style={styles.accountCard}
+            onPress={() => navigation.navigate('CoachCredentials')}
+            accessibilityRole="button"
+            accessibilityLabel="Manage personal trainer certificates"
+          >
+            <View>
+              <Text style={styles.accountTitle}>
+                Credentials
+              </Text>
+
+              <Text style={styles.accountSubtitle}>
+                Upload and view your personal trainer certification
+              </Text>
+            </View>
+
             <Text style={styles.chevron}>›</Text>
           </Pressable>
 

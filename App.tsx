@@ -51,6 +51,9 @@ import RateCoachScreen from './screens/RateCoachScreen'
 import CoachRecipesScreen from './screens/CoachRecipesScreen'
 import CoachRecipesBuilderScreen from './screens/CoachRecipesBuilderScreen'
 import CoachRecipesReviewScreen from './screens/CoachRecipesReviewScreen'
+import CoachRatingScreen from './screens/CoachRatingScreen'
+import CoachContentStatusScreen from './screens/CoachContentStatusScreen'
+import CoachCredentialsScreen from './screens/CoachCredentialsScreen'
 
 import { useCoachUnreadCount } from './hooks/useCoachUnreadCount'
 import { supabase } from './services/supabase'
@@ -670,6 +673,21 @@ void checkInitialRecoveryLink()
               <Stack.Screen
                 name="CoachRecipesReview"
                 component={CoachRecipesReviewScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachRatings"
+                component={CoachRatingScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachContentStatus"
+                component={CoachContentStatusScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CoachCredentials"
+                component={CoachCredentialsScreen}
                 options={{ headerShown: false }}
               />
             </>

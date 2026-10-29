@@ -16,18 +16,19 @@
         }
       ],
       "expo-asset",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-audio"
     ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-          "backgroundColor": "#349630",
-          "foregroundImage": "./assets/android-icon-foreground.png",
-          "backgroundImage": "./assets/android-icon-background.png",
-          "monochromeImage": "./assets/android-icon-monochrome.png"
-        },
+        "backgroundColor": "#349630",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
