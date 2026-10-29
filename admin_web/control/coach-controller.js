@@ -6,7 +6,8 @@ import {
     getCoachCredentialUrl,
     approveCoach as approveCoachEntity,
     rejectCoach as rejectCoachEntity,
-    updateCoachSuspension
+    updateCoachSuspension,
+    getApprovedCoachesForLanding
 } from "../entity/coach-entity.js";
 
 export async function loadCoachApplications() {
@@ -22,7 +23,7 @@ export async function loadSuspendedCoaches() {
 }
 
 export async function loadCoachCredentials(coachId) {
-    return await getCoachCredentials(coachId);
+    return await getCoachCredentials(coachId);  
 }
 
 export async function openCoachCredential(filePath) {
@@ -43,4 +44,8 @@ export async function suspendCoach(coachId) {
 
 export async function reactivateCoach(coachId) {
     return await updateCoachSuspension(coachId, false);
+}
+
+export async function loadApprovedCoachesForLanding() {
+    return await getApprovedCoachesForLanding();
 }

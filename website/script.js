@@ -24,7 +24,7 @@ async function loadLandingPageContent() {
 
     let statusToLoad = "published";
 
-    // Only allow an authenticated admin to request a draft.
+    // Only allow an authenticated admin to request a draft
     if (previewMode) {
         try {
             const { data: userData, error: userError } =
@@ -59,7 +59,7 @@ async function loadLandingPageContent() {
         return;
     }
 
-    // If an admin has no draft yet, preview the published version.
+    // If an admin has no draft yet, preview the published version
     if (!landing && statusToLoad === "draft") {
         const result = await supabaseClient
             .from("landing_page_content")
@@ -248,7 +248,8 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         .from("profiles")
         .select("id, full_name, coaching_specialty")
         .eq("app_role", "coach")
-        .eq("approval_status", "approved");
+        .eq("approval_status", "approved")
+        .eq("is_suspended", false);
 
     if (error) {
         console.error("Failed to load featured coaches:", error);

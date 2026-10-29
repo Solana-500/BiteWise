@@ -187,3 +187,54 @@ export async function updateCoachSuspension(coachId, isSuspended) {
 
     return data[0];
 }
+
+
+export async function getApprovedCoachesForLanding() {
+    // Get all approved, non-suspended coaches
+    const coaches = await getApprovedCoaches();
+
+    if (coaches.length === 0) {
+        return [];
+    }
+
+    // Get coach ratings
+    const coachIds = coaches.map(coach => coach.id);
+
+    const { data: reviews, error: reviewError } = await supabaseClient
+        .from("coach_reviews")
+        .select("coach_id, rating")
+        .in("coach_id", coachIds);
+
+    if (reviewError) throw reviewError;
+
+    // Calculate each coach's average rating
+    const coachesWithRatings = coaches.map(coach => {
+        const coachReviews = (reviews ?? []).filter(
+            review => review.coach_id === coach.id
+        );
+
+        const averageRating = coachReviews.length
+            ? coachReviews.reduce(
+                (sum, review) => sum + Number(review.rating),
+                0
+            ) / coachReviews.length
+            : null;
+
+        return {
+            ...coach,
+            averageRating,
+            reviewCount: coachReviews.length
+        };
+    });
+
+    // Rated coaches first, highest average rating first
+    coachesWithRatings.sort((a, b) => {
+        if (a.averageRating === null) return 1;
+        if (b.averageRating === null) return -1;
+
+        return b.averageRating - a.averageRating;
+    });
+
+    // Return all coaches; pagination will be handled in the boundary
+    return coachesWithRatings;
+}

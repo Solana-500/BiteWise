@@ -4,11 +4,19 @@ import {
     saveHeroDraft,
     saveFeaturesDraft,
     saveHowItWorksDraft,
+    saveFeaturedReviewsDraft,
     saveFeaturedCoachesDraft,
-    loadApprovedCoachesForLanding,
     savePlansDraft,
     publishLandingDraft
 } from "../entity/landing-entity.js";
+ 
+import {
+    loadApprovedCoachesForLanding
+} from "./coach-controller.js";
+
+import {
+    loadPublishedReviewsForLanding
+} from "./review-controller.js";
 
 export async function loadLandingDraft() {
     return await getLandingDraft();
@@ -44,4 +52,12 @@ export async function saveLandingPlans(plans) {
 
 export async function publishLandingPage() {
     return await publishLandingDraft();
+}
+
+export async function loadLandingFeaturedReviews(page = 1, pageSize = 10) {
+    return await loadPublishedReviewsForLanding(page, pageSize);
+}
+
+export async function saveLandingFeaturedReviews(featuredReviews) {
+    return await saveFeaturedReviewsDraft(featuredReviews);
 }

@@ -1877,7 +1877,253 @@ button {
     font-size: 13px;
 }
 
-/* Featured Health Coaches Editor */
+
+
+/* ==============================================
+   FEATURED REVIEWS EDITOR
+============================================== */
+
+#reviews-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.review-selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.review-selection-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.review-selection-count {
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #edf3eb;
+    color: #456744;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.review-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Review card */
+.review-editor-card {
+    display: grid !important;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 14px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.review-editor-card:hover {
+    border-color: #a3b79e;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.review-editor-card.selected {
+    border-color: #477c59;
+    background: #f4f8f4;
+}
+
+/* Checkbox */
+.review-editor-card > input[type="checkbox"] {
+    grid-column: 1;
+    grid-row: 1;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    justify-self: center;
+    align-self: center;
+    accent-color: #17623a;
+    cursor: pointer;
+}
+
+.review-editor-card > .review-card-main {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    width: 100%;
+}
+
+.review-editor-card input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+}
+
+/* Avatar */
+.review-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #e8efe5;
+    color: #496b45;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Review details */
+.review-card-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.review-card-details h4 {
+    margin: 0 0 4px;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.review-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.review-card-rating {
+    color: #8a6a25;
+    font-weight: 600;
+}
+
+.review-card-date {
+    color: #64748b;
+}
+
+/* Feedback text */
+.review-card-text {
+    margin: 6px 0 0;
+    color: #1e293b;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* Display order */
+.review-editor-card > .review-rank {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    margin: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #17623a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Footer and empty state */
+.review-selection-note,
+.review-empty-message {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .review-editor-card {
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+        column-gap: 10px;
+        padding: 12px;
+    }
+
+    .review-editor-card > .review-card-main {
+        gap: 10px;
+    }
+
+    .review-editor-card > .review-rank {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .review-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 12px;
+    }
+}
+
+
+/* Reviews pagination */
+
+.review-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.review-pagination button {
+    padding: 8px 14px;
+    border: 1px solid #dbe3d8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #456744;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.review-pagination button:hover:not(:disabled) {
+    background: #edf3eb;
+}
+
+.review-pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.review-pagination span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+/* ==============================================
+   FEATURED HEALTH COACHES EDITOR 
+============================================== */
+
 #coaches-editor {
     display: flex;
     flex-direction: column;
@@ -1895,17 +2141,17 @@ button {
 
 .coach-selection-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 600;
-    color: #334155;
+    color: #1e293b;
 }
 
 .coach-selection-count {
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 20px;
     background: #edf3eb;
     color: #456744;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -1916,17 +2162,17 @@ button {
 }
 
 .coach-editor-card {
-    display: flex;
+    display: grid !important;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 14px;
+    column-gap: 14px;
     padding: 16px;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     background: #ffffff;
     cursor: pointer;
-    transition: border-color 0.2s ease,
-                background-color 0.2s ease,
-                box-shadow 0.2s ease;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .coach-editor-card:hover {
@@ -1935,15 +2181,20 @@ button {
 }
 
 .coach-editor-card.selected {
-    border-color: #6f916b;
-    background: #f6f9f4;
+    border-color: #477c59;
+    background: #f4f8f4;
 }
 
-.coach-editor-card input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    accent-color: #557a55;
+/* Checkbox — first column */
+.coach-editor-card > input[type="checkbox"] {
+    grid-column: 1;
+    grid-row: 1;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    justify-self: center;
+    align-self: center;
+    accent-color: #17623a;
     cursor: pointer;
 }
 
@@ -1951,12 +2202,16 @@ button {
     cursor: not-allowed;
 }
 
-.coach-card-main {
+/* Avatar and coach details — second column */
+.coach-editor-card > .coach-card-main {
+    grid-column: 2;
+    grid-row: 1;
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 14px;
-    flex: 1;
     min-width: 0;
+    width: 100%;
 }
 
 .coach-avatar {
@@ -1974,6 +2229,9 @@ button {
 }
 
 .coach-card-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     min-width: 0;
 }
 
@@ -1997,13 +2255,45 @@ button {
 }
 
 .coach-card-rating {
-    margin-top: 3px;
+    margin-top: 2px;
     color: #8a6a25;
+    font-weight: 600;
 }
 
-.coach-rank {
-    flex-shrink: 0;
-    color: #94a3b8;
+/* Selection order — third column */
+.coach-editor-card > .coach-rank {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    margin: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #17623a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.coach-editor-card > .coach-rank[hidden] {
+    display: none !important;
+}
+
+/* Header and footer */
+.coach-selection-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.coach-selection-count {
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #edf3eb;
+    color: #456744;
     font-size: 12px;
     font-weight: 600;
 }
@@ -2018,12 +2308,18 @@ button {
 
 @media (max-width: 600px) {
     .coach-editor-card {
-        gap: 10px;
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+        column-gap: 10px;
         padding: 12px;
     }
 
-    .coach-card-main {
+    .coach-editor-card > .coach-card-main {
         gap: 10px;
+    }
+
+    .coach-editor-card > .coach-rank {
+        padding: 5px 8px;
+        font-size: 11px;
     }
 
     .coach-avatar {
@@ -2034,9 +2330,45 @@ button {
 }
 
 
+/* Coach pagination */
+
+.coach-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.coach-pagination button {
+    padding: 8px 14px;
+    border: 1px solid #dbe3d8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #456744;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.coach-pagination button:hover:not(:disabled) {
+    background: #edf3eb;
+}
+
+.coach-pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.coach-pagination span {
+    color: #64748b;
+    font-size: 13px;
+}
+
 
 /* ==============================================
-   SUBSCRIPTION PLAN EDITOR CARDS
+   SUBSCRIPTION PLAN EDITOR
 ============================================== */
 
 .plan-editor-card {

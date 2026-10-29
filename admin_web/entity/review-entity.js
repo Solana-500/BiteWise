@@ -2,7 +2,7 @@ import { supabaseClient } from "../supabase-client.js";
 
 const REVIEW_TABLES = {
     coach: "coach_reviews",
-    feedback: "app_feedback"
+    app: "app_feedback"
 };
 
 
@@ -73,7 +73,7 @@ export async function getCoachReviews() {
 
 export async function getAppFeedback() {
     const { data, error } = await supabaseClient
-        .from(REVIEW_TABLES.feedback)
+        .from(REVIEW_TABLES.app)
         .select(`
             id,
             user_id,
@@ -185,4 +185,53 @@ export async function markContentReported({
     }
 
     return data;
+}
+
+
+
+export async function getPublishedReviewsForLanding(page = 1, pageSize = 10) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabaseClient
+        .from("app_feedback")
+        .select(`
+            id,
+            user_id,
+            rating,
+            feedback_text,
+            created_at,
+            moderation_status
+        `, { count: "exact" })
+        .eq("moderation_status", "published")
+        .not("feedback_text", "is", null)
+        .neq("feedback_text", "")
+        .order("rating", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+    if (error) {
+        throw new Error(`Unable to load featured reviews: ${error.message}`);
+    }
+
+    const reviews = data ?? [];
+
+    const profileNames = await getProfileNames(
+        reviews.map(review => review.user_id)
+    );
+
+    const formattedReviews = reviews.map(review => ({
+        ...review,
+        reviewer_name: profileNames[review.user_id] || "Unknown User",
+        content_type: "app",
+        content_text: review.feedback_text ?? ""
+    }));
+
+    return {
+        reviews: formattedReviews,
+        totalCount: count ?? 0,
+        currentPage: page,
+        pageSize,
+        totalPages: Math.ceil((count ?? 0) / pageSize)
+    };
 }

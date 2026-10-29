@@ -241,6 +241,66 @@ export async function saveHowItWorksDraft(howItWorks) {
 }
 
 
+export async function saveFeaturedReviewsDraft(featuredReviews) {
+    const { data: draft, error: draftError } = await supabaseClient
+        .from("landing_page_content")
+        .select("id, content")
+        .eq("status", "draft")
+        .maybeSingle();
+
+    if (draftError) throw draftError;
+
+    const { data: { user }, error: userError } =
+        await supabaseClient.auth.getUser();
+
+    if (userError) throw userError;
+
+    if (!user) {
+        throw new Error("You must be logged in to save a draft.");
+    }
+
+    let existingContent = draft?.content || {};
+
+    // If no draft exists, start from the published version.
+    if (!draft) {
+        const { data: published, error: publishedError } =
+            await supabaseClient
+                .from("landing_page_content")
+                .select("content")
+                .eq("status", "published")
+                .maybeSingle();
+
+        if (publishedError) throw publishedError;
+
+        existingContent = published?.content || {};
+    }
+
+    const updatedContent = {
+        ...existingContent,
+        featuredReviews
+    };
+
+    if (draft) {
+        const { error } = await supabaseClient
+            .from("landing_page_content")
+            .update({ content: updatedContent })
+            .eq("id", draft.id);
+
+        if (error) throw error;
+    } else {
+        const { error } = await supabaseClient
+            .from("landing_page_content")
+            .insert({
+                content: updatedContent,
+                status: "draft",
+                created_by: user.id
+            });
+
+        if (error) throw error;
+    }
+}
+
+
 export async function saveFeaturedCoachesDraft(featuredCoaches) {
     const { data: draft, error: draftError } = await supabaseClient
         .from("landing_page_content")
@@ -303,23 +363,24 @@ export async function saveFeaturedCoachesDraft(featuredCoaches) {
 
 
 export async function loadApprovedCoachesForLanding() {
-    // Load approved health coaches.
+    // Load approved health coaches
     const { data: coaches, error: coachError } = await supabaseClient
         .from("profiles")
         .select("id, full_name, coaching_specialty")
         .eq("app_role", "coach")
-        .eq("approval_status", "approved");
+        .eq("approval_status", "approved")
+        .eq("is_suspended", false);
 
     if (coachError) throw coachError;
 
-    // Load ratings visible to the current user.
+    // Load ratings visible to the current user
     const { data: reviews, error: reviewError } = await supabaseClient
         .from("coach_reviews")
         .select("coach_id, rating");
 
     if (reviewError) throw reviewError;
 
-    // Calculate each coach's average rating.
+    // Calculate each coach's average rating
     const coachesWithRatings = coaches.map(coach => {
         const coachReviews = reviews.filter(
             review => review.coach_id === coach.id
@@ -339,7 +400,7 @@ export async function loadApprovedCoachesForLanding() {
         };
     });
 
-    // Put rated coaches first, highest average rating first.
+    // Put rated coaches first, highest average rating first
     coachesWithRatings.sort((a, b) => {
         if (a.averageRating === null) return 1;
         if (b.averageRating === null) return -1;
@@ -347,7 +408,7 @@ export async function loadApprovedCoachesForLanding() {
         return b.averageRating - a.averageRating;
     });
 
-    // Return the top 10 for the admin to choose from.
+    // Return the top 10 for the admin to choose from
     return coachesWithRatings.slice(0, 10);
 }
 
