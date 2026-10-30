@@ -226,8 +226,9 @@
 
                             <thead>
                                 <tr>
-                                    <th>Applicant</th>
-                                    <th>Specialties</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Specialty</th>
                                     <th>Experience</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -299,8 +300,9 @@
 
                             <thead>
                                 <tr>
-                                    <th>Coach</th>
-                                    <th>Specialties</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Specialty</th>
                                     <th>Experience</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -369,8 +371,9 @@
 
                             <thead>
                                 <tr>
-                                    <th>Coach</th>
-                                    <th>Specialties</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Specialty</th>
                                     <th>Experience</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -421,8 +424,6 @@
                 &times;
             </button>
 
-            <h2>Health Coach Details</h2>
-
             <div class="coach-profile-summary">
 
                 <div class="coach-profile-avatar">
@@ -430,19 +431,13 @@
                 </div>
 
                 <div class="coach-profile-heading">
-
                     <h3 id="approved-coach-name">—</h3>
+                    <p id="approved-coach-email">Email unavailable</p>
 
-                    <p>Health Coach</p>
-
-                    <span class="coach-status active">
-                        Active
-                    </span>
-
+                    <span class="coach-status active">Active</span>
                 </div>
 
             </div>
-
 
             <div class="coach-details-section">
 
@@ -451,33 +446,66 @@
                 <div class="coach-details-grid">
 
                     <div class="coach-detail-item">
-
-                        <span class="review-label">
-                            Specialties
-                        </span>
-
-                        <span id="approved-coach-specialties">
-                            —
-                        </span>
-
+                        <span class="detail-label">Age</span>
+                        <strong id="approved-coach-age">—</strong>
                     </div>
 
                     <div class="coach-detail-item">
+                        <span class="detail-label">Gender</span>
+                        <strong id="approved-coach-gender">—</strong>
+                    </div>
 
-                        <span class="review-label">
-                            Experience
-                        </span>
-
-                        <span id="approved-coach-experience">
-                            —
-                        </span>
-
+                    <div class="coach-detail-item">
+                        <span class="detail-label">Experience</span>
+                        <strong id="approved-coach-experience">—</strong>
                     </div>
 
                 </div>
 
+                <div class="coach-specialties-section">
+                    <span class="detail-label">Specialties</span>
+                    <div id="approved-coach-specialties" class="specialty-tags">
+                        —
+                    </div>
+                </div>
+
             </div>
 
+            <!-- Credentials -->
+            <section class="review-section">
+                <div class="credentials-heading">
+                    <h3>Credentials</h3>
+                    <span id="approved-credential-count">Documents</span>
+                </div>
+
+                <div id="approved-coach-credentials-container">
+                    <div class="credential-empty-state">
+                        Loading credentials...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Content -->
+            <section class="review-section">
+                <div class="credentials-heading">
+                    <h3>Content</h3>
+                    <span id="approved-content-count">0 items</span>
+                </div>
+
+                <div id="approved-coach-content-container">
+                    <div class="credential-empty-state">
+                        Loading content...
+                    </div>
+                </div>
+
+                <a
+                    href="admin-content.html"
+                    id="approved-view-all-content"
+                    class="view-all-content-link"
+                >
+                    View all content →
+                </a>
+            </section>
 
             <div class="coach-management-actions">
 
@@ -561,9 +589,7 @@
             >
                 &times;
             </button>
-
-            <h2>Health Coach Details</h2>
-
+            
             <div class="coach-profile-summary">
 
                 <div class="coach-profile-avatar">
@@ -571,15 +597,10 @@
                 </div>
 
                 <div class="coach-profile-heading">
-
                     <h3 id="suspended-coach-name">—</h3>
+                    <p id="suspended-coach-email">Email unavailable</p>
 
-                    <p>Health Coach</p>
-
-                    <span class="coach-status suspended">
-                        Suspended
-                    </span>
-
+                    <span class="coach-status suspended">Suspended</span>
                 </div>
 
             </div>
@@ -591,34 +612,72 @@
                 <div class="coach-details-grid">
 
                     <div class="coach-detail-item">
-                        <span class="review-label">
-                            Specialties
-                        </span>
-
-                        <span id="suspended-coach-specialties">
-                            —
-                        </span>
+                        <span class="detail-label">Age</span>
+                        <strong id="suspended-coach-age">—</strong>
                     </div>
 
                     <div class="coach-detail-item">
-                        <span class="review-label">
-                            Experience
-                        </span>
+                        <span class="detail-label">Gender</span>
+                        <strong id="suspended-coach-gender">—</strong>
+                    </div>
 
-                        <span id="suspended-coach-experience">
-                            —
-                        </span>
+                    <div class="coach-detail-item">
+                        <span class="detail-label">Experience</span>
+                        <strong id="suspended-coach-experience">—</strong>
                     </div>
 
                 </div>
 
+                <div class="coach-specialties-section">
+                    <span class="detail-label">Specialties</span>
+                    <div id="suspended-coach-specialties" class="specialty-tags">
+                        —
+                    </div>
+                </div>
+
             </div>
+
+            <!-- Credentials -->
+            <section class="review-section">
+                <div class="credentials-heading">
+                    <h3>Credentials</h3>
+                    <span id="suspended-credential-count">Documents</span>
+                </div>
+
+                <div id="suspended-coach-credentials-container">
+                    <div class="credential-empty-state">
+                        Loading credentials...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Content -->
+            <section class="review-section">
+                <div class="credentials-heading">
+                    <h3>Content</h3>
+                    <span id="suspended-content-count">0 items</span>
+                </div>
+
+                <div id="suspended-coach-content-container">
+                    <div class="credential-empty-state">
+                        Loading content...
+                    </div>
+                </div>
+
+                <a
+                    href="admin-content.html"
+                    id="suspended-view-all-content"
+                    class="view-all-content-link"
+                >
+                    View all content →
+                </a>
+            </section>
 
             <div class="coach-management-actions">
 
                 <button
                     type="button"
-                    class="approve-application-button"
+                    class="reactivate-button"
                     id="reactivate-coach"
                 >
                     Reactivate Coach
@@ -667,7 +726,7 @@
 
                 <button
                     type="button"
-                    class="approve-application-button"
+                    class="reactivate-button"
                     id="confirm-reactivate"
                 >
                     Reactivate
@@ -737,8 +796,8 @@
         REVIEW COACH APPLICATION MODAL
     ====================================== -->
 
+    
     <div class="modal-overlay" id="coach-review-modal">
-
         <div class="coach-review-modal">
 
             <button
@@ -750,87 +809,67 @@
                 &times;
             </button>
 
+            <!-- Header -->
             <div class="coach-review-header">
-                <div>
-                    <span class="review-label">
-                        Coach Application
-                    </span>
+                <span class="application-badge">Coach Application</span>
 
-                    <h2 id="review-coach-name">
-                        Applicant
-                    </h2>
+                <h2 id="review-coach-name">Applicant</h2>
 
-                    <span class="coach-status pending">
-                        Pending
-                    </span>
-                </div>
+                <p class="application-meta">
+                    <span id="review-email">—</span>
+                    <span class="meta-separator">·</span>
+                    <span id="review-applied-date">Applied date unavailable</span>
+                </p>
+
+                <span class="coach-status pending">Pending</span>
             </div>
 
-
-            <div class="review-section">
-
+            <!-- Applicant Information -->
+            <section class="review-section">
                 <h3>Applicant Information</h3>
 
-                <div class="review-details-grid">
-
-                    <div class="review-detail">
-                        <span>Full Name</span>
-                        <strong id="review-full-name">—</strong>
-                    </div>
-
-                    <div class="review-detail">
+                <div class="applicant-info-grid">
+                    <div class="applicant-info-card">
                         <span>Age</span>
                         <strong id="review-age">—</strong>
                     </div>
 
-                    <div class="review-detail">
+                    <div class="applicant-info-card">
                         <span>Gender</span>
                         <strong id="review-gender">—</strong>
                     </div>
 
-                </div>
-
-            </div>
-
-
-            <div class="review-section">
-
-                <h3>Professional Information</h3>
-
-                <div class="review-details-grid">
-
-                    <div class="review-detail">
-                        <span>Specialties</span>
-                        <strong id="review-specialties">—</strong>
+                    <div class="applicant-info-card">
+                        <span>Experience</span>
+                        <strong id="review-experience-summary">—</strong>
                     </div>
-
-                    <div class="review-detail">
-                        <span>Years of Experience</span>
-                        <strong id="review-experience">—</strong>
-                    </div>
-
                 </div>
+            </section>
 
-            </div>
+            <!-- Professional Information -->
+            <section class="review-section">
+                <div class="professional-info">
+                    <span class="info-label">Specialties</span>
+                    <div id="review-specialties" class="specialty-tags">—</div>
+                </div>
+            </section>
 
-
-            <div class="review-section">
-
-                <h3>Credentials</h3>
+            <!-- Credentials -->
+            <section class="review-section">
+                <div class="credentials-heading">
+                    <h3>Credentials</h3>
+                    <span id="credential-count">Documents</span>
+                </div>
 
                 <div id="coach-credentials-container">
-
                     <div class="credential-empty-state">
                         Loading credentials...
                     </div>
-
                 </div>
+            </section>
 
-            </div>
-
-
+            <!-- Actions -->
             <div class="coach-review-actions">
-
                 <button
                     type="button"
                     class="reject-application-button"
@@ -846,12 +885,11 @@
                 >
                     Approve Application
                 </button>
-
             </div>
 
         </div>
-
     </div>
+
 
     <!-- =====================================
         REJECT COACH CONFIRMATION MODAL

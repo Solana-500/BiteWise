@@ -1,5 +1,28 @@
 import { supabaseClient } from "../supabase-client.js";
 
+async function getCoachEmailsById() {
+    const { data, error } =
+        await supabaseClient.functions.invoke(
+            "get-user-emails",
+            {
+                body: {}
+            }
+        );
+
+    if (error) {
+        throw error;
+    }
+
+    const users = data?.users || [];
+
+    return new Map(
+        users
+            .filter(user => user.app_role === "coach")
+            .map(user => [user.id, user.email])
+    );
+}
+
+
 export async function getCoachApplications() {
     const { data, error } = await supabaseClient
         .from("profiles")
@@ -10,7 +33,8 @@ export async function getCoachApplications() {
             gender,
             coaching_specialty,
             years_experience,
-            approval_status
+            approval_status,
+            created_at
         `)
         .eq("app_role", "coach")
         .eq("approval_status", "pending")
@@ -18,8 +42,20 @@ export async function getCoachApplications() {
 
     if (error) throw error;
 
-    return data || [];
+    const applications = data || [];
+
+    if (applications.length === 0) {
+        return [];
+    }
+
+    const emailById = await getCoachEmailsById();
+
+    return applications.map(coach => ({
+        ...coach,
+        email: emailById.get(coach.id) || null
+    }));
 }
+
 
 
 export async function getApprovedCoaches() {
@@ -28,6 +64,8 @@ export async function getApprovedCoaches() {
         .select(`
             id,
             full_name,
+            age,
+            gender,
             coaching_specialty,
             years_experience,
             approval_status,
@@ -40,7 +78,18 @@ export async function getApprovedCoaches() {
 
     if (error) throw error;
 
-    return data || [];
+    const coaches = data || [];
+
+    if (coaches.length === 0) {
+        return [];
+    }
+
+    const emailById = await getCoachEmailsById();
+
+    return coaches.map(coach => ({
+        ...coach,
+        email: emailById.get(coach.id) || null
+    }));
 }
 
 
@@ -50,6 +99,8 @@ export async function getSuspendedCoaches() {
         .select(`
             id,
             full_name,
+            age,
+            gender,
             coaching_specialty,
             years_experience,
             approval_status,
@@ -62,7 +113,18 @@ export async function getSuspendedCoaches() {
 
     if (error) throw error;
 
-    return data || [];
+    const coaches = data || [];
+
+    if (coaches.length === 0) {
+        return [];
+    }
+
+    const emailById = await getCoachEmailsById();
+
+    return coaches.map(coach => ({
+        ...coach,
+        email: emailById.get(coach.id) || null
+    }));
 }
 
 

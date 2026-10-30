@@ -4,6 +4,7 @@ import {
     setContentStatusFilter,
     setContentSearch,
     setContentTypeFilter,
+    setContentCoachFilter,
     moderateCoachContent
 } from "../control/content-controller.js";
 
@@ -867,6 +868,13 @@ export async function loadContentPage() {
     setupTypeFilter();
     setupContentDetailsModal();
     setupFeedbackModal();
+
+    const params = new URLSearchParams(window.location.search);
+    const coachId = params.get("coach_id");
+
+    if (coachId) {
+        setContentCoachFilter(coachId);
+    }
 
     document.getElementById("content-table-body")
         ?.addEventListener("click", handleContentAction);

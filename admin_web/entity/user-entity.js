@@ -1,22 +1,30 @@
 import { supabaseClient } from "../supabase-client.js";
 
 
+
 export async function getUsers() {
 
     const { data, error } =
-        await supabaseClient
-            .from("profiles")
-            .select("*")
-            .eq("app_role", "user")
-            .order("full_name", {
-                ascending: true
-            });
+        await supabaseClient.functions.invoke(
+            "get-user-emails",
+            {
+                body: {}
+            }
+        );
 
     if (error) {
         throw error;
     }
 
-    return data || [];
+    const users = data?.users || [];
+
+    return users
+        .filter(user => user.app_role === "user")
+        .sort((a, b) =>
+            (a.full_name || "").localeCompare(
+                b.full_name || ""
+            )
+        );
 }
 
 

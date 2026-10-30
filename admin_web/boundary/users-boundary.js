@@ -104,7 +104,7 @@ function renderUsers(users) {
 
         usersTableBody.innerHTML = `
             <tr class="table-empty-row">
-                <td colspan="4">
+                <td colspan="5">
 
                     <div class="table-empty-state">
 
@@ -143,6 +143,10 @@ function renderUsers(users) {
                 <strong>
                     ${user.full_name || "Unnamed User"}
                 </strong>
+            </td>
+
+            <td>
+                ${user.email || "No email available"}
             </td>
 
             <td>

@@ -8,7 +8,7 @@ let coachContent = [];
 let currentFilter = "pending";
 let currentSearch = "";
 let currentContentType = "all";
-
+let currentCoachId = null;
 
 const STATUS_MAP = {
     pending: ["pending_review"],
@@ -23,6 +23,20 @@ export async function loadCoachContent() {
         return getContentViewData();
     } catch (error) {
         console.error("Unable to load coach content:", error);
+        throw error;
+    }
+}
+
+
+export async function loadContentForCoach(coachId) {
+    try {
+        const allContent = await getAllCoachContent();
+
+        return allContent.filter(
+            item => item.coach_id === coachId
+        );
+    } catch (error) {
+        console.error("Unable to load content for coach:", error);
         throw error;
     }
 }
@@ -61,11 +75,22 @@ export function setContentTypeFilter(type) {
     return getContentViewData();
 }
 
+export function setContentCoachFilter(coachId) {
+    currentCoachId = coachId || null;
+    return getContentViewData();
+}
+
 
 function getFilteredContent() {
     let filtered = coachContent.filter(item =>
         STATUS_MAP[currentFilter].includes(item.status)
     );
+
+    if (currentCoachId) {
+        filtered = filtered.filter(
+            item => item.coach_id === currentCoachId
+        );
+    }
 
     if (currentContentType !== "all") {
         filtered = filtered.filter(
@@ -95,16 +120,20 @@ function getFilteredContent() {
 
 
 function getContentCounts() {
+    const content = currentCoachId
+        ? coachContent.filter(item => item.coach_id === currentCoachId)
+        : coachContent;
+
     return {
-        pending: coachContent.filter(
+        pending: content.filter(
             item => STATUS_MAP.pending.includes(item.status)
         ).length,
 
-        approved: coachContent.filter(
+        approved: content.filter(
             item => STATUS_MAP.approved.includes(item.status)
         ).length,
 
-        changesRequested: coachContent.filter(
+        changesRequested: content.filter(
             item => STATUS_MAP.changesRequested.includes(item.status)
         ).length
     };

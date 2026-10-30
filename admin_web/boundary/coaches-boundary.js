@@ -7,8 +7,10 @@ import {
     approveCoach,
     rejectCoach,
     suspendCoach,
-    reactivateCoach
+    reactivateCoach,
 } from "../control/coach-controller.js";
+
+import { loadContentForCoach } from "../control/content-controller.js";
 
 let coachApplications = [];
 let approvedCoaches = [];
@@ -38,6 +40,33 @@ function formatSpecialties(specialties) {
     }
 
     return escapeHTML(specialties);
+}
+
+function renderSpecialtyTags(containerId, specialties) {
+    const container = document.getElementById(containerId);
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    const items = Array.isArray(specialties)
+        ? specialties
+        : String(specialties || "")
+            .split(",")
+            .map(item => item.trim())
+            .filter(Boolean);
+
+    if (items.length === 0) {
+        container.textContent = "Not provided";
+        return;
+    }
+
+    items.forEach(specialty => {
+        const tag = document.createElement("span");
+        tag.className = "specialty-tag";
+        tag.textContent = specialty;
+        container.appendChild(tag);
+    });
 }
 
 function formatExperience(years) {
@@ -78,7 +107,7 @@ async function loadCoachApplications() {
         if (applications.length === 0) {
             tableBody.innerHTML = `
                 <tr class="table-empty-row">
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="table-empty-state">
                             <strong>No pending applications</strong>
                             <span>
@@ -101,6 +130,11 @@ async function loadCoachApplications() {
                         )}
                     </strong>
                 </td>
+
+                <td>
+                    ${escapeHTML(coach.email || "Email unavailable")}
+                </td>
+
                 <td>${formatSpecialties(coach.coaching_specialty)}</td>
                 <td>${formatExperience(coach.years_experience)}</td>
                 <td>
@@ -112,7 +146,7 @@ async function loadCoachApplications() {
                         class="coach-action-button review-coach-button"
                         data-coach-id="${escapeHTML(coach.id)}"
                     >
-                        Review
+                        View
                     </button>
                 </td>
             </tr>
@@ -127,7 +161,7 @@ async function loadCoachApplications() {
 
         tableBody.innerHTML = `
             <tr class="table-empty-row">
-                <td colspan="5">
+                <td colspan="6">
                     <div class="table-empty-state">
                         <strong>Unable to load applications</strong>
                         <span>Please try again later.</span>
@@ -160,7 +194,7 @@ async function loadApprovedCoaches() {
         if (coaches.length === 0) {
             tableBody.innerHTML = `
                 <tr class="table-empty-row">
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="table-empty-state">
                             <strong>No approved coaches</strong>
                             <span>
@@ -180,6 +214,9 @@ async function loadApprovedCoaches() {
                     <strong>
                         ${escapeHTML(coach.full_name || "Unnamed Coach")}
                     </strong>
+                </td>
+                <td>
+                    ${escapeHTML(coach.email || "Email unavailable")}
                 </td>
                 <td>${formatSpecialties(coach.coaching_specialty)}</td>
                 <td>${formatExperience(coach.years_experience)}</td>
@@ -207,7 +244,7 @@ async function loadApprovedCoaches() {
 
         tableBody.innerHTML = `
             <tr class="table-empty-row">
-                <td colspan="5">
+                <td colspan="6">
                     <div class="table-empty-state">
                         <strong>
                             Unable to load approved coaches
@@ -242,7 +279,7 @@ async function loadSuspendedCoaches() {
         if (coaches.length === 0) {
             tableBody.innerHTML = `
                 <tr class="table-empty-row">
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="table-empty-state">
                             <strong>No suspended coaches</strong>
                             <span>
@@ -262,6 +299,9 @@ async function loadSuspendedCoaches() {
                     <strong>
                         ${escapeHTML(coach.full_name || "Unnamed Coach")}
                     </strong>
+                </td>
+                <td>
+                    ${escapeHTML(coach.email || "Email unavailable")}
                 </td>
                 <td>${formatSpecialties(coach.coaching_specialty)}</td>
                 <td>${formatExperience(coach.years_experience)}</td>
@@ -289,7 +329,7 @@ async function loadSuspendedCoaches() {
 
         tableBody.innerHTML = `
             <tr class="table-empty-row">
-                <td colspan="5">
+                <td colspan="6">
                     <div class="table-empty-state">
                         <strong>
                             Unable to load suspended coaches
@@ -303,26 +343,48 @@ async function loadSuspendedCoaches() {
 }
 
 // Load coach credentials
-async function loadCoachCredentials(coachId) {
-    const container = document.getElementById("coach-credentials-container");
+async function loadCoachCredentials(
+    coachId,
+    containerId = "coach-credentials-container",
+    countId = "credential-count"
+) {
+    const container = document.getElementById(containerId);
+    const countElement = document.getElementById(countId);
 
     if (!container) return;
 
-    container.innerHTML = "<p>Loading credentials...</p>";
+    container.innerHTML = `
+        <div class="credential-empty-state">
+            Loading credentials...
+        </div>
+    `;
 
     try {
         const documents = await getCoachCredentials(coachId);
 
+        if (countElement) {
+            countElement.textContent =
+                `${documents.length} document${documents.length === 1 ? "" : "s"}`;
+        }
+
         if (documents.length === 0) {
-            container.innerHTML = "<p>No credentials uploaded.</p>";
+            container.innerHTML = `
+                <div class="credential-empty-state">
+                    No credentials uploaded.
+                </div>
+            `;
             return;
         }
 
         container.innerHTML = documents.map(document => `
-            <div class="credential-item">
-                <div>
-                    <strong>${escapeHTML(document.file_name || "Unnamed file")}</strong>
-                    <p>${escapeHTML(document.file_type || "Unknown file type")}</p>
+            <div class="credential-card">
+                <div class="credential-info">
+                    <strong>
+                        ${escapeHTML(document.file_name || "Unnamed file")}
+                    </strong>
+                    <span>
+                        ${escapeHTML(document.file_type || "Unknown file type")}
+                    </span>
                 </div>
 
                 <button
@@ -331,15 +393,101 @@ async function loadCoachCredentials(coachId) {
                     data-file-path="${escapeHTML(document.file_path || "")}"
                     ${document.file_path ? "" : "disabled"}
                 >
-                    View credential
+                    View document ↗
                 </button>
             </div>
         `).join("");
+
     } catch (error) {
         console.error("Error loading coach credentials:", error);
-        container.innerHTML = "<p>Unable to load credentials.</p>";
+
+        container.innerHTML = `
+            <div class="credential-empty-state">
+                Unable to load credentials.
+            </div>
+        `;
     }
 }
+
+
+async function loadCoachContent(coachId, containerId, countId, linkId) {
+    const container = document.getElementById(containerId);
+    const countElement = document.getElementById(countId);
+    const viewAllLink = document.getElementById(linkId);
+
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="credential-empty-state">
+            Loading content...
+        </div>
+    `;
+
+    if (viewAllLink) {
+        viewAllLink.href =
+            `admin-content.html?coach_id=${encodeURIComponent(coachId)}`;
+    }
+
+    try {
+        const items = await loadContentForCoach(coachId);
+
+        if (countElement) {
+            countElement.textContent =
+                `${items.length} item${items.length === 1 ? "" : "s"}`;
+        }
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="credential-empty-state">
+                    No content created by this coach.
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = items.map(item => {
+        const typeLabel = item.content_type === "meal"
+            ? "Meal Plan"
+            : "Workout Plan";
+
+        const statusMap = {
+            pending_review:    { label: "Pending Review",    className: "pending" },
+            approved:          { label: "Approved",          className: "approved" },
+            active:            { label: "Approved",          className: "approved" },
+            changes_requested: { label: "Changes Requested", className: "changes" },
+            rejected:          { label: "Rejected",          className: "rejected" }
+        };
+
+        const status = statusMap[item.status] ?? {
+            label: item.status || "Unknown",
+            className: "neutral"
+        };
+
+        return `
+            <div class="coach-content-item">
+                <div class="coach-content-info">
+                    <strong>${escapeHTML(item.title || "Untitled")}</strong>
+                    <span>${typeLabel}</span>
+                </div>
+
+                <span class="content-status ${status.className}">
+                    ${escapeHTML(status.label)}
+                </span>
+            </div>
+        `;
+    }).join("");
+
+    } catch (error) {
+        console.error("Error loading coach content:", error);
+
+        container.innerHTML = `
+            <div class="credential-empty-state">
+                Unable to load coach content.
+            </div>
+        `;
+    }
+}
+
 
 async function handleOpenCoachCredential(filePath) {
     try {
@@ -352,21 +500,20 @@ async function handleOpenCoachCredential(filePath) {
     }
 }
 
-const credentialContainer = document.getElementById("coach-credentials-container");
 
-if (credentialContainer) {
-    credentialContainer.addEventListener("click", event => {
-        const button = event.target.closest(".credential-view-button");
+document.addEventListener("click", event => {
+    const button = event.target.closest(".credential-view-button");
 
-        if (!button || !credentialContainer.contains(button)) return;
+    if (!button) return;
 
-        const filePath = button.dataset.filePath;
+    const filePath = button.dataset.filePath;
 
-        if (filePath) {
-            handleOpenCoachCredential(filePath);
-        }
-    });
-}
+    if (filePath) {
+        handleOpenCoachCredential(filePath);
+    }
+});
+
+
 
 async function handleReviewCoachApplication(coachId) {
     const coach = coachApplications.find(
@@ -383,22 +530,65 @@ async function handleReviewCoachApplication(coachId) {
     document.getElementById("review-coach-name").textContent =
         coach.full_name || "Unknown Coach";
 
-    document.getElementById("review-full-name").textContent =
-        coach.full_name || "Not provided";
-
     document.getElementById("review-age").textContent =
         coach.age ?? "Not provided";
 
     document.getElementById("review-gender").textContent =
         coach.gender || "Not provided";
 
-    document.getElementById("review-specialties").textContent =
-        formatSpecialties(coach.coaching_specialty);
-
-    document.getElementById("review-experience").textContent =
+    // No. of experience
+    document.getElementById("review-experience-summary").textContent =
         coach.years_experience != null
             ? `${coach.years_experience} years`
             : "Not provided";
+
+    // Specialties
+    const specialtiesContainer =
+        document.getElementById("review-specialties");
+
+    specialtiesContainer.replaceChildren();
+
+    const specialties = Array.isArray(coach.coaching_specialty)
+        ? coach.coaching_specialty
+        : String(coach.coaching_specialty || "")
+            .split(",")
+            .map(specialty => specialty.trim())
+            .filter(Boolean);
+
+    if (specialties.length > 0) {
+        specialties.forEach(specialty => {
+            const tag = document.createElement("span");
+            tag.className = "specialty-tag";
+            tag.textContent = specialty;
+
+            specialtiesContainer.appendChild(tag);
+        });
+    } else {
+        specialtiesContainer.textContent = "Not provided";
+    }
+
+    // Email 
+    const emailElement = document.getElementById("review-email");
+    if (emailElement) {
+        emailElement.textContent = coach.email || "Email unavailable";
+    }
+
+    // Application date
+    const appliedDateElement =
+        document.getElementById("review-applied-date");
+
+    if (appliedDateElement) {
+        appliedDateElement.textContent = coach.created_at
+            ? `Applied ${new Date(coach.created_at).toLocaleDateString(
+                "en-GB",
+                {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                }
+            )}`
+            : "Application date unavailable";
+    }
 
     const modal = document.getElementById("coach-review-modal");
 
@@ -635,15 +825,44 @@ function setupCoachStatusActions() {
                     .slice(0, 2)
                     .toUpperCase();
 
-            document.getElementById("approved-coach-specialties").textContent =
-                formatSpecialties(selectedApprovedCoach.coaching_specialty);
+            document.getElementById("approved-coach-age").textContent =
+                selectedApprovedCoach.age ?? "Not provided";
+
+            document.getElementById("approved-coach-gender").textContent =
+                selectedApprovedCoach.gender || "Not provided";
+
+            renderSpecialtyTags(
+                "approved-coach-specialties",
+                selectedApprovedCoach.coaching_specialty
+            );
 
             document.getElementById("approved-coach-experience").textContent =
                 selectedApprovedCoach.years_experience != null
-                    ? `${selectedApprovedCoach.years_experience} years`
+                    ? formatExperience(selectedApprovedCoach.years_experience)
                     : "Not provided";
 
+            const approvedEmailElement =
+                document.getElementById("approved-coach-email");
+
+            if (approvedEmailElement) {
+                approvedEmailElement.textContent =
+                    selectedApprovedCoach.email || "Email unavailable";
+            }
+
             document.getElementById("approved-coach-modal").style.display = "flex";
+
+            loadCoachCredentials(
+                selectedApprovedCoach.id,
+                "approved-coach-credentials-container",
+                "approved-credential-count"
+            );
+
+            loadCoachContent(
+                selectedApprovedCoach.id,
+                "approved-coach-content-container",
+                "approved-content-count",
+                "approved-view-all-content"
+            );
         });
     }
 
@@ -672,15 +891,44 @@ function setupCoachStatusActions() {
                     .slice(0, 2)
                     .toUpperCase();
 
-            document.getElementById("suspended-coach-specialties").textContent =
-                formatSpecialties(selectedSuspendedCoach.coaching_specialty);
+            document.getElementById("suspended-coach-age").textContent =
+                selectedSuspendedCoach.age ?? "Not provided";
+
+            document.getElementById("suspended-coach-gender").textContent =
+                selectedSuspendedCoach.gender || "Not provided";
+
+            renderSpecialtyTags(
+                "suspended-coach-specialties",
+                selectedSuspendedCoach.coaching_specialty
+            );
 
             document.getElementById("suspended-coach-experience").textContent =
                 selectedSuspendedCoach.years_experience != null
-                    ? `${selectedSuspendedCoach.years_experience} years`
+                    ? formatExperience(selectedSuspendedCoach.years_experience)
                     : "Not provided";
 
+            const suspendedEmailElement =
+                document.getElementById("suspended-coach-email");
+
+            if (suspendedEmailElement) {
+                suspendedEmailElement.textContent =
+                    selectedSuspendedCoach.email || "Email unavailable";
+            }
+
             document.getElementById("suspended-coach-modal").style.display = "flex";
+
+            loadCoachCredentials(
+                selectedSuspendedCoach.id,
+                "suspended-coach-credentials-container",
+                "suspended-credential-count"
+            );
+
+            loadCoachContent(
+                selectedSuspendedCoach.id,
+                "suspended-coach-content-container",
+                "suspended-content-count",
+                "suspended-view-all-content"
+            );
         });
     }
 
