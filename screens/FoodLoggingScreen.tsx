@@ -796,7 +796,7 @@ function openEditFood() {
               )}
             
               <Text style={styles.actionText}>
-                {analyzingImage ? 'Analyzing...' : 'AI Photo'}
+                {analyzingImage ? 'Scanning...' : 'AI Food Scanner'}
               </Text>
             </TouchableOpacity>
 
