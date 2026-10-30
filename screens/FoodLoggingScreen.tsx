@@ -220,13 +220,24 @@ async function stopVoiceRecording() {
 }
 
 async function pickFoodImage() {
-  try {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 0.5,
-      base64: false,
-    })
+  try { 
+      const permission = await ImagePicker.requestCameraPermissionsAsync()
+      
+      if (!permission.granted) {
+        Alert.alert(
+          'Camera Permission Required',
+          'Please allow BiteWise to access your camera to photograph your food.'
+        )
+        return
+      }
+      
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.5,
+        base64: false,
+      })
+
 
     if (result.canceled || result.assets.length === 0) {
       return
