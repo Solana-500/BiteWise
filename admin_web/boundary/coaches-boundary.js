@@ -8,6 +8,7 @@ import {
     rejectCoach,
     suspendCoach,
     reactivateCoach,
+    searchCoaches
 } from "../control/coach-controller.js";
 
 import { loadContentForCoach } from "../control/content-controller.js";
@@ -85,262 +86,214 @@ function formatExperience(years) {
     }`;
 }
 
+/* =========================================
+   COACH TABLES (render + search)
+========================================= */
+
+function emptyRowHTML(title, message) {
+    return `
+        <tr class="table-empty-row">
+            <td colspan="6">
+                <div class="table-empty-state">
+                    <strong>${title}</strong>
+                    <span>${message}</span>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function coachRowHTML(coach, { fallbackName, statusClass, statusLabel, buttonClass }) {
+    return `
+        <tr>
+            <td>
+                <strong>${escapeHTML(coach.full_name || fallbackName)}</strong>
+            </td>
+            <td>${escapeHTML(coach.email || "Email unavailable")}</td>
+            <td>${formatSpecialties(coach.coaching_specialty)}</td>
+            <td>${formatExperience(coach.years_experience)}</td>
+            <td>
+                <span class="coach-status ${statusClass}">${statusLabel}</span>
+            </td>
+            <td>
+                <button
+                    type="button"
+                    class="coach-action-button ${buttonClass}"
+                    data-coach-id="${escapeHTML(coach.id)}"
+                >
+                    View
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+function renderCoachTable({
+    tableBodyId,
+    searchInputId,
+    coaches,
+    row,
+    emptyTitle,
+    emptyMessage
+}) {
+    const tableBody = document.getElementById(tableBodyId);
+    if (!tableBody) return;
+
+    const query = document.getElementById(searchInputId)?.value.trim() ?? "";
+    const results = searchCoaches(coaches, query);
+
+    if (results.length === 0) {
+        tableBody.innerHTML = query
+            ? emptyRowHTML(
+                "No matching results",
+                "Try a different name, email or specialty."
+            )
+            : emptyRowHTML(emptyTitle, emptyMessage);
+        return;
+    }
+
+    tableBody.innerHTML = results
+        .map(coach => coachRowHTML(coach, row))
+        .join("");
+}
+
+function renderApplicationsTable() {
+    renderCoachTable({
+        tableBodyId: "applications-table-body",
+        searchInputId: "application-search",
+        coaches: coachApplications,
+        row: {
+            fallbackName: "Unnamed Applicant",
+            statusClass: "pending",
+            statusLabel: "Pending",
+            buttonClass: "review-coach-button"
+        },
+        emptyTitle: "No pending applications",
+        emptyMessage: "New Health Coach applications will appear here."
+    });
+}
+
+function renderApprovedTable() {
+    renderCoachTable({
+        tableBodyId: "approved-table-body",
+        searchInputId: "approved-search",
+        coaches: approvedCoaches,
+        row: {
+            fallbackName: "Unnamed Coach",
+            statusClass: "active",
+            statusLabel: "Active",
+            buttonClass: "view-approved-coach-button"
+        },
+        emptyTitle: "No approved coaches",
+        emptyMessage: "Approved Health Coaches will appear here."
+    });
+}
+
+function renderSuspendedTable() {
+    renderCoachTable({
+        tableBodyId: "suspended-table-body",
+        searchInputId: "suspended-search",
+        coaches: suspendedCoaches,
+        row: {
+            fallbackName: "Unnamed Coach",
+            statusClass: "suspended",
+            statusLabel: "Suspended",
+            buttonClass: "view-suspended-coach-button"
+        },
+        emptyTitle: "No suspended coaches",
+        emptyMessage: "Suspended Health Coaches will appear here."
+    });
+}
+
 // Load coach applications
 async function loadCoachApplications() {
-    const tableBody =
-        document.getElementById("applications-table-body");
-
-    const countElement =
-        document.getElementById("applications-count");
+    const tableBody = document.getElementById("applications-table-body");
+    const countElement = document.getElementById("applications-count");
 
     if (!tableBody) return;
 
     try {
-        const applications = await getApplications();
+        coachApplications = await getApplications();
 
-        coachApplications = applications;
+        if (countElement) countElement.textContent = coachApplications.length;
 
-        if (countElement) {
-            countElement.textContent = applications.length;
-        }
-
-        if (applications.length === 0) {
-            tableBody.innerHTML = `
-                <tr class="table-empty-row">
-                    <td colspan="6">
-                        <div class="table-empty-state">
-                            <strong>No pending applications</strong>
-                            <span>
-                                New Health Coach applications
-                                will appear here.
-                            </span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tableBody.innerHTML = applications.map((coach) => `
-            <tr>
-                <td>
-                    <strong>
-                        ${escapeHTML(
-                            coach.full_name || "Unnamed Applicant"
-                        )}
-                    </strong>
-                </td>
-
-                <td>
-                    ${escapeHTML(coach.email || "Email unavailable")}
-                </td>
-
-                <td>${formatSpecialties(coach.coaching_specialty)}</td>
-                <td>${formatExperience(coach.years_experience)}</td>
-                <td>
-                    <span class="coach-status pending">Pending</span>
-                </td>
-                <td>
-                    <button
-                        type="button"
-                        class="coach-action-button review-coach-button"
-                        data-coach-id="${escapeHTML(coach.id)}"
-                    >
-                        View
-                    </button>
-                </td>
-            </tr>
-        `).join("");
-
+        renderApplicationsTable();
     } catch (error) {
         console.error("Error loading coach applications:", error);
 
-        if (countElement) {
-            countElement.textContent = "—";
-        }
+        if (countElement) countElement.textContent = "—";
 
-        tableBody.innerHTML = `
-            <tr class="table-empty-row">
-                <td colspan="6">
-                    <div class="table-empty-state">
-                        <strong>Unable to load applications</strong>
-                        <span>Please try again later.</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        tableBody.innerHTML = emptyRowHTML(
+            "Unable to load applications",
+            "Please try again later."
+        );
     }
 }
 
 // Load approved coaches
 async function loadApprovedCoaches() {
-    const tableBody =
-        document.getElementById("approved-table-body");
-
-    const countElement =
-        document.getElementById("approved-count");
+    const tableBody = document.getElementById("approved-table-body");
+    const countElement = document.getElementById("approved-count");
 
     if (!tableBody) return;
 
     try {
-        const coaches = await getApproved();
+        approvedCoaches = await getApproved();
 
-        approvedCoaches = coaches;
+        if (countElement) countElement.textContent = approvedCoaches.length;
 
-        if (countElement) {
-            countElement.textContent = coaches.length;
-        }
-
-        if (coaches.length === 0) {
-            tableBody.innerHTML = `
-                <tr class="table-empty-row">
-                    <td colspan="6">
-                        <div class="table-empty-state">
-                            <strong>No approved coaches</strong>
-                            <span>
-                                Approved Health Coaches
-                                will appear here.
-                            </span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tableBody.innerHTML = coaches.map((coach) => `
-            <tr>
-                <td>
-                    <strong>
-                        ${escapeHTML(coach.full_name || "Unnamed Coach")}
-                    </strong>
-                </td>
-                <td>
-                    ${escapeHTML(coach.email || "Email unavailable")}
-                </td>
-                <td>${formatSpecialties(coach.coaching_specialty)}</td>
-                <td>${formatExperience(coach.years_experience)}</td>
-                <td>
-                    <span class="coach-status active">Active</span>
-                </td>
-                <td>
-                    <button
-                        type="button"
-                        class="coach-action-button view-approved-coach-button"
-                        data-coach-id="${escapeHTML(coach.id)}"
-                    >
-                        View
-                    </button>
-                </td>
-            </tr>
-        `).join("");
-
+        renderApprovedTable();
     } catch (error) {
         console.error("Error loading approved coaches:", error);
 
-        if (countElement) {
-            countElement.textContent = "—";
-        }
+        if (countElement) countElement.textContent = "—";
 
-        tableBody.innerHTML = `
-            <tr class="table-empty-row">
-                <td colspan="6">
-                    <div class="table-empty-state">
-                        <strong>
-                            Unable to load approved coaches
-                        </strong>
-                        <span>Please try again later.</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        tableBody.innerHTML = emptyRowHTML(
+            "Unable to load approved coaches",
+            "Please try again later."
+        );
     }
 }
 
 // Load suspended coaches
 async function loadSuspendedCoaches() {
-    const tableBody =
-        document.getElementById("suspended-table-body");
-
-    const countElement =
-        document.getElementById("suspended-count");
+    const tableBody = document.getElementById("suspended-table-body");
+    const countElement = document.getElementById("suspended-count");
 
     if (!tableBody) return;
 
     try {
-        const coaches = await getSuspended();
+        suspendedCoaches = await getSuspended();
 
-        suspendedCoaches = coaches;
+        if (countElement) countElement.textContent = suspendedCoaches.length;
 
-        if (countElement) {
-            countElement.textContent = coaches.length;
-        }
-
-        if (coaches.length === 0) {
-            tableBody.innerHTML = `
-                <tr class="table-empty-row">
-                    <td colspan="6">
-                        <div class="table-empty-state">
-                            <strong>No suspended coaches</strong>
-                            <span>
-                                Suspended Health Coaches
-                                will appear here.
-                            </span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tableBody.innerHTML = coaches.map((coach) => `
-            <tr>
-                <td>
-                    <strong>
-                        ${escapeHTML(coach.full_name || "Unnamed Coach")}
-                    </strong>
-                </td>
-                <td>
-                    ${escapeHTML(coach.email || "Email unavailable")}
-                </td>
-                <td>${formatSpecialties(coach.coaching_specialty)}</td>
-                <td>${formatExperience(coach.years_experience)}</td>
-                <td>
-                    <span class="coach-status suspended">Suspended</span>
-                </td>
-                <td>
-                    <button
-                        type="button"
-                        class="coach-action-button view-suspended-coach-button"
-                        data-coach-id="${escapeHTML(coach.id)}"
-                    >
-                        View
-                    </button>
-                </td>
-            </tr>
-        `).join("");
-
+        renderSuspendedTable();
     } catch (error) {
         console.error("Error loading suspended coaches:", error);
 
-        if (countElement) {
-            countElement.textContent = "—";
-        }
+        if (countElement) countElement.textContent = "—";
 
-        tableBody.innerHTML = `
-            <tr class="table-empty-row">
-                <td colspan="6">
-                    <div class="table-empty-state">
-                        <strong>
-                            Unable to load suspended coaches
-                        </strong>
-                        <span>Please try again later.</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        tableBody.innerHTML = emptyRowHTML(
+            "Unable to load suspended coaches",
+            "Please try again later."
+        );
     }
 }
+
+// Search inputs
+function setupCoachSearch() {
+    [
+        ["application-search", renderApplicationsTable],
+        ["approved-search", renderApprovedTable],
+        ["suspended-search", renderSuspendedTable]
+    ].forEach(([inputId, render]) => {
+        document
+            .getElementById(inputId)
+            ?.addEventListener("input", render);
+    });
+}
+
+setupCoachSearch();
 
 // Load coach credentials
 async function loadCoachCredentials(

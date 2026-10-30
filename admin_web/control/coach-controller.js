@@ -7,7 +7,8 @@ import {
     approveCoach as approveCoachEntity,
     rejectCoach as rejectCoachEntity,
     updateCoachSuspension,
-    getApprovedCoachesForLanding
+    getApprovedCoachesForLanding,
+    searchCoaches as searchCoachesEntity
 } from "../entity/coach-entity.js";
 
 export async function loadCoachApplications() {
@@ -48,4 +49,8 @@ export async function reactivateCoach(coachId) {
 
 export async function loadApprovedCoachesForLanding() {
     return await getApprovedCoachesForLanding();
+}
+
+export function searchCoaches(coaches, query) {
+    return searchCoachesEntity(coaches, query);
 }

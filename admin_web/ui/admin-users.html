@@ -259,27 +259,20 @@
                     &times;
                 </button>
 
-                <h2>User Details</h2>
-
-
-                <!-- USER SUMMARY -->
-
+                <!-- Header -->
                 <div class="coach-profile-summary">
 
                     <div class="coach-profile-avatar">
-                        <span id="user-profile-initials">
-                            —
-                        </span>
+                        <span id="user-profile-initials">—</span>
                     </div>
 
                     <div class="coach-profile-heading">
+                        <h3 id="user-profile-name">—</h3>
 
-                        <h3 id="user-profile-name">
-                            —
-                        </h3>
-
-                        <p id="user-profile-account-type">
-                            Registered User
+                        <p class="application-meta">
+                            <span id="user-profile-email">Email unavailable</span>
+                            <span class="meta-separator">·</span>
+                            <span id="user-profile-joined">Joined date unavailable</span>
                         </p>
 
                         <span
@@ -288,14 +281,11 @@
                         >
                             Active
                         </span>
-
                     </div>
 
                 </div>
 
-
-                <!-- ACCOUNT INFORMATION -->
-
+                <!-- Account Information -->
                 <div class="coach-details-section">
 
                     <h3>Account Information</h3>
@@ -303,48 +293,73 @@
                     <div class="coach-details-grid">
 
                         <div class="coach-detail-item">
-
-                            <span class="review-label">
-                                Email
-                            </span>
-
-                            <span id="user-profile-email">
-                                —
-                            </span>
-
+                            <span class="detail-label">Account Type</span>
+                            <strong id="user-profile-tier">—</strong>
                         </div>
 
                         <div class="coach-detail-item">
-
-                            <span class="review-label">
-                                Account Type
-                            </span>
-
-                            <span id="user-profile-tier">
-                                —
-                            </span>
-
+                            <span class="detail-label">Subscription Status</span>
+                            <strong id="user-profile-subscription-status">—</strong>
                         </div>
 
-                    </div>
-
-                    <div class="coach-management-actions">
-
-                        <button
-                            type="button"
-                            class="reject-button"
-                            id="suspend-user"
-                        >
-                            Suspend User
-                        </button>
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Subscription Ends</span>
+                            <strong id="user-profile-subscription-end">—</strong>
+                        </div>
+                        
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Assigned Coach</span>
+                            <strong id="user-profile-coach">—</strong>
+                        </div>
 
                     </div>
 
                 </div>
 
+                <!-- Profile -->
+                <div class="coach-details-section">
+
+                    <h3>Profile</h3>
+
+                    <div class="coach-details-grid two-columns">
+
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Age</span>
+                            <strong id="user-profile-age">—</strong>
+                        </div>
+
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Gender</span>
+                            <strong id="user-profile-gender">—</strong>
+                        </div>
+
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Fitness Goal</span>
+                            <strong id="user-profile-goal">—</strong>
+                        </div>
+
+                        <div class="coach-detail-item">
+                            <span class="detail-label">Activity Level</span>
+                            <strong id="user-profile-activity">—</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="coach-management-actions">
+                    <button
+                        type="button"
+                        class="reject-button"
+                        id="suspend-user"
+                    >
+                        Suspend User
+                    </button>
+                </div>
+
             </div>
 
-        </div>
+</div>
 
         <!-- =====================================
             SUSPEND USER CONFIRMATION MODAL
@@ -431,7 +446,7 @@
 
                     <button
                         type="button"
-                        class="approve-application-button"
+                        class="reactivate-button"
                         id="confirm-user-reactivate"
                     >
                         Reactivate

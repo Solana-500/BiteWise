@@ -1409,17 +1409,20 @@ button {
 }
 
 /* =========================================
-   APPROVED & SUSPENDED COACH DETAILS MODALS
+   APPROVED / SUSPENDED COACH + USER DETAILS MODALS
 ========================================= */
 
 #approved-coach-modal,
-#suspended-coach-modal {
+#suspended-coach-modal,
+#user-profile-modal {
     padding: 16px;
     box-sizing: border-box;
 }
 
+/* Modal shell */
 #approved-coach-modal .coach-review-modal,
-#suspended-coach-modal .coach-review-modal {
+#suspended-coach-modal .coach-review-modal,
+#user-profile-modal .coach-review-modal {
     position: relative;
     width: min(820px, 100%);
     max-height: 88vh;
@@ -1433,7 +1436,8 @@ button {
 }
 
 #approved-coach-modal .modal-close,
-#suspended-coach-modal .modal-close {
+#suspended-coach-modal .modal-close,
+#user-profile-modal .modal-close {
     position: absolute;
     top: 16px;
     right: 18px;
@@ -1447,7 +1451,8 @@ button {
 
 /* Header: avatar + name + email + status */
 #approved-coach-modal .coach-profile-summary,
-#suspended-coach-modal .coach-profile-summary {
+#suspended-coach-modal .coach-profile-summary,
+#user-profile-modal .coach-profile-summary {
     display: flex;
     align-items: center;
     gap: 20px;
@@ -1456,7 +1461,8 @@ button {
 }
 
 #approved-coach-modal .coach-profile-avatar,
-#suspended-coach-modal .coach-profile-avatar {
+#suspended-coach-modal .coach-profile-avatar,
+#user-profile-modal .coach-profile-avatar {
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -1471,7 +1477,8 @@ button {
 }
 
 #approved-coach-modal .coach-profile-heading h3,
-#suspended-coach-modal .coach-profile-heading h3 {
+#suspended-coach-modal .coach-profile-heading h3,
+#user-profile-modal .coach-profile-heading h3 {
     margin: 0 0 4px;
     color: #1e293b;
     font-size: 25px;
@@ -1479,13 +1486,14 @@ button {
 }
 
 #approved-coach-modal .coach-profile-heading p,
-#suspended-coach-modal .coach-profile-heading p {
+#suspended-coach-modal .coach-profile-heading p,
+#user-profile-modal .coach-profile-heading p {
     margin: 0 0 8px;
     color: #64748b;
     font-size: 14px;
 }
 
-/* Status */
+/* Status pills */
 .coach-status {
     display: inline-flex;
     padding: 4px 10px;
@@ -1500,23 +1508,29 @@ button {
 }
 
 #suspended-coach-modal .coach-status.suspended,
+#user-profile-modal .coach-status.suspended,
 .coach-status.suspended {
     background: #fde2e2;
     color: #b42318;
 }
 
+/* Sections */
 #approved-coach-modal .coach-details-section,
 #suspended-coach-modal .coach-details-section,
+#user-profile-modal .coach-details-section,
 #approved-coach-modal .review-section,
-#suspended-coach-modal .review-section {
+#suspended-coach-modal .review-section,
+#user-profile-modal .review-section {
     padding: 17px 0;
     border-bottom: 1px solid #e8ede9;
 }
 
 #approved-coach-modal .coach-details-section h3,
 #suspended-coach-modal .coach-details-section h3,
+#user-profile-modal .coach-details-section h3,
 #approved-coach-modal .review-section h3,
-#suspended-coach-modal .review-section h3 {
+#suspended-coach-modal .review-section h3,
+#user-profile-modal .review-section h3 {
     margin: 0 0 12px;
     color: #1e293b;
     font-size: 15px;
@@ -1525,14 +1539,16 @@ button {
 
 /* Info cards (Age / Gender / Experience) */
 #approved-coach-modal .coach-details-grid,
-#suspended-coach-modal .coach-details-grid {
+#suspended-coach-modal .coach-details-grid,
+#user-profile-modal .coach-details-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
 
 #approved-coach-modal .coach-detail-item,
-#suspended-coach-modal .coach-detail-item {
+#suspended-coach-modal .coach-detail-item,
+#user-profile-modal .coach-detail-item {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1545,14 +1561,16 @@ button {
 }
 
 #approved-coach-modal .coach-detail-item .detail-label,
-#suspended-coach-modal .coach-detail-item .detail-label {
+#suspended-coach-modal .coach-detail-item .detail-label,
+#user-profile-modal .coach-detail-item .detail-label {
     color: #64748b;
     font-size: 12px;
     font-weight: 400;
 }
 
 #approved-coach-modal .coach-detail-item strong,
-#suspended-coach-modal .coach-detail-item strong {
+#suspended-coach-modal .coach-detail-item strong,
+#user-profile-modal .coach-detail-item strong {
     color: #1e293b;
     font-size: 17px;
     font-weight: 600;
@@ -1576,7 +1594,8 @@ button {
 
 /* Credentials */
 #approved-coach-modal .credentials-heading,
-#suspended-coach-modal .credentials-heading {
+#suspended-coach-modal .credentials-heading,
+#user-profile-modal .credentials-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1585,26 +1604,30 @@ button {
 }
 
 #approved-coach-modal .credentials-heading h3,
-#suspended-coach-modal .credentials-heading h3 {
+#suspended-coach-modal .credentials-heading h3,
+#user-profile-modal .credentials-heading h3 {
     margin: 0;
 }
 
 #approved-coach-modal .credentials-heading > span,
-#suspended-coach-modal .credentials-heading > span {
+#suspended-coach-modal .credentials-heading > span,
+#user-profile-modal .credentials-heading > span {
     color: #64748b;
     font-size: 12px;
     white-space: nowrap;
 }
 
 #approved-coach-modal .credential-card,
-#suspended-coach-modal .credential-card {
+#suspended-coach-modal .credential-card,
+#user-profile-modal .credential-card {
     margin-top: 0;
     padding: 12px;
 }
 
-/* Content */
+/* Content section */
 #approved-coach-modal .content-heading,
-#suspended-coach-modal .content-heading {
+#suspended-coach-modal .content-heading,
+#user-profile-modal .content-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1613,7 +1636,8 @@ button {
 }
 
 #approved-coach-modal .content-heading h3,
-#suspended-coach-modal .content-heading h3 {
+#suspended-coach-modal .content-heading h3,
+#user-profile-modal .content-heading h3 {
     margin: 0;
 }
 
@@ -1703,16 +1727,6 @@ button {
     color: #c9302c;
 }
 
-.content-status.changes {
-    background: #e8edff;
-    color: #3b55b5;
-}
-
-.content-status.neutral {
-    background: #eef1f0;
-    color: #475569;
-}
-
 .view-all-content-link {
     display: inline-block;
     margin: 12px 0 0;
@@ -1727,9 +1741,10 @@ button {
     text-decoration: underline;
 }
 
-/* Footer actions*/
+/* Footer actions */
 #approved-coach-modal .coach-management-actions,
-#suspended-coach-modal .coach-management-actions {
+#suspended-coach-modal .coach-management-actions,
+#user-profile-modal .coach-management-actions {
     position: sticky;
     bottom: 0;
     display: flex;
@@ -1740,7 +1755,8 @@ button {
 }
 
 #approved-coach-modal .coach-management-actions button,
-#suspended-coach-modal .coach-management-actions button {
+#suspended-coach-modal .coach-management-actions button,
+#user-profile-modal .coach-management-actions button {
     padding: 10px 17px;
     border-radius: 9px;
     font-size: 13px;
@@ -1768,27 +1784,45 @@ button {
     cursor: not-allowed;
 }
 
+.content-status.changes {
+    background: #e8edff;
+    color: #3b55b5;
+}
+
+.content-status.neutral {
+    background: #eef1f0;
+    color: #475569;
+}
+
+#user-profile-modal .coach-details-grid.two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     #approved-coach-modal .coach-review-modal,
-    #suspended-coach-modal .coach-review-modal {
+    #suspended-coach-modal .coach-review-modal,
+#user-profile-modal .coach-review-modal {
         padding: 20px 16px 0;
     }
 
     #approved-coach-modal .coach-profile-avatar,
-    #suspended-coach-modal .coach-profile-avatar {
+    #suspended-coach-modal .coach-profile-avatar,
+#user-profile-modal .coach-profile-avatar {
         width: 72px;
         height: 72px;
         font-size: 26px;
     }
 
     #approved-coach-modal .coach-profile-heading h3,
-    #suspended-coach-modal .coach-profile-heading h3 {
+    #suspended-coach-modal .coach-profile-heading h3,
+#user-profile-modal .coach-profile-heading h3 {
         font-size: 22px;
     }
 
     #approved-coach-modal .coach-details-grid,
-    #suspended-coach-modal .coach-details-grid {
+    #suspended-coach-modal .coach-details-grid,
+#user-profile-modal .coach-details-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1803,13 +1837,21 @@ button {
     }
 
     #approved-coach-modal .coach-management-actions,
-    #suspended-coach-modal .coach-management-actions {
+    #suspended-coach-modal .coach-management-actions,
+#user-profile-modal .coach-management-actions {
         flex-direction: column-reverse;
     }
 
     #approved-coach-modal .coach-management-actions button,
-    #suspended-coach-modal .coach-management-actions button {
+    #suspended-coach-modal .coach-management-actions button,
+#user-profile-modal .coach-management-actions button {
         width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    #user-profile-modal .coach-details-grid.two-columns {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1848,6 +1890,15 @@ button {
     border-color: #2f6b49;
 }
 
+#user-profile-modal .coach-detail-item .detail-label {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+#user-profile-modal .coach-detail-item strong {
+    font-size: 15px;
+    font-weight: 500;
+}
 
 /* =========================================
    LANDING PAGE MANAGEMENT

@@ -300,3 +300,27 @@ export async function getApprovedCoachesForLanding() {
     // Return all coaches; pagination will be handled in the boundary
     return coachesWithRatings;
 }
+
+export function searchCoaches(coaches, query) {
+    const terms = String(query ?? "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (terms.length === 0) return coaches;
+
+    return coaches.filter(coach => {
+        const specialties = Array.isArray(coach.coaching_specialty)
+            ? coach.coaching_specialty.join(" ")
+            : coach.coaching_specialty ?? "";
+
+        const searchableText = [
+            coach.full_name,
+            coach.email,
+            specialties
+        ].join(" ").toLowerCase();
+
+        return terms.every(term => searchableText.includes(term));
+    });
+}

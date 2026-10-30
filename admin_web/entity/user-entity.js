@@ -1,30 +1,88 @@
 import { supabaseClient } from "../supabase-client.js";
 
-
-
-export async function getUsers() {
-
+async function getEmailsById() {
     const { data, error } =
         await supabaseClient.functions.invoke(
             "get-user-emails",
-            {
-                body: {}
-            }
+            { body: {} }
         );
 
     if (error) {
         throw error;
     }
 
-    const users = data?.users || [];
+    return new Map(
+        (data?.users || []).map(user => [user.id, user.email])
+    );
+}
 
-    return users
-        .filter(user => user.app_role === "user")
-        .sort((a, b) =>
-            (a.full_name || "").localeCompare(
-                b.full_name || ""
-            )
+export async function getUsers() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("profiles")
+            .select(`
+                id,
+                full_name,
+                age,
+                gender,
+                activity_level,
+                fitness_goal,
+                subscription_tier,
+                subscription_status,
+                subscription_end_date,
+                assigned_coach_id,
+                is_suspended,
+                created_at
+            `)
+            .eq("app_role", "user")
+            .order("full_name", { ascending: true });
+
+    if (error) {
+        throw error;
+    }
+
+    const users = data || [];
+
+    if (users.length === 0) {
+        return [];
+    }
+
+    // Look up assigned coach names in one query
+    const coachIds = [
+        ...new Set(
+            users
+                .map(user => user.assigned_coach_id)
+                .filter(Boolean)
+        )
+    ];
+
+    let coachNameById = new Map();
+
+    if (coachIds.length > 0) {
+        const { data: coaches, error: coachError } =
+            await supabaseClient
+                .from("profiles")
+                .select("id, full_name")
+                .in("id", coachIds);
+
+        if (coachError) {
+            throw coachError;
+        }
+
+        coachNameById = new Map(
+            (coaches || []).map(coach => [coach.id, coach.full_name])
         );
+    }
+
+    const emailById = await getEmailsById();
+
+    return users.map(user => ({
+        ...user,
+        email: emailById.get(user.id) || null,
+        assigned_coach_name:
+            coachNameById.get(user.assigned_coach_id) || null
+    }));
 }
 
 

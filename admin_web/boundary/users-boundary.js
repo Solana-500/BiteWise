@@ -5,6 +5,16 @@ import {
     filterUsers
 } from "../control/user-controller.js";
 
+function escapeHTML(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
 let loadedUsers = [];
 let selectedUserId = null;
 
@@ -141,12 +151,12 @@ function renderUsers(users) {
         row.innerHTML = `
             <td>
                 <strong>
-                    ${user.full_name || "Unnamed User"}
+                    ${escapeHTML(user.full_name) || "Unnamed User"}
                 </strong>
             </td>
 
             <td>
-                ${user.email || "No email available"}
+                ${escapeHTML(user.email) || "No email available"}
             </td>
 
             <td>
@@ -170,7 +180,7 @@ function renderUsers(users) {
                 <button
                     type="button"
                     class="coach-action-button view-user-button"
-                    data-user-id="${user.id}"
+                    data-user-id="${escapeHTML(user.id)}"
                 >
                     View
                 </button>
@@ -242,6 +252,36 @@ function applyUserFilters() {
     renderUsers(filteredUsers);
 }
 
+function setText(id, value) {
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = value || "—";
+    }
+}
+
+function formatLabel(text) {
+    if (!text) return "";
+
+    const spaced = String(text).replaceAll("_", " ");
+
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    });
+}
+
 // View user profile
 function openUserProfile(userId) {
 
@@ -295,7 +335,7 @@ function openUserProfile(userId) {
             );
 
             suspendUserButton.classList.add(
-                "approve-application-button"
+                "reactivate-button"
             );
 
         } else {
@@ -307,7 +347,7 @@ function openUserProfile(userId) {
                 "suspend";
 
             suspendUserButton.classList.remove(
-                "approve-application-button"
+                "reactivate-button"
             );
 
             suspendUserButton.classList.add(
@@ -317,29 +357,45 @@ function openUserProfile(userId) {
     }
 
 
-    document.getElementById(
-        "user-profile-initials"
-    ).textContent = initials;
+    const isPremium = user.subscription_tier === "premium";
 
-    document.getElementById(
-        "user-profile-name"
-    ).textContent =
-        user.full_name || "Unnamed User";
+    setText("user-profile-initials", initials);
+    setText("user-profile-name", user.full_name || "Unnamed User");
+    setText("user-profile-email", user.email || "Email unavailable");
 
-    document.getElementById(
-        "user-profile-account-type"
-    ).textContent =
-        `${subscriptionTier} User`;
+    // Account information
+    setText("user-profile-tier", subscriptionTier);
+    setText(
+        "user-profile-subscription-status",
+        isPremium ? formatLabel(user.subscription_status) : "—"
+    );
+    setText(
+        "user-profile-subscription-end",
+        isPremium ? formatDate(user.subscription_end_date) : "—"
+    );
+    setText(
+        "user-profile-joined",
+        user.created_at
+            ? `Joined ${formatDate(user.created_at)}`
+            : "Joined date unavailable"
+    );
 
-    document.getElementById(
-        "user-profile-email"
-    ).textContent =
-        user.email || "Not provided";
+    setText("user-profile-coach", user.assigned_coach_name || "None");
 
-    document.getElementById(
-        "user-profile-tier"
-    ).textContent =
-        subscriptionTier;
+    // Profile
+    setText(
+        "user-profile-age",
+        user.age != null ? String(user.age) : "Not provided"
+    );
+    setText(
+        "user-profile-gender",
+        formatLabel(user.gender) || "Not provided"
+    );
+    setText("user-profile-goal", user.fitness_goal || "Not provided");
+    setText(
+        "user-profile-activity",
+        formatLabel(user.activity_level) || "Not provided"
+    );
 
 
     // Status badge
