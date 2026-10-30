@@ -393,7 +393,7 @@ export default function App() {
       return
     }
 
-    await handleRecoveryLink(initialUrl)
+    await handleRecoveryLink(initialUrl ?? null)
   } catch (error) {
     console.warn('Unable to check initial recovery link', error)
   } finally {
