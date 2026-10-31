@@ -22,6 +22,10 @@ import {
     loadContentPage
 } from "./boundary/content-boundary.js";
 
+import {
+    loadSubscriptionsPage
+} from "./boundary/subscriptions-boundary.js";
+
 
 /* =========================================
    ADMIN PROFILE
@@ -131,6 +135,10 @@ async function checkAdminAccess() {
 
     if (document.getElementById("content-table-body")) {
         await loadContentPage();
+    }
+
+    if (document.getElementById("subscription-list-panel")) {
+        await loadSubscriptionsPage();
     }
 }
 

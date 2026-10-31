@@ -5640,3 +5640,241 @@ button {
         flex: 1;
     }
 }
+
+
+/* ==============================================
+   SUBSCRIPTION MANAGEMENT
+============================================== */
+
+#subscription-details-modal {
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+#subscription-details-modal .modal-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(820px, 100%);
+    max-height: 88vh;
+    overflow: hidden;
+    padding: 0;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+}
+
+/* Header */
+#subscription-details-modal .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#subscription-details-modal .modal-header h2 {
+    margin: 0 0 4px;
+    color: #1e293b;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+#subscription-details-modal .modal-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+#subscription-details-modal .modal-close-button {
+    flex-shrink: 0;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Body */
+#subscription-details-modal .modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 26px;
+}
+
+/* Footer */
+#subscription-details-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 15px 26px;
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+/* Destructive button */
+.warning-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #b42318;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.warning-button:hover {
+    background: #912018;
+}
+
+.warning-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Details sections */
+.subscription-detail-section {
+    padding: 17px 0;
+    border-bottom: 1px solid #e8ede9;
+}
+
+.subscription-detail-section:last-child {
+    border-bottom: none;
+}
+
+.subscription-detail-section h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Information grid */
+.subscription-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 28px;
+    padding: 18px 20px;
+    background: #f4f7f6;
+    border-radius: 10px;
+}
+
+.subscription-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.subscription-info-item span {
+    font-size: 12px;
+    font-weight: 400;
+    color: #64748b;
+}
+
+.subscription-info-item strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1e293b;
+    overflow-wrap: anywhere;
+}
+
+/* Payment placeholder */
+.subscription-payment-placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 20px;
+    background: #f4f7f6;
+    border-radius: 10px;
+}
+
+.subscription-payment-placeholder strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.subscription-payment-placeholder span {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+#subscription-cancel-modal .confirmation-modal {
+    max-width: 540px;
+}
+
+#subscription-cancel-modal .confirmation-actions button {
+    white-space: nowrap;
+}
+
+/* Responsive layout */
+@media (max-width: 600px) {
+    #subscription-details-modal .modal-header,
+    #subscription-details-modal .modal-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #subscription-details-modal .modal-body {
+        padding: 0 16px;
+    }
+
+    .subscription-info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    #subscription-details-modal .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    #subscription-details-modal .modal-footer button {
+        width: 100%;
+    }
+
+    #subscription-details-modal .modal-footer:has(#subscription-cancel-button[hidden]) {
+        display: none;
+    }
+}
+
+
+/* ==============================================
+   SUBSCRIPTION STATUS
+============================================== */
+
+.subscription-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.subscription-status.active {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.subscription-status.cancelled {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.subscription-status.expired {
+    color: #6b7280;
+    background: #f3f4f6;
+}
+
+.subscription-status.unknown {
+    color: #92400e;
+    background: #fef3c7;
+}

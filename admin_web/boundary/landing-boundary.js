@@ -281,6 +281,10 @@ const previewFrame =
 
 // Load landing page content
 async function loadLandingPage() {
+    if (!document.getElementById("landing-status")) {
+        return;
+    }
+
     try {
         statusElement.textContent = "Loading...";
 
@@ -301,13 +305,13 @@ async function loadLandingPage() {
 
         
         if (Array.isArray(hero.images)) {
-            // Respect the saved gallery, including an intentionally empty one.
+            // Respect the saved gallery, including an intentionally empty one
             uploadedHeroImages = [...hero.images];
         } else if (hero.image) {
-            // Support older content with a single image.
+            // Support older content with a single image
             uploadedHeroImages = [hero.image];
         } else {
-            // Initialize defaults only when no gallery has been configured.
+            // Initialize defaults only when no gallery has been configured
             uploadedHeroImages = [...defaultHeroImages];
         }
 
