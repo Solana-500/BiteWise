@@ -102,3 +102,62 @@ export async function getAllSubscriptions() {
     }));
 
 }
+
+// Cancel subscription
+export async function cancelSubscription(
+    subscriptionId,
+    cancellationReason
+) {
+
+    const { data, error } = await supabaseClient
+        .from("subscriptions")
+        .update({
+            status: "cancelled",
+            cancelled_at: new Date().toISOString(),
+            cancellation_reason: cancellationReason,
+            cancellation_initiated_by: "admin"
+        })
+        .eq("id", subscriptionId)
+        .eq("status", "active")
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(
+            `Unable to cancel subscription: ${error.message}`
+        );
+    }
+
+    return data;
+}
+
+
+// Retrieve subscription history records
+export async function getSubscriptionHistory(subscriptionId) {
+
+    const { data: history, error } = await supabaseClient
+        .from("subscription_history")
+        .select(`
+            id,
+            subscription_id,
+            user_id,
+            event_type,
+            previous_status,
+            new_status,
+            previous_plan,
+            new_plan,
+            changed_by,
+            change_reason,
+            created_at
+        `)
+        .eq("subscription_id", subscriptionId)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        throw new Error(
+            `Unable to load subscription history: ${error.message}`
+        );
+    }
+
+    return history ?? [];
+}

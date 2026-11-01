@@ -1,12 +1,26 @@
 import {
-    loadAllSubscriptions as getSubscriptions
+    loadAllSubscriptions as getSubscriptions,
+    cancelUserSubscription,
+    loadSubscriptionHistory
 } from "../control/subscription-controller.js";
+
+import {
+    loadSubscriptionPayments,
+    loadLatestSubscriptionPayments
+} from "../control/payment-controller.js";
+
 
 
 let subscriptions = [];
 let selectedSubscription = null;
+let latestSubscriptionPayments = {};
 
 
+/* ==============================================
+   FUNCTIONS
+============================================== */
+
+// Helper functions
 function escapeHTML(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -47,11 +61,7 @@ function getStatusClass(status) {
     return "unknown";
 }
 
-
-/* ==============================================
-   FUNCTIONS
-============================================== */
-
+// Load subscriptions
 export async function loadSubscriptionsPage() {
 
     const tableBody = document.getElementById(
@@ -62,7 +72,16 @@ export async function loadSubscriptionsPage() {
 
     try {
 
+        // Retrieve all subscriptions
         subscriptions = await getSubscriptions();
+
+        // Retrieve the latest payment for each subscription
+        const subscriptionIds = subscriptions.map(
+            subscription => subscription.id
+        );
+
+        latestSubscriptionPayments =
+            await loadLatestSubscriptionPayments(subscriptionIds);
 
         renderSubscriptions();
 
@@ -168,7 +187,9 @@ function renderSubscriptions() {
                 </td>
 
                 <td>
-                    ${subscription.plan ? escapeHTML(formatStatus(subscription.plan)) : "—"}
+                    ${subscription.plan
+                        ? escapeHTML(formatStatus(subscription.plan))
+                        : "—"}
                 </td>
 
                 <td>
@@ -179,7 +200,25 @@ function renderSubscriptions() {
                     ${formatDate(subscription.expires_at)}
                 </td>
 
-                <td>—</td>
+                <td>
+                    ${(() => {
+                        const payment = latestSubscriptionPayments[subscription.id];
+
+                        if (!payment) {
+                            return `<span class="subscription-payment-status unknown">No payment</span>`;
+                        }
+
+                        const paymentStatus = String(
+                            payment.status ?? ""
+                        ).toLowerCase();
+
+                        return `
+                            <span class="subscription-payment-status ${escapeHTML(paymentStatus)}">
+                                ${escapeHTML(formatStatus(paymentStatus))}
+                            </span>
+                        `;
+                    })()}
+                </td>
 
                 <td>
                     <span class="subscription-status ${getStatusClass(subscription.status)}">
@@ -204,7 +243,9 @@ function renderSubscriptions() {
 
 }
 
-function openSubscriptionDetails(subscriptionId) {
+
+// Subscription details
+async function openSubscriptionDetails(subscriptionId) {
 
     selectedSubscription = subscriptions.find(
         subscription => subscription.id === subscriptionId
@@ -220,7 +261,9 @@ function openSubscriptionDetails(subscriptionId) {
 
     document.getElementById(
         "detail-plan"
-    ).textContent = subscription.plan ? formatStatus(subscription.plan) : "—";
+    ).textContent = subscription.plan
+        ? formatStatus(subscription.plan)
+        : "—";
 
     document.getElementById(
         "detail-status"
@@ -268,6 +311,213 @@ function openSubscriptionDetails(subscriptionId) {
         "subscription-details-modal"
     )?.classList.add("show");
 
+    
+    // Load payment information
+    const paymentStatus = document.getElementById(
+        "detail-payment-status"
+    );
+
+    const paymentAmount = document.getElementById(
+        "detail-payment-amount"
+    );
+
+    const paymentMethod = document.getElementById(
+        "detail-payment-method"
+    );
+
+    const paymentDate = document.getElementById(
+        "detail-payment-date"
+    );
+
+    const transactionReference = document.getElementById(
+        "detail-transaction-reference"
+    );
+
+    const paymentHistoryBody = document.getElementById(
+        "subscription-payment-history-body"
+    );
+
+    // Reset payment information while loading
+    paymentStatus.textContent = "Loading...";
+    paymentAmount.textContent = "—";
+    paymentMethod.textContent = "—";
+    paymentDate.textContent = "—";
+    transactionReference.textContent = "—";
+
+    paymentHistoryBody.innerHTML = `
+        <tr>
+            <td colspan="4">Loading payment records...</td>
+        </tr>
+    `;
+
+    try {
+        const payments = await loadSubscriptionPayments(
+            subscription.id
+        );
+
+        if (payments.length === 0) {
+            paymentStatus.textContent = "No payment records";
+            paymentHistoryBody.innerHTML = `
+                <tr>
+                    <td colspan="4">No payment records found.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Display the latest payment
+        const latestPayment = payments[0];
+
+        paymentStatus.textContent = formatStatus(
+            latestPayment.status
+        );
+
+        paymentAmount.textContent =
+            `${latestPayment.currency} ${Number(latestPayment.amount).toFixed(2)}`;
+
+        paymentMethod.textContent =
+            latestPayment.payment_method || "—";
+
+        paymentDate.textContent =
+            formatDate(latestPayment.payment_date);
+
+        transactionReference.textContent =
+            latestPayment.transaction_reference || "—";
+
+        // Display payment history
+        paymentHistoryBody.innerHTML = payments.map(payment => `
+            <tr>
+                <td>${escapeHTML(payment.transaction_reference || "—")}</td>
+                <td>${escapeHTML(payment.currency)} ${Number(payment.amount).toFixed(2)}</td>
+                <td>${escapeHTML(formatDate(payment.payment_date))}</td>
+                <td>${escapeHTML(formatStatus(payment.status))}</td>
+            </tr>
+        `).join("");
+
+    } catch (error) {
+        console.error("Unable to display payment information:", error);
+
+        paymentStatus.textContent = "Unable to load";
+        paymentHistoryBody.innerHTML = `
+            <tr>
+                <td colspan="4">Unable to load payment records.</td>
+            </tr>
+        `;
+    }
+
+    // Load subscription history
+    const historyBody = document.getElementById(
+        "subscription-history-body"
+    );
+
+    historyBody.innerHTML = `
+        <tr>
+            <td colspan="4">Loading subscription history...</td>
+        </tr>
+    `;
+
+    try {
+
+        const history = await loadSubscriptionHistory(
+            subscription.id
+        );
+
+        if (history.length === 0) {
+
+            historyBody.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        No subscription history found.
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            historyBody.innerHTML = history.map(record => {
+
+            let details = "—";
+            let reasonHTML = "";
+
+            switch (record.event_type) {
+                case "created":
+                    details = `${formatStatus(record.new_plan || "—")} plan activated`;
+                    break;
+
+                case "activated":
+                    details = `${formatStatus(record.previous_status || "—")} → ${formatStatus(record.new_status || "—")}`;
+                    break;
+
+                case "cancelled":
+                    details = `${formatStatus(record.previous_status || "—")} → ${formatStatus(record.new_status || "—")}`;
+
+                    if (record.change_reason) {
+                        reasonHTML = `
+                            <small>
+                                Reason: ${escapeHTML(record.change_reason)}
+                            </small>
+                        `;
+                    }
+                    break;
+
+                case "expired":
+                    details = `${formatStatus(record.previous_status || "—")} → ${formatStatus(record.new_status || "—")}`;
+                    break;
+
+                case "plan_changed":
+                    details = `${formatStatus(record.previous_plan || "—")} → ${formatStatus(record.new_plan || "—")}`;
+                    break;
+
+                case "renewed":
+                    details = `${formatStatus(record.new_plan || "—")} subscription renewed`;
+                    break;
+
+                case "status_changed":
+                    details = `${formatStatus(record.previous_status || "—")} → ${formatStatus(record.new_status || "—")}`;
+                    break;
+
+                default:
+                    details = formatStatus(record.event_type);
+            }
+
+            return `
+                <tr>
+                    <td>${escapeHTML(formatDate(record.created_at))}</td>
+
+                    <td>${escapeHTML(formatStatus(record.event_type))}</td>
+
+                    <td>
+                        <div class="subscription-history-details">
+                            <span>${escapeHTML(details)}</span>
+                            ${reasonHTML}
+                        </div>
+                    </td>
+
+                    <td>${escapeHTML(formatStatus(record.changed_by || "system"))}</td>
+                </tr>
+            `;
+
+        }).join("");
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load subscription history:",
+            error
+        );
+
+        historyBody.innerHTML = `
+            <tr>
+                <td colspan="4">
+                    Unable to load subscription history.
+                </td>
+            </tr>
+        `;
+
+    }
+
 }
 
 
@@ -280,9 +530,39 @@ function closeSubscriptionDetails() {
 }
 
 
+// Cancel subscription
 function openCancelConfirmation() {
 
     if (!selectedSubscription) return;
+
+    const reasonInput = document.getElementById(
+        "subscription-cancellation-reason"
+    );
+
+    const notesInput = document.getElementById(
+        "subscription-cancellation-notes"
+    );
+
+    const reasonError = document.getElementById(
+        "subscription-cancellation-reason-error"
+    );
+
+    const messageElement = document.getElementById(
+        "subscription-cancel-message"
+    );
+
+
+    // Reset previous form values
+    reasonInput.value = "";
+    notesInput.value = "";
+
+    // Clear previous validation messages
+    reasonError.textContent = "";
+    reasonError.classList.remove("show");
+
+    messageElement.textContent = "";
+    messageElement.className = "subscription-form-message";
+
 
     document.getElementById(
         "subscription-cancel-modal"
@@ -304,19 +584,16 @@ function closeCancelConfirmation() {
    EVENT LISTENERS
 ============================================== */
 
-// Search subscriptions
 document.getElementById(
     "subscription-search"
 )?.addEventListener("input", renderSubscriptions);
 
 
-// Filter subscriptions
 document.getElementById(
     "subscription-status-filter"
 )?.addEventListener("change", renderSubscriptions);
 
 
-// Open subscription details
 document.getElementById(
     "subscription-table-body"
 )?.addEventListener("click", event => {
@@ -334,13 +611,11 @@ document.getElementById(
 });
 
 
-// Close details modal
 document.getElementById(
     "subscription-details-close"
 )?.addEventListener("click", closeSubscriptionDetails);
 
 
-// Close details modal when clicking outside
 document.getElementById(
     "subscription-details-modal"
 )?.addEventListener("click", event => {
@@ -352,13 +627,10 @@ document.getElementById(
 });
 
 
-// Open cancellation confirmation
 document.getElementById(
     "subscription-cancel-button"
 )?.addEventListener("click", openCancelConfirmation);
 
-
-// Close cancellation confirmation
 document.getElementById(
     "subscription-cancel-close"
 )?.addEventListener("click", closeCancelConfirmation);
@@ -367,8 +639,6 @@ document.getElementById(
     "subscription-cancel-confirm-close"
 )?.addEventListener("click", closeCancelConfirmation);
 
-
-// Close cancellation confirmation when clicking outside
 document.getElementById(
     "subscription-cancel-modal"
 )?.addEventListener("click", event => {
@@ -380,19 +650,118 @@ document.getElementById(
 });
 
 
-// Cancellation is intentionally not connected to Supabase yet.
-// We will implement this after confirming the cancellation rules.
+// Confirm subscription cancellation
 document.getElementById(
     "subscription-cancel-confirm"
-)?.addEventListener("click", () => {
+)?.addEventListener("click", async () => {
 
-    alert(
-        "Subscription cancellation is not connected yet."
+    if (!selectedSubscription) return;
+
+
+    const reasonInput = document.getElementById(
+        "subscription-cancellation-reason"
     );
 
-    closeCancelConfirmation();
+    const notesInput = document.getElementById(
+        "subscription-cancellation-notes"
+    );
+
+    const reasonError = document.getElementById(
+        "subscription-cancellation-reason-error"
+    );
+
+    const messageElement = document.getElementById(
+        "subscription-cancel-message"
+    );
+
+    const confirmButton = document.getElementById(
+        "subscription-cancel-confirm"
+    );
+
+
+    const reason = reasonInput.value;
+    const notes = notesInput.value.trim();
+
+
+    reasonError.textContent = "";
+    reasonError.classList.remove("show");
+
+    messageElement.textContent = "";
+    messageElement.className = "subscription-form-message";
+
+
+    // Validate cancellation reason
+    if (!reason) {
+
+        reasonError.textContent =
+            "Please select a cancellation reason.";
+
+        reasonError.classList.add("show");
+
+        reasonInput.focus();
+
+        return;
+    }
+
+
+    if (reason === "Other" && !notes) {
+
+        messageElement.textContent =
+            "Please provide additional details when selecting Other.";
+
+        messageElement.className =
+            "subscription-form-message error show";
+
+        notesInput.focus();
+
+        return;
+    }
+
+    const cancellationReason = notes
+        ? `${reason} - ${notes}`
+        : reason;
+
+
+    try {
+
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Cancelling...";
+
+        await cancelUserSubscription(
+            selectedSubscription.id,
+            cancellationReason
+        );
+
+        await loadSubscriptionsPage();
+
+        closeCancelConfirmation();
+        closeSubscriptionDetails();
+
+
+    } catch (error) {
+
+        console.error(
+            "Failed to cancel subscription:",
+            error
+        );
+
+        messageElement.textContent =
+            error.message ||
+            "Unable to cancel subscription. Please try again.";
+
+        messageElement.className =
+            "subscription-form-message error show";
+
+
+    } finally {
+
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Confirm Cancellation";
+
+    }
 
 });
+
 
 
 document.addEventListener("keydown", event => {

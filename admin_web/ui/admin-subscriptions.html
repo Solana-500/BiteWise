@@ -292,55 +292,112 @@
 
 
                 <!-- PAYMENT INFORMATION -->
-                <section class="subscription-detail-section">
+                <div class="subscription-detail-section">
 
                     <h3>Payment Information</h3>
 
-                    <div class="subscription-payment-placeholder">
-                        <strong>Payment information is not available yet.</strong>
-                        <span>
-                            This section will be populated once payment
-                            records are integrated.
-                        </span>
+                    <div class="subscription-payment-summary">
+
+                        <div class="subscription-info-grid">
+
+                            <div class="subscription-info-item">
+                                <span>Payment Status</span>
+                                <strong id="detail-payment-status">—</strong>
+                            </div>
+
+                            <div class="subscription-info-item">
+                                <span>Amount</span>
+                                <strong id="detail-payment-amount">—</strong>
+                            </div>
+
+                            <div class="subscription-info-item">
+                                <span>Payment Method</span>
+                                <strong id="detail-payment-method">—</strong>
+                            </div>
+
+                            <div class="subscription-info-item">
+                                <span>Payment Date</span>
+                                <strong id="detail-payment-date">—</strong>
+                            </div>
+
+                            <div class="subscription-info-item">
+                                <span>Transaction Reference</span>
+                                <strong id="detail-transaction-reference">—</strong>
+                            </div>
+
+                        </div>
+
                     </div>
 
-                </section>
+                    <div class="subscription-payment-history">
+
+                        <h4>Payment History</h4>
+
+                        <div class="content-table-wrapper">
+
+                            <table class="content-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>Transaction Reference</th>
+                                        <th>Amount</th>
+                                        <th>Payment Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="subscription-payment-history-body">
+                                    <tr>
+                                        <td colspan="4">
+                                            Loading payment records...
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
 
-                <!-- SUBSCRIPTION HISTORY -->
-                <section class="subscription-detail-section">
+                <!-- Subscription History -->
+                <div class="subscription-detail-section">
 
                     <h3>Subscription History</h3>
 
-                    <div class="content-table-wrapper">
-                        <table class="content-table">
+                    <div class="subscription-history-table">
 
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
+                        <div class="content-table-wrapper">
 
-                            <tbody id="subscription-history-body">
-                                <tr class="table-empty-row">
-                                    <td colspan="3">
-                                        <div class="table-empty-state">
-                                            <strong>No history available</strong>
-                                            <span>
-                                                Subscription history will
-                                                appear here.
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
+                            <table class="content-table">
 
-                        </table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Event</th>
+                                        <th>Details</th>
+                                        <th>Changed By</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="subscription-history-body">
+                                    <tr>
+                                        <td colspan="4">
+                                            Loading subscription history...
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
                     </div>
 
-                </section>
+                </div>
 
             </div>
 
@@ -369,39 +426,102 @@
         hidden>
 
         <div
-            class="modal-box confirmation-modal"
+            class="modal-box confirmation-modal subscription-cancel-modal-box"
             role="dialog"
             aria-modal="true"
             aria-labelledby="subscription-cancel-title"
         >
 
-            <button
-                type="button"
-                class="modal-close"
-                id="subscription-cancel-close"
-                aria-label="Close"
-            >
-                &times;
-            </button>
+            <!-- HEADER -->
+            <div class="subscription-cancel-header">
 
-            <h2 id="subscription-cancel-title">
-                Cancel Subscription?
-            </h2>
+                <h2 id="subscription-cancel-title">
+                    Cancel Subscription
+                </h2>
 
-            <p>
-                Are you sure you want to cancel this subscription?
-                This will terminate the user's premium subscription.
-                The user may lose access to premium features.
-            </p>
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="subscription-cancel-close"
+                    aria-label="Close"
+                >
+                    &times;
+                </button>
 
-            <div class="confirmation-actions">
+            </div>
+
+            <!-- BODY -->
+            <div class="subscription-cancel-body">
+
+                <p>
+                    Please provide a reason for this administrative
+                    cancellation.
+                </p>
+
+                <div class="form-group">
+
+                    <label for="subscription-cancellation-reason">
+                        Cancellation Reason <span class="required">*</span>
+                    </label>
+
+                    <select id="subscription-cancellation-reason" required>
+                        <option value="">Select a reason</option>
+                        <option value="Violation of Terms of Service">Violation of Terms of Service</option>
+                        <option value="Fraudulent Activity">Fraudulent Activity</option>
+                        <option value="Payment Issues">Payment Issues</option>
+                        <option value="Duplicate Subscription">Duplicate Subscription</option>
+                        <option value="Administrative Error">Administrative Error</option>
+                        <option value="Account Termination">Account Termination</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <span
+                        id="subscription-cancellation-reason-error"
+                        class="subscription-form-error"
+                    ></span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="subscription-cancellation-notes">
+                        Additional Notes (Optional)
+                    </label>
+
+                    <textarea
+                        id="subscription-cancellation-notes"
+                        rows="4"
+                        placeholder="Enter additional details..."
+                    ></textarea>
+
+                </div>
+
+                <div class="subscription-cancellation-notice">
+                    <strong>Premium access will remain active</strong>
+                    <span>
+                        The user will retain Premium access until their
+                        current subscription expiry date.
+                    </span>
+                </div>
+
+                <span
+                    id="subscription-cancel-message"
+                    class="subscription-form-message"
+                    role="status"
+                    aria-live="polite"
+                ></span>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="subscription-cancel-footer">
 
                 <button
                     type="button"
                     class="secondary-button"
                     id="subscription-cancel-confirm-close"
                 >
-                    No, Keep Subscription
+                    Cancel
                 </button>
 
                 <button
@@ -409,7 +529,7 @@
                     class="reject-button"
                     id="subscription-cancel-confirm"
                 >
-                    Cancel Subscription
+                    Confirm Cancellation
                 </button>
 
             </div>
