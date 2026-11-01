@@ -6623,13 +6623,11 @@ button {
     font-size: 13px;
     overflow-wrap: anywhere;
 }
- 
-/* The toolbar is display:flex, which would otherwise override [hidden] */
+
 .report-toolbar[hidden] {
     display: none;
 }
- 
-/* Wider KPI row on System Status */
+
 #status-report-content .report-kpis {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
@@ -6689,7 +6687,7 @@ button {
     margin-bottom: 16px;
 }
  
-.status-card {
+.audit-status-card {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -6699,21 +6697,21 @@ button {
     background: #ffffff;
 }
  
-.status-card-top {
+.audit-status-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
 }
  
-.status-card-top h3 {
+.audit-status-card-top h3 {
     margin: 0;
     color: #1e293b;
     font-size: 14px;
     font-weight: 600;
 }
  
-.status-card p {
+.audit-status-card p {
     margin: 0;
     color: #64748b;
     font-size: 13px;
@@ -6749,7 +6747,6 @@ button {
 }
  
 @media (max-width: 520px) {
-    /* the toolbar has no action buttons here, so let it shrink to the screen */
     .report-toolbar-left {
         width: 100%;
         min-width: 0;

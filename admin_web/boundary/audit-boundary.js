@@ -643,8 +643,8 @@ const MANY_FAILURES = 5;
  
 function statusCard(title, tone, pill, text) {
     return `
-        <div class="status-card">
-            <div class="status-card-top">
+        <div class="audit-status-card">
+            <div class="audit-status-card-top">
                 <h3>${escapeHTML(title)}</h3>
                 <span class="status-pill ${tone}">${escapeHTML(pill)}</span>
             </div>
