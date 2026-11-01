@@ -30,6 +30,10 @@ import {
     loadReportsPage 
 } from "./boundary/reports-boundary.js";
 
+import {
+    loadAuditPage
+} from "./boundary/audit-boundary.js"
+
 
 /* =========================================
    ADMIN PROFILE
@@ -147,6 +151,10 @@ async function checkAdminAccess() {
 
     if (document.getElementById("report-range")) {
         await loadReportsPage();
+    }
+
+    if (document.getElementById("audit-toolbar")) {
+        await loadAuditPage();
     }
 }
 

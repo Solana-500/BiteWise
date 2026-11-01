@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Audit Logs | BiteWise</title>
+
+    <link
+        rel="stylesheet"
+        href="./admin-style.css"
+    >
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        <!-- =====================================
+             SIDEBAR
+        ====================================== -->
+
+        <aside class="admin-sidebar">
+
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-content.html" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="admin-subscriptions.html" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="admin-reports.html" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="admin-audit-logs.html" class="nav-item active">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+
+            </nav>
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logout-button"
+            >
+                <span>↪</span>
+                Log Out
+            </button>
+
+        </aside>
+
+
+        <!-- =====================================
+             MAIN AREA
+        ====================================== -->
+
+        <div class="admin-main">
+
+            <header class="admin-header">
+
+                <div class="header-title">
+                    <h2>Audit Logs</h2>
+                </div>
+
+                <div class="admin-profile">
+
+                    <div class="admin-avatar" id="admin-avatar">
+                        A
+                    </div>
+
+                    <div class="admin-profile-text">
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
+                    </div>
+
+                </div>
+
+            </header>
+
+            <main class="coach-management-content">
+
+                <div class="management-heading">
+                    <div>
+                        <h1>Audit &amp; System Monitoring</h1>
+                        <p>
+                            Trace admin actions, monitor sign-ins and check system health.
+                        </p>
+                    </div>
+                </div>
+
+
+                <!-- TABS -->
+
+                <div class="report-tabs" role="tablist">
+
+                    <button type="button" class="report-tab active" data-audit-tab="logs">Audit Logs</button>
+                    <button type="button" class="report-tab" data-audit-tab="auth">Authentication</button>
+                    <button type="button" class="report-tab" data-audit-tab="integrations">Integration Failures</button>
+                    <button type="button" class="report-tab" data-audit-tab="status">System Status</button>
+
+                </div>
+
+
+                <!-- TOOLBAR -->
+
+                <div class="report-toolbar" id="audit-toolbar">
+
+                    <div class="report-toolbar-left">
+
+                        <label for="audit-range">Date range</label>
+
+                        <select id="audit-range" class="report-select">
+                            <option value="1">Today</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="year">This year</option>
+                            <option value="custom">Custom range</option>
+                        </select>
+
+                        <div class="report-custom-range" id="audit-custom-range" hidden>
+                            <input type="date" id="audit-start" class="report-select" aria-label="Start date">
+                            <span>to</span>
+                            <input type="date" id="audit-end" class="report-select" aria-label="End date">
+                        </div>
+
+                        <span class="report-range-label" id="audit-range-label"></span>
+
+                    </div>
+
+                </div>
+
+                <p class="report-range-error" id="audit-range-error" hidden></p>
+
+
+                <!-- AUDIT LOGS -->
+
+                <section class="report-tab-panel active" id="audit-panel-logs">
+
+                    <div id="logs-report-content">
+
+                        <p class="report-error" id="logs-report-error" hidden></p>
+
+                        <div class="audit-filters">
+                            <select id="logs-action" class="report-select" aria-label="Filter by action">
+                                <option value="">All actions</option>
+                            </select>
+                            <input
+                                type="search"
+                                id="logs-search"
+                                class="report-select audit-search"
+                                placeholder="Search by admin or target name"
+                                maxlength="100"
+                                aria-label="Search"
+                            >
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Admin</th>
+                                            <th>Action</th>
+                                            <th>Target</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="logs-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="5">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="audit-pager" id="logs-pager" hidden>
+                                <span class="audit-pager-info" id="logs-pager-info"></span>
+                                <div class="audit-pager-buttons">
+                                    <button type="button" class="secondary-button" data-pager="logs" data-dir="-1">Previous</button>
+                                    <button type="button" class="secondary-button" data-pager="logs" data-dir="1">Next</button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- AUTHENTICATION -->
+
+                <section class="report-tab-panel" id="audit-panel-auth">
+
+                    <div id="auth-report-content">
+
+                        <p class="report-error" id="auth-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Logins</span>
+                                <strong id="auth-kpi-logins">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Sign-ups</span>
+                                <strong id="auth-kpi-signups">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Accounts that logged in</span>
+                                <strong id="auth-kpi-unique">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Password recovery requests</span>
+                                <strong id="auth-kpi-recoveries">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="audit-filters">
+                            <select id="auth-event" class="report-select" aria-label="Filter by event">
+                                <option value="">All events</option>
+                            </select>
+                            <input
+                                type="search"
+                                id="auth-search"
+                                class="report-select audit-search"
+                                placeholder="Search by name or email"
+                                maxlength="100"
+                                aria-label="Search"
+                            >
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Event</th>
+                                            <th>Account</th>
+                                            <th>Role</th>
+                                            <th>Method</th>
+                                            <th>IP address</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="auth-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="6">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="audit-pager" id="auth-pager" hidden>
+                                <span class="audit-pager-info" id="auth-pager-info"></span>
+                                <div class="audit-pager-buttons">
+                                    <button type="button" class="secondary-button" data-pager="auth" data-dir="-1">Previous</button>
+                                    <button type="button" class="secondary-button" data-pager="auth" data-dir="1">Next</button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <p class="audit-note">
+                            Shows successful activity recorded by Supabase Auth. Failed login
+                            attempts and routine token refreshes are not listed.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- INTEGRATION FAILURES -->
+
+                <section class="report-tab-panel" id="audit-panel-integrations">
+
+                    <div id="integrations-report-content">
+
+                        <p class="report-error" id="integrations-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Failures</span>
+                                <strong id="integrations-kpi-total">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>USDA</span>
+                                <strong id="integrations-kpi-usda">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Gemini</span>
+                                <strong id="integrations-kpi-gemini">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Last failure</span>
+                                <strong id="integrations-kpi-last">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid single">
+
+                            <div class="report-chart-card" id="integrations-card-daily">
+                                <h3>Failures over time</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="integrations-chart-daily"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No failures recorded in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="audit-filters">
+                            <select id="integrations-service" class="report-select" aria-label="Filter by service">
+                                <option value="">All services</option>
+                                <option value="usda">USDA food database</option>
+                                <option value="gemini">Gemini AI</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Service</th>
+                                            <th>Operation</th>
+                                            <th>Error</th>
+                                            <th>Status</th>
+                                            <th>User</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="integrations-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="6">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="audit-pager" id="integrations-pager" hidden>
+                                <span class="audit-pager-info" id="integrations-pager-info"></span>
+                                <div class="audit-pager-buttons">
+                                    <button type="button" class="secondary-button" data-pager="integrations" data-dir="-1">Previous</button>
+                                    <button type="button" class="secondary-button" data-pager="integrations" data-dir="1">Next</button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- SYSTEM STATUS -->
+
+                <section class="report-tab-panel" id="audit-panel-status">
+
+                    <div id="status-report-content">
+
+                        <p class="report-error" id="status-report-error" hidden></p>
+
+                        <div class="status-banner" id="status-banner">
+                            <strong id="status-banner-title">Checking system status...</strong>
+                            <span id="status-banner-text"></span>
+                        </div>
+
+                        <div class="status-grid" id="status-grid"></div>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Users</span>
+                                <strong id="status-kpi-users">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Active coaches</span>
+                                <strong id="status-kpi-coaches">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Pending applications</span>
+                                <strong id="status-kpi-applications">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Plans pending review</span>
+                                <strong id="status-kpi-plans">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Active subscriptions</span>
+                                <strong id="status-kpi-subscriptions">—</strong>
+                            </div>
+
+                        </div>
+
+                        <p class="audit-note">
+                            Integration status is based on failures reported by the app. It does
+                            not test USDA or Gemini directly. <span id="status-checked"></span>
+                        </p>
+
+                        <button type="button" class="secondary-button" id="status-refresh">
+                            Refresh
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+        </div>
+
+
+        <!-- =====================================
+            LOGOUT CONFIRMATION MODAL
+        ====================================== -->
+
+        <div class="modal-overlay" id="logout-modal">
+
+            <div class="confirmation-modal">
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="logout-modal-close"
+                    aria-label="Close"
+                >
+                    &times;
+                </button>
+
+                <div class="logout-modal-icon">
+                    ↪
+                </div>
+
+                <h2>Log Out?</h2>
+
+                <p>
+                    Are you sure you want to log out of the
+                    BiteWise Admin Portal?
+                </p>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="modal-cancel-button"
+                        id="cancel-logout"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        class="modal-logout-button"
+                        id="confirm-logout"
+                    >
+                        Log Out
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script type="module" src="../admin-script.js"></script>
+
+</body>
+
+</html>

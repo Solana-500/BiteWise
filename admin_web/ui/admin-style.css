@@ -6268,3 +6268,250 @@ button {
     font-size: 12px;
     font-weight: 400;
 }
+
+/* =========================================
+   AUDIT LOGS PAGE
+========================================= */
+ 
+/* Filter row above a table */
+.audit-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+ 
+.audit-search {
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 360px;
+}
+ 
+/* Pagination under a table */
+.audit-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid #eef1ef;
+}
+ 
+.audit-pager[hidden] {
+    display: none;
+}
+ 
+.audit-pager-info {
+    color: #64748b;
+    font-size: 13px;
+}
+ 
+.audit-pager-buttons {
+    display: flex;
+    gap: 8px;
+}
+ 
+.audit-pager-buttons .secondary-button {
+    white-space: nowrap;
+}
+ 
+.audit-pager-buttons .secondary-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+ 
+.audit-note {
+    margin: 14px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+ 
+/* Table cell helpers */
+.audit-cell-sub {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 12px;
+}
+ 
+.audit-details {
+    color: #475569;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+ 
+.audit-error-text {
+    max-width: 360px;
+    color: #475569;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+ 
+/* The toolbar is display:flex, which would otherwise override [hidden] */
+.report-toolbar[hidden] {
+    display: none;
+}
+ 
+/* Wider KPI row on System Status */
+#status-report-content .report-kpis {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+ 
+/* System status */
+.status-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+ 
+.status-banner strong {
+    font-size: 16px;
+}
+ 
+.status-banner span {
+    color: #64748b;
+    font-size: 13px;
+}
+ 
+.status-banner.ok {
+    border-color: #b9dcc6;
+    background: #f0f8f3;
+}
+ 
+.status-banner.ok strong {
+    color: #246b43;
+}
+ 
+.status-banner.warn {
+    border-color: #f0d9a3;
+    background: #fff9e8;
+}
+ 
+.status-banner.warn strong {
+    color: #8a6418;
+}
+ 
+.status-banner.bad {
+    border-color: #f1b8b3;
+    background: #fff3f1;
+}
+ 
+.status-banner.bad strong {
+    color: #b42318;
+}
+ 
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+ 
+.status-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+ 
+.status-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+ 
+.status-card-top h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+}
+ 
+.status-card p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+}
+ 
+.status-pill {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+ 
+.status-pill.ok      { background: #e5f2e8; color: #246b43; }
+.status-pill.warn    { background: #fff4d6; color: #8a6418; }
+.status-pill.bad     { background: #fde2e2; color: #b42318; }
+.status-pill.neutral { background: #eef1f0; color: #475569; }
+ 
+#status-refresh {
+    margin-top: 6px;
+}
+ 
+@media (max-width: 900px) {
+    .status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+ 
+    #status-report-content .report-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+ 
+@media (max-width: 520px) {
+    /* the toolbar has no action buttons here, so let it shrink to the screen */
+    .report-toolbar-left {
+        width: 100%;
+        min-width: 0;
+    }
+ 
+    .report-toolbar-left .report-select {
+        max-width: 100%;
+    }
+ 
+    .report-range-label {
+        flex-basis: 100%;
+        white-space: normal;
+    }
+ 
+    .status-grid,
+    #status-report-content .report-kpis {
+        grid-template-columns: 1fr;
+    }
+ 
+    .audit-pager {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+ 
+    .audit-pager-buttons button {
+        flex: 1;
+    }
+ 
+    .audit-search {
+        max-width: none;
+    }
+}
+ 
+@media print {
+    .audit-filters,
+    .audit-pager-buttons,
+    #status-refresh {
+        display: none !important;
+    }
+}
