@@ -32,19 +32,33 @@ const COLORS = {
 };
  
  
-/* ==============================================
-   LABELS
-============================================== */
- 
+// Labels
 const ACTION_LABELS = {
+    "coach.applied": "Submitted coach application",
     "coach.approved": "Approved coach application",
     "coach.rejected": "Rejected coach application",
     "coach.suspended": "Suspended coach",
     "coach.reactivated": "Reactivated coach",
+    "user.registered": "Registered an account",
     "user.suspended": "Suspended user",
     "user.reactivated": "Reactivated user",
-    "subscription.cancelled": "Cancelled subscription"
+    "user.plan_changed": "Changed plan",
+    "subscription.started": "Started subscription",
+    "subscription.cancelled": "Cancelled subscription",
+    "subscription.expired": "Subscription expired"
 };
+ 
+// Meal plans and workout plans status
+[["meal_plan", "meal plan"], ["workout_plan", "workout plan"]]
+    .forEach(([key, noun]) => {
+        ACTION_LABELS[`${key}.created`] = `Created ${noun}`;
+        ACTION_LABELS[`${key}.pending_review`] = `Submitted ${noun} for review`;
+        ACTION_LABELS[`${key}.changes_requested`] = `Requested changes to ${noun}`;
+        ACTION_LABELS[`${key}.approved`] = `Approved ${noun}`;
+        ACTION_LABELS[`${key}.active`] = `Activated ${noun}`;
+        ACTION_LABELS[`${key}.archived`] = `Archived ${noun}`;
+        ACTION_LABELS[`${key}.draft`] = `Moved ${noun} back to draft`;
+    });
  
 const AUTH_EVENT_LABELS = {
     login: "Login",
@@ -73,16 +87,26 @@ function authEventLabel(event) {
     return AUTH_EVENT_LABELS[event] ?? humanise(event);
 }
  
- 
-// Colour of the little badge for an audit action
+// Audit action badge
 function actionTone(action) {
  
     const verb = String(action ?? "").split(".")[1];
  
-    if (["approved", "reactivated"].includes(verb)) return "active";
+    if (["approved", "reactivated", "started", "active",
+         "created", "registered"].includes(verb)) {
+        return "active";
+    }
+ 
     if (["rejected", "suspended", "cancelled", "deleted"].includes(verb)) {
         return "rejected";
     }
+ 
+    if (["pending_review", "applied", "changes_requested",
+         "plan_changed"].includes(verb)) {
+        return "pending";
+    }
+ 
+    if (["expired", "archived"].includes(verb)) return "expired";
  
     return "unknown";
 }
@@ -102,18 +126,14 @@ function authTone(event) {
 function badge(label, tone) {
     return `<span class="report-status ${tone}">${escapeHTML(label)}</span>`;
 }
- 
- 
-/* ==============================================
-   STATE
-============================================== */
+
  
 let activeTab = "logs";
 let currentRange = null;
 let charts = {};
  
 const filters = {
-    logs: { action: "", search: "" },
+    logs: { action: "", role: "", search: "" },
     auth: { event: "", search: "" },
     integrations: { service: "" }
 };
@@ -123,10 +143,6 @@ const loaded = {};     // tabs already loaded for the current range
 const tokens = {};     // ignores results that arrive after a newer request
 let searchTimers = {};
  
- 
-/* ==============================================
-   DATE RANGE
-============================================== */
  
 function readRangeFromControls() {
  
@@ -186,11 +202,7 @@ function applyRangeFromControls() {
  
     loadTab(activeTab);
 }
- 
- 
-/* ==============================================
-   TABS
-============================================== */
+
  
 function switchTab(tab) {
  
@@ -305,7 +317,7 @@ async function loadTab(tab) {
  
  
 /* ==============================================
-   SHARED RENDER HELPERS
+   SHARED HELPERS
 ============================================== */
  
 function setKpis(tab, values) {
@@ -462,7 +474,7 @@ function lineConfig(labels, series) {
  
  
 /* ==============================================
-   RENDER: AUDIT LOGS
+   AUDIT LOGS
 ============================================== */
  
 // {from: "pending", to: "approved"} -> "pending → approved"
@@ -505,7 +517,10 @@ function renderLogs(data) {
             <tr>
                 <td>${escapeHTML(formatDateTime(row.created_at))}</td>
                 <td>
-                    <strong>${escapeHTML(row.actor_name || "Unknown admin")}</strong>
+                    <strong>${escapeHTML(row.actor_name || "Unknown")}</strong>
+                    ${row.actor_role
+                        ? `<span class="audit-cell-sub">${escapeHTML(capitalise(row.actor_role))}</span>`
+                        : ""}
                 </td>
                 <td>${badge(actionLabel(row.action), actionTone(row.action))}</td>
                 <td>
@@ -527,7 +542,7 @@ function renderLogs(data) {
  
  
 /* ==============================================
-   RENDER: AUTHENTICATION
+   AUTHENTICATION
 ============================================== */
  
 function renderAuth(data) {
@@ -576,7 +591,7 @@ function renderAuth(data) {
  
  
 /* ==============================================
-   RENDER: INTEGRATION FAILURES
+   INTEGRATION FAILURES
 ============================================== */
  
 function renderIntegrations(data) {
@@ -634,7 +649,7 @@ function renderIntegrations(data) {
  
  
 /* ==============================================
-   RENDER: SYSTEM STATUS
+   SYSTEM STATUS
 ============================================== */
  
 const SLOW_RESPONSE_MS = 1500;
@@ -714,9 +729,9 @@ function renderStatus(data, responseMs) {
             "ok",
             "Recording",
             audit.last_action_at
-                ? `${formatNumber(audit.actions_24h)} admin action(s) in the last 24 hours. ` +
+                ? `${formatNumber(audit.actions_24h)} event(s) in the last 24 hours. ` +
                   `Last action ${timeAgo(audit.last_action_at)}.`
-                : "No admin actions recorded yet."
+                : "No events recorded yet."
         )
     ];
  
@@ -774,7 +789,7 @@ function renderStatus(data, responseMs) {
 }
  
  
-// If the status call itself fails, that is the status
+// If the status call itself fails
 function renderStatusUnavailable() {
  
     document.getElementById("status-grid").innerHTML = statusCard(
@@ -810,11 +825,7 @@ const RENDERERS = {
     status: renderStatus
 };
  
- 
-/* ==============================================
-   SETUP
-============================================== */
- 
+
 // Filter changed: go back to page 1 and reload this tab
 function filterChanged(tab) {
     pages[tab] = 0;
@@ -883,6 +894,7 @@ function setupAuditPage() {
     });
  
     bindFilter("logs-action", "logs", "action");
+    bindFilter("logs-role", "logs", "role");
     bindSearch("logs-search", "logs");
     bindFilter("auth-event", "auth", "event");
     bindSearch("auth-search", "auth");

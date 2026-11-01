@@ -129,9 +129,9 @@
 
                 <div class="management-heading">
                     <div>
-                        <h1>Audit &amp; System Monitoring</h1>
+                        <h1>Audit Logs</h1>
                         <p>
-                            Trace admin actions, monitor sign-ins and check system health.
+                            Trace important actions by admins, coaches and users, monitor sign-ins and check system health.
                         </p>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                 </div>
 
 
-                <!-- TOOLBAR -->
+                <!-- TOOLBAR: date range (hidden on System Status) -->
 
                 <div class="report-toolbar" id="audit-toolbar">
 
@@ -193,11 +193,19 @@
                             <select id="logs-action" class="report-select" aria-label="Filter by action">
                                 <option value="">All actions</option>
                             </select>
+
+                            <select id="logs-role" class="report-select" aria-label="Filter by who did it">
+                                <option value="">Everyone</option>
+                                <option value="admin">Admins</option>
+                                <option value="coach">Coaches</option>
+                                <option value="user">Users</option>
+                                <option value="system">System</option>
+                            </select>
                             <input
                                 type="search"
                                 id="logs-search"
                                 class="report-select audit-search"
-                                placeholder="Search by admin or target name"
+                                placeholder="Search by name or action"
                                 maxlength="100"
                                 aria-label="Search"
                             >
@@ -212,7 +220,7 @@
                                     <thead>
                                         <tr>
                                             <th>Time</th>
-                                            <th>Admin</th>
+                                            <th>Actor</th>
                                             <th>Action</th>
                                             <th>Target</th>
                                             <th>Details</th>

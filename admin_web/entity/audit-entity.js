@@ -1,6 +1,7 @@
 import { supabaseClient } from "../supabase-client.js";
  
-
+ 
+// Record admin action
 export async function logAdminAction(
     action,
     targetType = null,
@@ -32,10 +33,6 @@ export async function logAdminAction(
 }
  
  
-/* ==============================================
-   READ
-============================================== */
- 
 async function callAudit(functionName, label, args) {
  
     const { data, error } =
@@ -52,7 +49,7 @@ async function callAudit(functionName, label, args) {
  
  
 export function getAuditLogs(
-    { start, end, action, search, limit, offset }
+    { start, end, action, role, search, limit, offset }
 ) {
     return callAudit("admin_audit_logs", "audit logs", {
         p_start: start,
@@ -60,7 +57,8 @@ export function getAuditLogs(
         p_action: action || null,
         p_search: search || null,
         p_limit: limit,
-        p_offset: offset
+        p_offset: offset,
+        p_role: role || null
     });
 }
  
