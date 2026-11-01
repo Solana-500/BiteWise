@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Reports & Analytics | BiteWise</title>
+
+    <link
+        rel="stylesheet"
+        href="./admin-style.css"
+    >
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        <!-- =====================================
+             SIDEBAR
+        ====================================== -->
+
+        <aside class="admin-sidebar">
+
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-content.html" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="admin-subscriptions.html" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="admin-reports.html" class="nav-item active">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+
+            </nav>
+
+            <button
+                type="button"
+                class="logout-button"
+                id="logout-button"
+            >
+                <span>↪</span>
+                Log Out
+            </button>
+
+        </aside>
+
+
+        <!-- =====================================
+             MAIN AREA
+        ====================================== -->
+
+        <div class="admin-main">
+
+            <header class="admin-header">
+
+                <div class="header-title">
+                    <h2>Analytics</h2>
+                </div>
+
+                <div class="admin-profile">
+
+                    <div class="admin-avatar" id="admin-avatar">
+                        A
+                    </div>
+
+                    <div class="admin-profile-text">
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
+                    </div>
+
+                </div>
+
+            </header>
+
+            <main class="coach-management-content">
+
+                <div class="management-heading">
+                    <div>
+                        <h1>Reports &amp; Analytics</h1>
+                        <p>
+                            Analyse system trends and export reports.
+                        </p>
+                    </div>
+                </div>
+
+
+                <!-- REPORT TABS -->
+
+                <div class="report-tabs" role="tablist">
+
+                    <button
+                        type="button"
+                        class="report-tab active"
+                        data-report-tab="users"
+                    >
+                        Users
+                    </button>
+
+                    <button
+                        type="button"
+                        class="report-tab"
+                        data-report-tab="subscriptions"
+                    >
+                        Subscriptions
+                    </button>
+
+                    <button
+                        type="button"
+                        class="report-tab"
+                        data-report-tab="coaches"
+                    >
+                        Coaches
+                    </button>
+
+                    <button
+                        type="button"
+                        class="report-tab"
+                        data-report-tab="content"
+                    >
+                        Content
+                    </button>
+
+                    <button
+                        type="button"
+                        class="report-tab"
+                        data-report-tab="usage"
+                    >
+                        Usage
+                    </button>
+
+                </div>
+
+
+                <!-- TOOLBAR: date range + export -->
+
+                <div class="report-toolbar">
+
+                    <div class="report-toolbar-left">
+
+                        <label for="report-range">Date range</label>
+
+                        <select id="report-range" class="report-select">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="year">This year</option>
+                            <option value="custom">Custom range</option>
+                        </select>
+
+                        <div
+                            class="report-custom-range"
+                            id="report-custom-range"
+                            hidden
+                        >
+                            <input
+                                type="date"
+                                id="report-start"
+                                class="report-select"
+                                aria-label="Start date"
+                            >
+
+                            <span>to</span>
+
+                            <input
+                                type="date"
+                                id="report-end"
+                                class="report-select"
+                                aria-label="End date"
+                            >
+                        </div>
+
+                        <span class="report-range-label" id="report-range-label"></span>
+
+                    </div>
+
+                    <div class="report-toolbar-actions">
+
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            id="report-print"
+                            disabled
+                        >
+                            Print / PDF
+                        </button>
+
+                        <button
+                            type="button"
+                            class="report-primary-button"
+                            id="report-export-csv"
+                            disabled
+                        >
+                            Export CSV
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <p class="report-range-error" id="report-range-error" hidden></p>
+
+
+                <!-- USERS REPORT -->
+
+                <section class="report-tab-panel active" id="report-panel-users">
+
+                    <div id="users-report-content">
+
+                        <p class="report-error" id="users-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Total users</span>
+                                <strong id="users-kpi-total">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>New users</span>
+                                <strong id="users-kpi-new">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Premium users</span>
+                                <strong id="users-kpi-premium">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Suspended users</span>
+                                <strong id="users-kpi-suspended">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="users-card-signups">
+                                <h3>New users over time</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="users-chart-signups"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="users-card-plans">
+                                <h3>Free vs Premium</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="users-chart-plans"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid single">
+
+                            <div class="report-chart-card" id="users-card-goals">
+                                <h3>Fitness goals</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="users-chart-goals"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="management-card-header">
+                                <div>
+                                    <h2>New Users</h2>
+                                    <p>Users who joined in this period.</p>
+                                </div>
+                            </div>
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Plan</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="users-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="5">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading report...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="report-table-note" id="users-table-note" hidden></p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- SUBSCRIPTIONS REPORT -->
+
+                <section class="report-tab-panel" id="report-panel-subscriptions">
+
+                    <div id="subscriptions-report-content">
+
+                        <p class="report-error" id="subscriptions-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Active subscriptions</span>
+                                <strong id="subscriptions-kpi-active">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>New in period</span>
+                                <strong id="subscriptions-kpi-new">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Ended in period</span>
+                                <strong id="subscriptions-kpi-ended">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Expiring in 30 days</span>
+                                <strong id="subscriptions-kpi-expiring">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="subscriptions-card-trend">
+                                <h3>New vs ended subscriptions</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="subscriptions-chart-trend"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="subscriptions-card-status">
+                                <h3>Subscription status</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="subscriptions-chart-status"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="management-card-header">
+                                <div>
+                                    <h2>New Subscriptions</h2>
+                                    <p>Subscriptions started in this period.</p>
+                                </div>
+                            </div>
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Plan</th>
+                                            <th>Status</th>
+                                            <th>Started</th>
+                                            <th>Expires</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="subscriptions-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="6">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading report...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="report-table-note" id="subscriptions-table-note" hidden></p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- COACHES REPORT -->
+
+                <section class="report-tab-panel" id="report-panel-coaches">
+
+                    <div id="coaches-report-content">
+
+                        <p class="report-error" id="coaches-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Active coaches</span>
+                                <strong id="coaches-kpi-active">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Pending applications</span>
+                                <strong id="coaches-kpi-pending">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Suspended coaches</span>
+                                <strong id="coaches-kpi-suspended">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Average rating</span>
+                                <strong id="coaches-kpi-rating">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="coaches-card-applications">
+                                <h3>Coach applications over time</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="coaches-chart-applications"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="coaches-card-status">
+                                <h3>Coach status</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="coaches-chart-status"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid single">
+
+                            <div class="report-chart-card" id="coaches-card-specialties">
+                                <h3>Top specialties</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="coaches-chart-specialties"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="management-card-header">
+                                <div>
+                                    <h2>Coaches</h2>
+                                    <p>Current snapshot of all coach accounts.</p>
+                                </div>
+                            </div>
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Specialties</th>
+                                            <th>Experience</th>
+                                            <th>Status</th>
+                                            <th>Clients</th>
+                                            <th>Rating</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="coaches-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="7">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading report...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="report-table-note" id="coaches-table-note" hidden></p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONTENT REPORT -->
+
+                <section class="report-tab-panel" id="report-panel-content">
+
+                    <div id="content-report-content">
+
+                        <p class="report-error" id="content-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Total plans</span>
+                                <strong id="content-kpi-total">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Pending review</span>
+                                <strong id="content-kpi-pending">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Live plans</span>
+                                <strong id="content-kpi-live">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Clients on a live plan</span>
+                                <strong id="content-kpi-clients">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="content-card-created">
+                                <h3>Plans created over time</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="content-chart-created"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="content-card-status">
+                                <h3>Plan status</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="content-chart-status"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="content-card-types">
+                                <h3>Content by type</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="content-chart-types"></canvas>
+                                </div>
+                                <p class="report-card-note" id="content-recipes-note">
+                                    Recipes are not tracked yet.
+                                </p>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="content-card-categories">
+                                <h3>Workout exercises by category</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="content-chart-categories"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid single">
+
+                            <div class="report-chart-card" id="content-card-coaches">
+                                <h3>Coaches by plans created</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="content-chart-coaches"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No data in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="management-card-header">
+                                <div>
+                                    <h2>Plans</h2>
+                                    <p>Meal and workout plans created in the selected period.</p>
+                                </div>
+                            </div>
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Coach</th>
+                                            <th>Client</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="content-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="6">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading report...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="report-table-note" id="content-table-note" hidden></p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- USAGE REPORT -->
+
+                <section class="report-tab-panel" id="report-panel-usage">
+
+                    <div id="usage-report-content">
+
+                        <p class="report-error" id="usage-report-error" hidden></p>
+
+                        <div class="report-kpis">
+
+                            <div class="report-kpi">
+                                <span>Active users</span>
+                                <strong id="usage-kpi-active">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Meals logged</span>
+                                <strong id="usage-kpi-meals">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Workouts logged</span>
+                                <strong id="usage-kpi-workouts">—</strong>
+                            </div>
+
+                            <div class="report-kpi">
+                                <span>Avg logs per active user</span>
+                                <strong id="usage-kpi-average">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid">
+
+                            <div class="report-chart-card" id="usage-card-dau">
+                                <h3>Daily active users</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="usage-chart-dau"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No activity in this period.
+                                </p>
+                            </div>
+
+                            <div class="report-chart-card" id="usage-card-adoption">
+                                <h3>Feature adoption</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="usage-chart-adoption"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No activity in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="report-chart-grid single">
+
+                            <div class="report-chart-card" id="usage-card-logs">
+                                <h3>Meals vs workouts logged</h3>
+                                <div class="report-chart-box">
+                                    <canvas id="usage-chart-logs"></canvas>
+                                </div>
+                                <p class="report-chart-empty">
+                                    No activity in this period.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="management-card">
+
+                            <div class="management-card-header">
+                                <div>
+                                    <h2>Most Active Users</h2>
+                                    <p>Top users by meals and workouts logged in this period.</p>
+                                </div>
+                            </div>
+
+                            <div class="coach-table-wrapper">
+
+                                <table class="coach-table">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Plan</th>
+                                            <th>Meals</th>
+                                            <th>Workouts</th>
+                                            <th>Total Logs</th>
+                                            <th>Last Active</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="usage-table-body">
+
+                                        <tr class="table-empty-row">
+                                            <td colspan="6">
+                                                <div class="table-empty-state">
+                                                    <strong>Loading report...</strong>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="report-table-note" id="usage-table-note" hidden></p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+            </main>
+
+        </div>
+
+
+        <!-- =====================================
+            LOGOUT CONFIRMATION MODAL
+        ====================================== -->
+
+        <div class="modal-overlay" id="logout-modal">
+
+            <div class="confirmation-modal">
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    id="logout-modal-close"
+                    aria-label="Close"
+                >
+                    &times;
+                </button>
+
+                <div class="logout-modal-icon">
+                    ↪
+                </div>
+
+                <h2>Log Out?</h2>
+
+                <p>
+                    Are you sure you want to log out of the
+                    BiteWise Admin Portal?
+                </p>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="modal-cancel-button"
+                        id="cancel-logout"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        class="modal-logout-button"
+                        id="confirm-logout"
+                    >
+                        Log Out
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script type="module" src="../admin-script.js"></script>
+
+</body>
+
+</html>

@@ -33,6 +33,11 @@ const userStatusFilter =
         "user-status-filter"
     );
 
+const userPlanFilter =
+    document.getElementById(
+        "user-plan-filter"
+    );
+
 // User profile
 const userProfileModal =
     document.getElementById(
@@ -205,8 +210,9 @@ async function loadUsersPage() {
     try {
 
         const users = await loadUsers();
-
         loadedUsers = users;
+
+        updateUserSummary();
 
         renderUsers(loadedUsers);
 
@@ -242,11 +248,15 @@ function applyUserFilters() {
     const status =
         userStatusFilter?.value || "all";
 
+    const plan =
+        userPlanFilter?.value || "all";
+
     const filteredUsers =
         filterUsers(
             loadedUsers,
             searchTerm,
-            status
+            status,
+            plan
         );
 
     renderUsers(filteredUsers);
@@ -584,7 +594,32 @@ async function handleReactivateUser() {
     }
 }
 
+function setBadge(id, text) {
 
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = text;
+    }
+}
+
+function updateUserSummary() {
+
+    const total = loadedUsers.length;
+
+    const premium = loadedUsers.filter(
+        (user) => user.subscription_tier === "premium"
+    ).length;
+
+    const free = total - premium;
+
+    setBadge(
+        "user-count",
+        `${total} ${total === 1 ? "user" : "users"}`
+    );
+    setBadge("user-free-count", `${free} Free`);
+    setBadge("user-premium-count", `${premium} Premium`);
+}
 
 // ==============================================
 // EVENT LISTENERS
@@ -597,6 +632,11 @@ userSearchInput?.addEventListener(
 );
 
 userStatusFilter?.addEventListener(
+    "change",
+    applyUserFilters
+);
+
+userPlanFilter?.addEventListener(
     "change",
     applyUserFilters
 );

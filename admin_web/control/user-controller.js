@@ -26,11 +26,13 @@ export async function reactivateUser(userId) {
 export function filterUsers(
     users,
     searchTerm,
-    status
+    status,
+    plan = "all"
 ) {
     return getFilteredUsers(
         users,
         searchTerm,
-        status
+        status,
+        plan
     );
 }

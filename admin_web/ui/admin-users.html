@@ -74,7 +74,7 @@
                     Subscriptions
                 </a>
 
-                <a href="#" class="nav-item">
+                <a href="admin-reports.html" class="nav-item">
                     <span class="nav-icon">⌁</span>
                     Analytics
                 </a>
@@ -148,89 +148,100 @@
 
                 <section class="coach-tab-panel active">
 
-                    <div class="management-card">
-
+                    <div class="management-card">   
                         <div class="management-card-header">
-
                             <div>
                                 <h2>User Accounts</h2>
-                                <p>
-                                    View and manage registered user accounts.
-                                </p>
-                            </div>
 
-
-                            <div class="user-management-filters">
-
-                                <div class="coach-search">
-                                    <input
-                                        type="search"
-                                        id="user-search"
-                                        placeholder="Search users..."
-                                        aria-label="Search users"
-                                    >
+                                <div class="count-badges">
+                                    <span class="count-badge" id="user-count">—</span>
+                                    <span class="count-badge count-badge-free" id="user-free-count">—</span>
+                                    <span class="count-badge count-badge-premium" id="user-premium-count">—</span>
                                 </div>
-
-                                <select
-                                    id="user-status-filter"
-                                    class="user-status-filter"
-                                >
-                                    <option value="all">
-                                        All Statuses
-                                    </option>
-
-                                    <option value="active">
-                                        Active
-                                    </option>
-
-                                    <option value="suspended">
-                                        Suspended
-                                    </option>
-                                </select>
-
                             </div>
 
-                        </div>
+                                <div class="user-management-filters">
+
+                                    <div class="coach-search">
+                                        <input
+                                            type="search"
+                                            id="user-search"
+                                            placeholder="Search users..."
+                                            aria-label="Search users"
+                                        >
+                                    </div>
+
+                                    <select
+                                        id="user-status-filter"
+                                        class="user-status-filter"
+                                    >
+                                        <option value="all">
+                                            All Statuses
+                                        </option>
+
+                                        <option value="active">
+                                            Active
+                                        </option>
+
+                                        <option value="suspended">
+                                            Suspended
+                                        </option>
+                                    </select>
+
+                                    <select
+                                        id="user-plan-filter"
+                                        class="user-status-filter"
+                                        aria-label="Filter by plan"
+                                    >
+                                        <option value="all">All Plans</option>
+                                        <option value="free">Free</option>
+                                        <option value="premium">Premium</option>
+                                    </select>
+
+                                </div>
+                            </div>
 
 
-                        <!-- USER TABLE -->
+                            <!-- USER TABLE -->
 
-                        <div class="coach-table-wrapper">
+                            <div class="coach-table-wrapper">
 
-                            <table class="coach-table">
+                                <table class="coach-table">
 
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Subscription</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Subscription</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
 
-                                <tbody id="users-table-body">
+                                    <tbody id="users-table-body">
 
-                                    <tr class="table-empty-row">
-                                        <td colspan="4">
+                                        <tr class="table-empty-row">
+                                            <td colspan="4">
 
-                                            <div class="table-empty-state">
-                                                <strong>
-                                                    Loading users...
-                                                </strong>
+                                                <div class="table-empty-state">
+                                                    <strong>
+                                                        Loading users...
+                                                    </strong>
 
-                                                <span>
-                                                    Registered users will
-                                                    appear here.
-                                                </span>
-                                            </div>
+                                                    <span>
+                                                        Registered users will
+                                                        appear here.
+                                                    </span>
+                                                </div>
 
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
 
-                                </tbody>
+                                    </tbody>
 
-                            </table>
+                                </table>
+
+                            </div>
 
                         </div>
 

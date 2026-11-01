@@ -26,6 +26,10 @@ import {
     loadSubscriptionsPage
 } from "./boundary/subscriptions-boundary.js";
 
+import { 
+    loadReportsPage 
+} from "./boundary/reports-boundary.js";
+
 
 /* =========================================
    ADMIN PROFILE
@@ -139,6 +143,10 @@ async function checkAdminAccess() {
 
     if (document.getElementById("subscription-list-panel")) {
         await loadSubscriptionsPage();
+    }
+
+    if (document.getElementById("report-range")) {
+        await loadReportsPage();
     }
 }
 
@@ -361,7 +369,7 @@ async function logoutAdmin() {
         return;
     }
 
-    window.location.href = "../website/index.html";
+    window.location.href = "../../website/index.html";
 }
 
 

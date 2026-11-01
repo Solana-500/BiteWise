@@ -5,6 +5,7 @@ import {
     saveLandingFeatures,
     saveLandingHowItWorks,
     loadLandingFeaturedReviews,
+    saveLandingFeaturedReviews,
     saveLandingFeaturedCoaches,
     loadLandingFeaturedCoaches,
     saveLandingPlans,

@@ -1864,6 +1864,13 @@ button {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.user-management-filters .coach-search {
+    flex: 1 1 200px;
+    min-width: 160px;
 }
 
 .user-status-filter {
@@ -1898,6 +1905,41 @@ button {
 #user-profile-modal .coach-detail-item strong {
     font-size: 15px;
     font-weight: 500;
+}
+
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: #eef1f0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.count-badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 0;
+}
+
+.count-badges .count-badge {
+    margin-left: 0;
+}
+
+.count-badge-free {
+    background: #e5f2e8;
+    color: #246b43;
+}
+
+.count-badge-premium {
+    background: #fff4d6; 
+    color: #8a6418;
 }
 
 /* =========================================
@@ -5877,4 +5919,352 @@ button {
 .subscription-status.unknown {
     color: #92400e;
     background: #fef3c7;
+}
+
+
+/* =========================================
+   REPORTS & ANALYTICS
+========================================= */
+ 
+/* Tabs */
+.report-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+ 
+.report-tab {
+    margin-bottom: -1px;
+    padding: 12px 20px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #5f6b66;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+ 
+.report-tab:hover {
+    color: #185d35;
+}
+ 
+.report-tab.active {
+    color: #185d35;
+    border-bottom-color: #185d35;
+}
+ 
+.report-tab-panel {
+    display: none;
+}
+ 
+.report-tab-panel.active {
+    display: block;
+}
+ 
+/* Toolbar */
+.report-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+ 
+.report-toolbar-left,
+.report-toolbar-actions,
+.report-custom-range {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+ 
+.report-toolbar-left > label {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+ 
+.report-custom-range[hidden] {
+    display: none;
+}
+ 
+.report-custom-range > span {
+    color: #64748b;
+    font-size: 13px;
+}
+ 
+.report-select {
+    height: 36px;
+    min-width: 150px;
+    padding: 0 12px;
+    background: #ffffff;
+    border: 1px solid #d7e1db;
+    border-radius: 8px;
+    color: #435249;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+ 
+.report-select:focus {
+    outline: none;
+    border-color: #2f6b49;
+}
+ 
+.report-range-label {
+    color: #94a3b8;
+    font-size: 13px;
+}
+ 
+.report-primary-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #185d35;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+ 
+.report-primary-button:hover {
+    background: #124a2a;
+}
+ 
+.report-primary-button:disabled,
+.report-toolbar-actions .secondary-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+ 
+.report-range-error,
+.report-error {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #f0a5a5;
+    border-radius: 10px;
+    color: #b42318;
+    font-size: 13px;
+}
+ 
+.report-range-error[hidden],
+.report-error[hidden] {
+    display: none;
+}
+ 
+/* Placeholder for reports not built yet */
+.report-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 56px 20px;
+    background: #ffffff;
+    border: 1px dashed #d5dbd7;
+    border-radius: 12px;
+    color: #64748b;
+    font-size: 14px;
+    text-align: center;
+}
+ 
+.report-placeholder strong {
+    color: #1e293b;
+    font-size: 15px;
+}
+ 
+/* KPI cards */
+.report-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+ 
+.report-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+ 
+.report-kpi span {
+    color: #64748b;
+    font-size: 13px;
+}
+ 
+.report-kpi strong {
+    color: #1e293b;
+    font-size: 26px;
+    font-weight: 700;
+}
+ 
+/* Charts */
+.report-chart-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+ 
+.report-chart-grid.single {
+    grid-template-columns: 1fr;
+}
+ 
+.report-chart-card {
+    min-width: 0;
+    padding: 18px 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+ 
+.report-chart-card h3 {
+    margin: 0 0 14px;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+}
+ 
+.report-chart-box {
+    position: relative;
+    height: 260px;
+}
+ 
+.report-chart-empty {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    height: 260px;
+    margin: 0;
+    color: #94a3b8;
+    font-size: 13px;
+}
+ 
+.report-chart-card.is-empty .report-chart-box {
+    display: none;
+}
+ 
+.report-chart-card.is-empty .report-chart-empty {
+    display: flex;
+}
+ 
+#usage-report-content.is-loading {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+ 
+#usage-report-content .management-card {
+    margin-top: 0;
+}
+ 
+@media (max-width: 900px) {
+    .report-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+ 
+    .report-chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+ 
+@media (max-width: 520px) {
+    .report-kpis {
+        grid-template-columns: 1fr;
+    }
+ 
+    .report-toolbar-actions,
+    .report-toolbar-actions button {
+        width: 100%;
+    }
+}
+ 
+@media print {
+    .admin-sidebar,
+    .admin-header,
+    .report-tabs,
+    .report-toolbar-actions,
+    #report-range,
+    .report-custom-range,
+    .report-range-error {
+        display: none !important;
+    }
+ 
+    .admin-layout,
+    .admin-main {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+ 
+    .report-toolbar {
+        border: 0;
+        padding: 0;
+    }
+ 
+    .report-chart-card,
+    .report-kpi,
+    .management-card {
+        break-inside: avoid;
+    }
+}
+ 
+ 
+/* Status badges used in report tables */
+.report-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+ 
+.report-badge.active {
+    background: #e5f2e8;
+    color: #246b43;
+}
+ 
+.report-badge.pending,
+.report-badge.unknown {
+    background: #fff4d6;
+    color: #8a6418;
+}
+ 
+.report-badge.suspended,
+.report-badge.cancelled,
+.report-badge.rejected {
+    background: #fde2e2;
+    color: #b42318;
+}
+ 
+.report-badge.expired {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+ 
+.report-subtext {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 400;
 }

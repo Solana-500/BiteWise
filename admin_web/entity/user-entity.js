@@ -117,7 +117,8 @@ export async function updateUserSuspension(
 export function getFilteredUsers(
     users,
     searchTerm,
-    status
+    status,
+    plan = "all"
 ) {
 
     const normalizedSearch =
@@ -145,12 +146,26 @@ export function getFilteredUsers(
 
         if (status === "suspended") {
             matchesStatus =
-                user.is_suspended;
+                Boolean(user.is_suspended);
+        }
+
+        const isPremium =
+            user.subscription_tier === "premium";
+
+        let matchesPlan = true;
+
+        if (plan === "premium") {
+            matchesPlan = isPremium;
+        }
+
+        if (plan === "free") {
+            matchesPlan = !isPremium;
         }
 
         return (
             matchesSearch &&
-            matchesStatus
+            matchesStatus &&
+            matchesPlan
         );
     });
 }
