@@ -319,6 +319,34 @@ export default function CoachMealPlanReviewScreen({
 
       setSavedPlanId(data.id)
 
+      await supabase
+  .from('meal_plan_meals')
+  .delete()
+  .eq('plan_id', data.id)
+
+const mealsToSave = Object.entries(mealsByDay).flatMap(
+  ([day, meals]) =>
+    meals.map((meal) => ({
+      plan_id: data.id,
+      day,
+      meal_type: meal.mealType,
+      name: meal.name,
+      calories: meal.calories,
+      serving: meal.serving,
+      tags: meal.tags,
+    }))
+)
+
+if (mealsToSave.length > 0) {
+  const { error: mealsError } = await supabase
+    .from('meal_plan_meals')
+    .insert(mealsToSave)
+
+  if (mealsError) {
+    throw mealsError
+  }
+}
+
       Alert.alert(
         'Draft saved',
         `${data.title} has been saved as a private draft. You can now submit it for system admin review when you are ready.`
@@ -404,6 +432,34 @@ export default function CoachMealPlanReviewScreen({
               if (error) {
                 console.error('Unable to submit meal plan for review:', error)
                 throw error
+              }
+
+              await supabase
+                .from('meal_plan_meals')
+                .delete()
+                .eq('plan_id', savedPlanId)
+
+              const mealsToSave = Object.entries(mealsByDay).flatMap(
+                ([day, meals]) =>
+                  meals.map((meal) => ({
+                    plan_id: savedPlanId,
+                    day,
+                    meal_type: meal.mealType,
+                    name: meal.name,
+                    calories: meal.calories,
+                    serving: meal.serving,
+                    tags: meal.tags,
+                  }))
+              )
+
+              if (mealsToSave.length > 0) {
+                const { error: mealsError } = await supabase
+                  .from('meal_plan_meals')
+                  .insert(mealsToSave)
+
+                if (mealsError) {
+                  throw mealsError
+                }
               }
 
               Alert.alert(
