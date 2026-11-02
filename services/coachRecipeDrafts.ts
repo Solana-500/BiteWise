@@ -19,9 +19,16 @@ export type CoachRecipeDraft = {
 }
 export type CoachRecipeRoutes = {
   CoachRecipes: undefined
-  CoachRecipesBuilder: { recipe?: CoachRecipeDraft } | undefined
-  CoachRecipesReview: { recipe: CoachRecipeDraft }
+  CoachRecipesBuilder: {
+    recipe?: CoachRecipeDraft
+    originalRequestKey?: string
+  } | undefined
+  CoachRecipesReview: {
+    recipe: CoachRecipeDraft
+    originalRequestKey?: string
+  }
 }
+
 const key = (userId: string) => `bitewise:coach-recipes:v1:${userId}`
 
 export async function loadLocalRecipes(userId: string): Promise<CoachRecipeDraft[]> {

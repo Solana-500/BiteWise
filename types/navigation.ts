@@ -153,17 +153,52 @@ export type RootStackParamList = {
     calorieTarget: number
     coachNotes: string
   }
+  mealsByDay?: Record<
+    string,
+    Array<{
+      id: string
+      mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
+      name: string
+      calories: number
+      serving: string
+      tags: string[]
+    }>
+  >
+  planId?: string
+  adminFeedback?: string
 }
 
   CoachCreateWorkoutPlan: undefined
 
-  CoachWorkoutPlanBuilder: {
-    workoutPlanDraft: CoachWorkoutPlanDraft
-  }
+ CoachWorkoutPlanBuilder: {
+  workoutPlanDraft: CoachWorkoutPlanDraft
+  workoutsByDay?: Record<
+    string,
+    {
+      title: string
+      focus: string
+      exercises: Array<{
+        id: string
+        name: string
+        category: string
+        sets: string
+        reps: string
+        restSeconds: string
+        load: string
+        equipment: string
+        notes: string
+      }>
+    }
+  >
+  requestKey?: string
+  adminFeedback?: string
+}
 
   CoachWorkoutPlanReview: {
     workoutPlanDraft: CoachWorkoutPlanDraft
     workoutsByDay: Record<string, CoachWorkoutDay>
+    requestKey?: string
+    adminFeedback?: string
   }
 
 CoachMealPlanReview: {
@@ -203,10 +238,12 @@ CoachRecipes: undefined
 
 CoachRecipesBuilder: {
   recipe?: CoachRecipeDraft
+  originalRequestKey?: string
 } | undefined
 
 CoachRecipesReview: {
   recipe: CoachRecipeDraft
+  originalRequestKey?: string
 }
 
 CoachRatings: undefined

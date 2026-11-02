@@ -12,9 +12,11 @@ import { useFocusEffect } from '@react-navigation/native'
 import { supabase } from '../services/supabase'
 import CoachBottomTabBar from '../components/CoachBottomTabBar';
 
+
 type Props = {
   navigation: any
 }
+
 
 type ContentCardProps = {
   title: string
@@ -26,18 +28,33 @@ type ContentCardProps = {
   onPress: () => void
 }
 
-export default function CoachContentScreen({ navigation }: Props) {
-  const [mealPlanCounts, setMealPlanCounts] = useState({
-    drafts: 0,
-    pending: 0,
-    approved: 0,
-  })
 
-  const [workoutPlanCounts, setWorkoutPlanCounts] = useState({
-    drafts: 0,
-    pending: 0,
-    approved: 0,
-  })
+type ContentCounts = {
+  drafts: number
+  pending: number
+  approved: number
+}
+
+
+const EMPTY_COUNTS: ContentCounts = {
+  drafts: 0,
+  pending: 0,
+  approved: 0,
+}
+
+
+export default function CoachContentScreen({ navigation }: Props) {
+  const [mealPlanCounts, setMealPlanCounts] =
+    useState<ContentCounts>(EMPTY_COUNTS)
+
+
+  const [workoutPlanCounts, setWorkoutPlanCounts] =
+    useState<ContentCounts>(EMPTY_COUNTS)
+
+
+  const [recipeCounts, setRecipeCounts] =
+    useState<ContentCounts>(EMPTY_COUNTS)
+
 
   const loadMealPlanCounts = useCallback(async () => {
     try {
@@ -46,18 +63,17 @@ export default function CoachContentScreen({ navigation }: Props) {
         error: userError,
       } = await supabase.auth.getUser()
 
+
       if (userError) {
         throw userError
       }
 
+
       if (!user) {
-        setMealPlanCounts({
-          drafts: 0,
-          pending: 0,
-          approved: 0,
-        })
+        setMealPlanCounts(EMPTY_COUNTS)
         return
       }
+
 
       const [draftResult, pendingResult, approvedResult] =
         await Promise.all([
@@ -70,6 +86,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             .eq('coach_id', user.id)
             .eq('status', 'draft'),
 
+
           supabase
             .from('meal_plans')
             .select('*', {
@@ -78,6 +95,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             })
             .eq('coach_id', user.id)
             .eq('status', 'pending_review'),
+
 
           supabase
             .from('meal_plans')
@@ -89,15 +107,21 @@ export default function CoachContentScreen({ navigation }: Props) {
             .in('status', ['approved', 'active']),
         ])
 
+
       if (draftResult.error) {
         throw draftResult.error
       }
+
+
       if (pendingResult.error) {
         throw pendingResult.error
       }
+
+
       if (approvedResult.error) {
         throw approvedResult.error
       }
+
 
       setMealPlanCounts({
         drafts: draftResult.count ?? 0,
@@ -109,6 +133,7 @@ export default function CoachContentScreen({ navigation }: Props) {
     }
   }, [])
 
+
   const loadWorkoutPlanCounts = useCallback(async () => {
     try {
       const {
@@ -116,18 +141,17 @@ export default function CoachContentScreen({ navigation }: Props) {
         error: userError,
       } = await supabase.auth.getUser()
 
+
       if (userError) {
         throw userError
       }
 
+
       if (!user) {
-        setWorkoutPlanCounts({
-          drafts: 0,
-          pending: 0,
-          approved: 0,
-        })
+        setWorkoutPlanCounts(EMPTY_COUNTS)
         return
       }
+
 
       const [draftResult, pendingResult, approvedResult] =
         await Promise.all([
@@ -140,6 +164,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             .eq('coach_id', user.id)
             .eq('status', 'draft'),
 
+
           supabase
             .from('workout_plans')
             .select('*', {
@@ -148,6 +173,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             })
             .eq('coach_id', user.id)
             .eq('status', 'pending_review'),
+
 
           supabase
             .from('workout_plans')
@@ -159,15 +185,21 @@ export default function CoachContentScreen({ navigation }: Props) {
             .in('status', ['approved', 'active']),
         ])
 
+
       if (draftResult.error) {
         throw draftResult.error
       }
+
+
       if (pendingResult.error) {
         throw pendingResult.error
       }
+
+
       if (approvedResult.error) {
         throw approvedResult.error
       }
+
 
       setWorkoutPlanCounts({
         drafts: draftResult.count ?? 0,
@@ -179,15 +211,97 @@ export default function CoachContentScreen({ navigation }: Props) {
     }
   }, [])
 
+
+  const loadRecipeCounts = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+
+      if (userError) {
+        throw userError
+      }
+
+
+      if (!user) {
+        setRecipeCounts(EMPTY_COUNTS)
+        return
+      }
+
+
+      const [draftResult, pendingResult, approvedResult] =
+        await Promise.all([
+          supabase
+            .from('coach_recipes')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'draft'),
+
+
+          supabase
+            .from('coach_recipes')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .eq('status', 'pending_review'),
+
+
+          supabase
+            .from('coach_recipes')
+            .select('*', {
+              count: 'exact',
+              head: true,
+            })
+            .eq('coach_id', user.id)
+            .in('status', ['approved', 'active']),
+        ])
+
+
+      if (draftResult.error) {
+        throw draftResult.error
+      }
+
+
+      if (pendingResult.error) {
+        throw pendingResult.error
+      }
+
+
+      if (approvedResult.error) {
+        throw approvedResult.error
+      }
+
+
+      setRecipeCounts({
+        drafts: draftResult.count ?? 0,
+        pending: pendingResult.count ?? 0,
+        approved: approvedResult.count ?? 0,
+      })
+    } catch (error) {
+      console.error('Unable to load recipe counts:', error)
+    }
+  }, [])
+
+
   useFocusEffect(
     useCallback(() => {
       void loadMealPlanCounts()
       void loadWorkoutPlanCounts()
+      void loadRecipeCounts()
     }, [
       loadMealPlanCounts,
       loadWorkoutPlanCounts,
+      loadRecipeCounts,
     ])
   )
+
 
   return (
     <View style={styles.screen}>
@@ -205,11 +319,13 @@ export default function CoachContentScreen({ navigation }: Props) {
             <Text style={styles.backHomeText}>‹ Home</Text>
           </TouchableOpacity>
 
+
           <Text style={styles.pageHeading}>Content Management</Text>
           <Text style={styles.pageSubtitle}>
             Create personalised content, then submit it for system admin
             approval before it is released to clients.
           </Text>
+
 
           <View style={styles.workflowCard}>
             <Text style={styles.workflowTitle}>How content is released</Text>
@@ -225,6 +341,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             </Text>
           </View>
 
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your content</Text>
             <Pressable
@@ -236,6 +353,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             </Pressable>
           </View>
 
+
           <ContentCard
             title="Meal Plans"
             description="Create personalised, client-specific nutrition plans."
@@ -245,6 +363,7 @@ export default function CoachContentScreen({ navigation }: Props) {
             approvedCount={mealPlanCounts.approved}
             onPress={() => navigation.navigate('CoachMealPlans')}
           />
+
 
           <ContentCard
             title="Workout Plans"
@@ -256,15 +375,17 @@ export default function CoachContentScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('CoachWorkoutPlans')}
           />
 
+
           <ContentCard
             title="Recipes"
-            description="Save reusable recipes for meal plans and clients."
+            description="Create client recipes and submit them for admin review."
             icon="🍲"
-            draftCount={0}
-            pendingCount={0}
-            approvedCount={0}
+            draftCount={recipeCounts.drafts}
+            pendingCount={recipeCounts.pending}
+            approvedCount={recipeCounts.approved}
             onPress={() => navigation.navigate('CoachRecipes')}
           />
+
 
           <View style={styles.reminderCard}>
             <Text style={styles.reminderIcon}>✓</Text>
@@ -279,13 +400,15 @@ export default function CoachContentScreen({ navigation }: Props) {
         </ScrollView>
       </SafeAreaView>
 
+
       <CoachBottomTabBar
-  activeTab="CoachContent"
-  onNavigate={(route) => navigation.navigate(route)}
-/>
+        activeTab="CoachContent"
+        onNavigate={(route) => navigation.navigate(route)}
+      />
     </View>
   )
 }
+
 
 function ContentCard({
   title,
@@ -314,6 +437,7 @@ function ContentCard({
         <Text style={styles.chevron}>›</Text>
       </View>
 
+
       <View style={styles.statusDivider} />
       <View style={styles.statusRow}>
         <StatusPill label="Drafts" value={draftCount} color="#7C8F83" />
@@ -323,6 +447,7 @@ function ContentCard({
     </Pressable>
   )
 }
+
 
 function StatusPill({
   label,
@@ -341,6 +466,7 @@ function StatusPill({
   )
 }
 
+
 function WorkflowStep({ number, label }: { number: string; label: string }) {
   return (
     <View style={styles.workflowStep}>
@@ -352,6 +478,7 @@ function WorkflowStep({ number, label }: { number: string; label: string }) {
   )
 }
 
+
 type CoachTabProps = {
   label: string
   icon: string
@@ -359,8 +486,10 @@ type CoachTabProps = {
   onPress: () => void
 }
 
+
 function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
   const color = active ? '#1E5C35' : '#7C8F83'
+
 
   return (
     <Pressable
@@ -376,22 +505,26 @@ function CoachTab({ label, icon, active, onPress }: CoachTabProps) {
   )
 }
 
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
 
+
   safeArea: {
     flex: 1,
     backgroundColor: '#F5FAF6',
   },
+
 
   content: {
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 28,
   },
+
 
   backHomeButton: {
     alignSelf: 'flex-start',
@@ -400,11 +533,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 
+
   backHomeText: {
     color: '#1E5C35',
     fontSize: 15,
     fontWeight: '800',
   },
+
 
   pageHeading: {
     color: '#16281D',
@@ -413,12 +548,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
 
+
   pageSubtitle: {
     marginTop: 7,
     color: '#5C7267',
     fontSize: 14,
     lineHeight: 21,
   },
+
 
   workflowCard: {
     marginTop: 20,
@@ -429,11 +566,13 @@ const styles = StyleSheet.create({
     borderColor: '#D7E8DC',
   },
 
+
   workflowTitle: {
     color: '#1E5C35',
     fontSize: 14,
     fontWeight: '800',
   },
+
 
   workflowRow: {
     marginTop: 14,
@@ -442,10 +581,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
+
   workflowStep: {
     flex: 1,
     alignItems: 'center',
   },
+
 
   workflowNumber: {
     width: 27,
@@ -456,11 +597,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E5C35',
   },
 
+
   workflowNumberText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800',
   },
+
 
   workflowStepLabel: {
     marginTop: 6,
@@ -470,12 +613,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+
   workflowArrow: {
     marginTop: 3,
     color: '#7C8F83',
     fontSize: 18,
     fontWeight: '700',
   },
+
 
   workflowNote: {
     marginTop: 13,
@@ -485,6 +630,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+
   sectionHeader: {
     marginTop: 26,
     marginBottom: 12,
@@ -493,17 +639,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
+
   sectionTitle: {
     color: '#16281D',
     fontSize: 18,
     fontWeight: '800',
   },
 
+
   viewStatusText: {
     color: '#1E5C35',
     fontSize: 13,
     fontWeight: '800',
   },
+
 
   contentCard: {
     marginBottom: 14,
@@ -522,10 +671,12 @@ const styles = StyleSheet.create({
     },
   },
 
+
   contentCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
 
   contentIconWrap: {
     width: 52,
@@ -536,20 +687,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F7F2',
   },
 
+
   contentIcon: {
     fontSize: 27,
   },
+
 
   contentCardTextWrap: {
     flex: 1,
     marginLeft: 13,
   },
 
+
   contentCardTitle: {
     color: '#16281D',
     fontSize: 16,
     fontWeight: '800',
   },
+
 
   contentCardDescription: {
     marginTop: 4,
@@ -558,12 +713,14 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
+
   chevron: {
     marginLeft: 8,
     color: '#1E5C35',
     fontSize: 27,
     fontWeight: '300',
   },
+
 
   statusDivider: {
     height: 1,
@@ -572,20 +729,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDF3EF',
   },
 
+
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
 
   statusPill: {
     flex: 1,
     alignItems: 'center',
   },
 
+
   statusPillValue: {
     fontSize: 15,
     fontWeight: '800',
   },
+
 
   statusPillLabel: {
     marginTop: 2,
@@ -593,6 +754,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+
 
   reminderCard: {
     marginTop: 4,
@@ -603,6 +765,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3DEAA',
   },
+
 
   reminderIcon: {
     width: 24,
@@ -617,10 +780,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7D98B',
   },
 
+
   reminderTextWrap: {
     flex: 1,
     marginLeft: 10,
   },
+
 
   reminderTitle: {
     color: '#704A08',
@@ -628,12 +793,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
+
   reminderText: {
     marginTop: 3,
     color: '#7A6131',
     fontSize: 12,
     lineHeight: 17,
   },
+
 
   bottomTabBar: {
     height: 78,
@@ -646,20 +813,22 @@ const styles = StyleSheet.create({
     borderTopColor: '#E2ECE6',
   },
 
+
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
+
   tabIcon: {
     fontSize: 19,
   },
+
 
   tabLabel: {
     marginTop: 3,
     fontSize: 11,
     fontWeight: '700',
   },
-
 })

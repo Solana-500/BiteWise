@@ -59,6 +59,8 @@ type WorkoutDay = {
 type ReviewParams = {
   workoutPlanDraft: WorkoutPlanDraft
   workoutsByDay: Record<string, WorkoutDay>
+  requestKey?: string
+  adminFeedback?: string
 }
 
 export default function CoachWorkoutPlanReviewScreen({
@@ -76,7 +78,8 @@ const [submitted, setSubmitted] = useState(false)
 const saveInFlight = useRef(false)
 
 const requestKey = useRef(
-  `workout-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  params?.requestKey ??
+    `workout-${Date.now()}-${Math.random().toString(36).slice(2)}`
 )
 
   const issues = useMemo(() => {
@@ -245,6 +248,12 @@ const requestKey = useRef(
 
         <Text style={styles.heading}>Review Workout Plan</Text>
         <Text style={styles.subtitle}>{plan.title}</Text>
+        {params?.adminFeedback ? (
+            <View style={styles.notice}>
+              <Text style={styles.noticeTitle}>Administrator feedback</Text>
+              <Text style={styles.noticeText}>{params.adminFeedback}</Text>
+            </View>
+          ) : null}
 
         <View style={styles.card}>
           <Text style={styles.label}>STEP 3 OF 3</Text>

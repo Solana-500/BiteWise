@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,45 +8,160 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 import { supabase } from '../services/supabase';
 import CoachBottomTabBar from '../components/CoachBottomTabBar';
 import { useCoachUnread } from '../context/CoachUnreadContext';
 
+
 type Props = {
   navigation: any;
 };
+
 
 type CoachProfile = {
   full_name: string | null;
   coaching_specialty: string | null;
 };
 
+
+type ContentCounts = {
+  pending: number;
+  approved: number;
+  changesRequested: number;
+};
+
+
+const EMPTY_CONTENT_COUNTS: ContentCounts = {
+  pending: 0,
+  approved: 0,
+  changesRequested: 0,
+};
+
+
 export default function CoachHomeScreen({ navigation }: Props) {
   const { totalUnreadCount } = useCoachUnread();
+
 
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState('Coach');
   const [specialty, setSpecialty] = useState('');
 
+
   const [ratingsError, setRatingsError] = useState(false);
+
 
   const [latestRating, setLatestRating] = useState<{
     rating: number;
     review_text: string | null;
   } | null>(null);
 
+
   const [stats, setStats] = useState({
     clients: 0,
     pendingContent: 0,
     approvedContent: 0,
+    changesRequestedContent: 0,
     recentRatings: 0,
   });
+
+
+  const [contentCounts, setContentCounts] =
+    useState<ContentCounts>(EMPTY_CONTENT_COUNTS);
+
+
+  const loadContentCounts = useCallback(async () => {
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+
+    if (userError) {
+      throw userError
+    }
+
+
+    if (!user) {
+      setContentCounts(EMPTY_CONTENT_COUNTS)
+      return
+    }
+
+
+    const [mealResult, workoutResult, recipeResult] = await Promise.all([
+      supabase
+        .from('meal_plans')
+        .select('status')
+        .eq('coach_id', user.id),
+
+
+      supabase
+        .from('workout_plans')
+        .select('status')
+        .eq('coach_id', user.id),
+
+
+      supabase
+        .from('coach_recipes')
+        .select('status')
+        .eq('coach_id', user.id),
+    ])
+
+
+    if (mealResult.error) {
+      throw mealResult.error
+    }
+
+
+    if (workoutResult.error) {
+      throw workoutResult.error
+    }
+
+
+    if (recipeResult.error) {
+      throw recipeResult.error
+    }
+
+
+    const statuses = [
+      ...(mealResult.data ?? []),
+      ...(workoutResult.data ?? []),
+      ...(recipeResult.data ?? []),
+    ].map((row) => row.status)
+
+
+    setContentCounts({
+      pending: statuses.filter(
+        (status) => status === 'pending_review'
+      ).length,
+      approved: statuses.filter(
+        (status) => status === 'approved'
+      ).length,
+      changesRequested: statuses.filter(
+        (status) => status === 'changes_requested'
+      ).length,
+    })
+  } catch (error) {
+    console.error('Unable to load content status counts:', error)
+    setContentCounts(EMPTY_CONTENT_COUNTS)
+  }
+}, [])
+
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadContentCounts();
+    }, [loadContentCounts])
+  );
 
 
   useEffect(() => {
     loadCoachHome();
   }, []);
+
 
   const loadCoachHome = async () => {
     try {
@@ -55,14 +170,17 @@ export default function CoachHomeScreen({ navigation }: Props) {
         error: userError,
       } = await supabase.auth.getUser();
 
+
       if (userError) {
         throw userError;
       }
+
 
       if (!user) {
         navigation.replace('Login');
         return;
       }
+
 
       const [profileResult, clientCountResult] = await Promise.all([
         supabase
@@ -71,6 +189,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
           .eq('id', user.id)
           .single<CoachProfile>(),
 
+
         // Count premium users assigned to this coach through profiles.assigned_coach_id
         supabase
           .from('profiles')
@@ -78,13 +197,16 @@ export default function CoachHomeScreen({ navigation }: Props) {
           .eq('assigned_coach_id', user.id),
       ]);
 
+
       if (profileResult.error) {
         throw profileResult.error;
       }
 
+
       if (clientCountResult.error) {
         throw clientCountResult.error;
       }
+
 
       const {
         data: latestReviewData,
@@ -101,7 +223,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
         })
         .limit(1);
 
+
       setRatingsError(Boolean(reviewsError));
+
 
       if (reviewsError) {
         console.error(
@@ -113,15 +237,19 @@ export default function CoachHomeScreen({ navigation }: Props) {
         setLatestRating(latestReviewData?.[0] ?? null);
       }
 
+
       setCoachName(profileResult.data?.full_name || 'Coach');
       setSpecialty(profileResult.data?.coaching_specialty || '');
 
+
       setStats({
         clients: clientCountResult.count ?? 0,
-        pendingContent: 0,
-        approvedContent: 0,
+        pendingContent: contentCounts.pending,
+        approvedContent: contentCounts.approved,
+        changesRequestedContent: contentCounts.changesRequested,
         recentRatings: reviewsError ? 0 : reviewCount ?? 0,
       });
+
 
     } catch (error) {
       console.error('Unable to load coach dashboard:', error);
@@ -130,7 +258,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
     }
   };
 
+
   const firstName = coachName.trim().split(' ')[0] || 'Coach';
+
 
   if (loading) {
     return (
@@ -139,6 +269,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
       </SafeAreaView>
     );
   }
+
 
   return (
     <View style={styles.screen}>
@@ -150,6 +281,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
           <Text style={styles.topBarTitle}>Dashboard</Text>
         </View>
 
+
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
@@ -157,14 +289,17 @@ export default function CoachHomeScreen({ navigation }: Props) {
           <View style={styles.headerRow}>
             <Text style={styles.pageHeading}>Dashboard</Text>
 
+
             <View style={styles.roleBadge}>
               <Text style={styles.roleBadgeText}>COACH</Text>
             </View>
           </View>
 
+
           <View style={styles.heroCard}>
             <View style={styles.heroTopRow}>
               <Text style={styles.heroGreeting}>Good afternoon</Text>
+
 
               <View style={styles.planChip}>
                 <Text style={styles.planChipText}>
@@ -173,18 +308,23 @@ export default function CoachHomeScreen({ navigation }: Props) {
               </View>
             </View>
 
+
             <Text style={styles.heroName}>Hello, {firstName} 👋</Text>
+
 
             <Text style={styles.heroSubtext}>
               Here&apos;s what&apos;s happening with your clients today.
             </Text>
           </View>
 
+
           <View style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Clients Assigned</Text>
 
+
             <View style={styles.summaryRow}>
               <Text style={styles.summaryNumber}>{stats.clients}</Text>
+
 
               <Pressable
                 style={styles.viewUsersButton}
@@ -193,6 +333,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
                 <Text style={styles.viewUsersText}>View User List</Text>
               </Pressable>
             </View>
+
 
             <View style={styles.progressTrack}>
               <View
@@ -204,7 +345,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
             </View>
           </View>
 
+
           <Text style={styles.sectionTitle}>Your Coaching Tools</Text>
+
 
           <View style={styles.featureGrid}>
             <Pressable
@@ -214,9 +357,16 @@ export default function CoachHomeScreen({ navigation }: Props) {
               <Text style={styles.featureEmoji}>📝</Text>
               <Text style={styles.featureTitle}>Content Status</Text>
               <Text style={styles.featureSubtitle}>
-                {stats.pendingContent} pending · {stats.approvedContent} approved
+                {contentCounts.pending} pending ·{' '}
+                {contentCounts.approved} approved
               </Text>
+              {contentCounts.changesRequested > 0 ? (
+                <Text style={styles.featureSubtitle}>
+                  {contentCounts.changesRequested} changes requested
+                </Text>
+              ) : null}
             </Pressable>
+
 
             <Pressable
               style={styles.featureCard}
@@ -229,6 +379,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
               </Text>
             </Pressable>
 
+
             <Pressable
               style={styles.featureCard}
               onPress={() => navigation.navigate('CoachChat')}
@@ -240,12 +391,14 @@ export default function CoachHomeScreen({ navigation }: Props) {
               </Text>
             </Pressable>
 
+
             <Pressable
               style={styles.featureCard}
               onPress={() => navigation.navigate('CoachRatings')}
             >
               <Text style={styles.featureEmoji}>⭐</Text>
               <Text style={styles.featureTitle}>Client Ratings</Text>
+
 
               <Text style={styles.featureSubtitle}>
                 {ratingsError
@@ -257,7 +410,9 @@ export default function CoachHomeScreen({ navigation }: Props) {
             </Pressable>
           </View>
 
+
           <Text style={styles.sectionTitle}>Recent Activity</Text>
+
 
           <Pressable
             style={styles.activityCard}
@@ -265,10 +420,12 @@ export default function CoachHomeScreen({ navigation }: Props) {
           >
             <Text style={styles.activityEmoji}>💬</Text>
 
+
             <View style={styles.activityTextBlock}>
               <Text style={styles.activityTitle}>
                 {totalUnreadCount} Unread Messages
               </Text>
+
 
               <Text
                 style={styles.activitySubtitle}
@@ -280,8 +437,10 @@ export default function CoachHomeScreen({ navigation }: Props) {
               </Text>
             </View>
 
+
             <Text style={styles.chevron}>›</Text>
           </Pressable>
+
 
           <Pressable
             style={styles.activityCard}
@@ -289,12 +448,17 @@ export default function CoachHomeScreen({ navigation }: Props) {
           >
             <Text style={styles.activityEmoji}>⭐</Text>
 
+
             <View style={styles.activityTextBlock}>
               <Text style={styles.activityTitle}>
                 Latest Client Feedback
               </Text>
 
-              <Text style={styles.activitySubtitle} numberOfLines={2}>
+
+              <Text
+                style={styles.activitySubtitle}
+                numberOfLines={2}
+              >
                 {ratingsError
                   ? 'Unable to load feedback. Open Client Ratings to retry.'
                   : latestRating
@@ -306,10 +470,12 @@ export default function CoachHomeScreen({ navigation }: Props) {
               </Text>
             </View>
 
+
             <Text style={styles.chevron}>›</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+
 
       <CoachBottomTabBar
         activeTab="CoachHome"
@@ -318,6 +484,7 @@ export default function CoachHomeScreen({ navigation }: Props) {
     </View>
   );
 }
+
 
 
 const styles = StyleSheet.create({
@@ -336,6 +503,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FAF6',
   },
 
+
   topBar: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -352,11 +520,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
+
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 24,
   },
+
 
   headerRow: {
     flexDirection: 'row',
@@ -380,6 +550,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+
 
   heroCard: {
     marginBottom: 18,
@@ -419,6 +590,7 @@ const styles = StyleSheet.create({
     color: '#D8EADF',
     fontSize: 13,
   },
+
 
   summaryCard: {
     marginBottom: 22,
@@ -466,6 +638,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E5C35',
   },
 
+
   sectionTitle: {
     marginBottom: 12,
     color: '#16281D',
@@ -474,6 +647,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
+
 
   featureGrid: {
     flexDirection: 'row',
@@ -502,6 +676,7 @@ const styles = StyleSheet.create({
     color: '#7C8F83',
     fontSize: 12,
   },
+
 
   activityCard: {
     flexDirection: 'row',
@@ -534,6 +709,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
 
+
   bottomTabBar: {
     height: 78,
     paddingTop: 8,
@@ -558,6 +734,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   bottomTabSafeArea: {
-  backgroundColor: '#FFFFFF',
-},
+    backgroundColor: '#FFFFFF',
+  },
 });

@@ -268,8 +268,10 @@ export default function CoachMealPlanBuilderScreen({
     navigation.navigate('CoachMealPlanReview', {
       planBasics,
       mealsByDay,
+      planId: route.params?.planId,
+      adminFeedback: route.params?.adminFeedback,
     })
-  }
+      }
 
   return (
     <View style={styles.screen}>

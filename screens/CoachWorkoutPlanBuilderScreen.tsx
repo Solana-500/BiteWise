@@ -116,11 +116,20 @@ export default function CoachWorkoutPlanBuilderScreen({
     : ['Mon', 'Wed', 'Fri']
 
   const initialWorkoutsByDay = useMemo(() => {
+  const savedWorkouts = route.params?.workoutsByDay
+
+  if (savedWorkouts) {
     return workoutDays.reduce<Record<string, WorkoutDay>>((result, day) => {
-      result[day] = createEmptyWorkoutDay(day)
+      result[day] = savedWorkouts[day] ?? createEmptyWorkoutDay(day)
       return result
     }, {})
-  }, [workoutDays.join('|')])
+  }
+
+  return workoutDays.reduce<Record<string, WorkoutDay>>((result, day) => {
+    result[day] = createEmptyWorkoutDay(day)
+    return result
+  }, {})
+}, [workoutDays.join(','), route.params?.workoutsByDay])
 
   const [selectedDay, setSelectedDay] = useState(workoutDays[0])
   const [workoutsByDay, setWorkoutsByDay] = useState<
@@ -444,9 +453,11 @@ export default function CoachWorkoutPlanBuilderScreen({
             text: 'Continue to review',
             onPress: () => {
               navigation.navigate('CoachWorkoutPlanReview', {
-                workoutPlanDraft,
-                workoutsByDay,
-              })
+  workoutPlanDraft,
+  workoutsByDay,
+  requestKey: route.params?.requestKey,
+  adminFeedback: route.params?.adminFeedback,
+})
             },
           },
         ]
@@ -455,9 +466,11 @@ export default function CoachWorkoutPlanBuilderScreen({
     }
 
     navigation.navigate('CoachWorkoutPlanReview', {
-      workoutPlanDraft,
-      workoutsByDay,
-    })
+  workoutPlanDraft,
+  workoutsByDay,
+  requestKey: route.params?.requestKey,
+  adminFeedback: route.params?.adminFeedback,
+})
   }
 
   return (
@@ -479,6 +492,18 @@ export default function CoachWorkoutPlanBuilderScreen({
 
           <Text style={styles.pageHeading}>Build Workouts</Text>
           <Text style={styles.pageSubtitle}>{workoutPlanDraft.title}</Text>
+
+          {route.params?.adminFeedback ? (
+  <View style={styles.draftNotice}>
+    <Text style={styles.draftNoticeIcon}>!</Text>
+    <View style={styles.draftNoticeTextWrap}>
+      <Text style={styles.draftNoticeTitle}>Administrator feedback</Text>
+      <Text style={styles.draftNoticeText}>
+        {route.params.adminFeedback}
+      </Text>
+    </View>
+  </View>
+) : null}
 
           <View style={styles.progressCard}>
             <View style={styles.progressHeader}>
@@ -1924,5 +1949,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 15,
   },
+  draftNoticeTextWrap: {
+  flex: 1,
+  marginLeft: 8,
+},
+draftNoticeTitle: {
+  color: '#704A08',
+  fontSize: 12,
+  fontWeight: '800',
+},
 
 }) 

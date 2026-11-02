@@ -178,8 +178,10 @@ export default function CoachRecipesBuilderScreen({
     }
 
     navigation.navigate('CoachRecipesReview', {
-      recipe,
-    })
+  recipe,
+  originalRequestKey: route.params?.originalRequestKey,
+})
+
   }
 
   return (
