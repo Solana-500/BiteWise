@@ -86,10 +86,31 @@ function formatExperience(years) {
     }`;
 }
 
-/* =========================================
-   COACH TABLES (render + search)
-========================================= */
+// Coach tabs
+function setupCoachTabs() {
 
+    const tabs = document.querySelectorAll(".coach-tab");
+    const panels = document.querySelectorAll(".coach-tab-panel");
+
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+
+            tabs.forEach(item => item.classList.remove("active"));
+            panels.forEach(panel => panel.classList.remove("active"));
+
+            tab.classList.add("active");
+
+            document
+                .getElementById(`${tab.dataset.coachTab}-panel`)
+                ?.classList.add("active");
+        });
+    });
+}
+
+setupCoachTabs();
+
+
+// Coach table
 function emptyRowHTML(title, message) {
     return `
         <tr class="table-empty-row">
@@ -996,8 +1017,12 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
+async function loadCoachesPage() {
+    await loadCoachApplications();
+    await loadApprovedCoaches();
+    await loadSuspendedCoaches();
+}
+
 export {
-    loadCoachApplications,
-    loadApprovedCoaches,
-    loadSuspendedCoaches
+    loadCoachesPage
 };

@@ -4,10 +4,8 @@ import {
     loadUsersPage
 } from "./boundary/users-boundary.js";
 
-import {
-    loadCoachApplications,
-    loadApprovedCoaches,
-    loadSuspendedCoaches
+   import { 
+    loadCoachesPage 
 } from "./boundary/coaches-boundary.js";
 
 import {
@@ -32,8 +30,11 @@ import {
 
 import {
     loadAuditPage
-} from "./boundary/audit-boundary.js"
+} from "./boundary/audit-boundary.js";
 
+import { 
+    loadDashboardPage 
+} from "./boundary/dashboard-boundary.js";
 
 /* =========================================
    ADMIN PROFILE
@@ -120,13 +121,11 @@ async function checkAdminAccess() {
     
     // Load only the module belonging to the current page.
     if (document.getElementById("total-users")) {
-        await loadDashboardStatistics();
+        await loadDashboardPage();
     }
 
     if (document.querySelector(".coach-tab")) {
-        await loadCoachApplications();
-        await loadApprovedCoaches();
-        await loadSuspendedCoaches();
+        await loadCoachesPage();
     }
 
     if (document.getElementById("users-table-body")) {
@@ -157,207 +156,6 @@ async function checkAdminAccess() {
         await loadAuditPage();
     }
 }
-
-
-
-/* =========================================
-   DASHBOARD STATISTICS
-========================================= */
-
-async function loadDashboardStatistics() {
-    try {
-        // Total registered users
-        const {
-            count: userCount,
-            error: userCountError
-        } = await supabaseClient
-            .from("profiles")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("app_role", "user");
-
-        if (userCountError) {
-            console.error(
-                "Error loading user count:",
-                userCountError.message
-            );
-        } else {
-            const totalUsers =
-                document.getElementById("total-users");
-
-            if (totalUsers) {
-                totalUsers.textContent = userCount ?? 0;
-            }
-        }
-
-
-        // Total approved health coaches
-        const {
-            count: coachCount,
-            error: coachCountError
-        } = await supabaseClient
-            .from("profiles")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("app_role", "coach")
-            .eq("approval_status", "approved");
-
-        if (coachCountError) {
-            console.error(
-                "Error loading coach count:",
-                coachCountError.message
-            );
-        } else {
-            const totalCoaches =
-                document.getElementById("total-coaches");
-
-            if (totalCoaches) {
-                totalCoaches.textContent = coachCount ?? 0;
-            }
-        }
-
-
-        // Pending coach applications
-        const {
-            count: pendingCoachCount,
-            error: pendingCoachError
-        } = await supabaseClient
-            .from("profiles")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("app_role", "coach")
-            .eq("approval_status", "pending");
-
-        if (pendingCoachError) {
-            console.error(
-                "Error loading pending coach applications:",
-                pendingCoachError.message
-            );
-        } else {
-            const pendingCoaches =
-                document.getElementById("pending-coaches");
-
-            if (pendingCoaches) {
-                pendingCoaches.textContent =
-                    pendingCoachCount ?? 0;
-            }
-        }
-
-
-        // Pending meal plans
-        const {
-            count: pendingMealCount,
-            error: pendingMealError
-        } = await supabaseClient
-            .from("meal_plans")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("status", "pending_review");
-
-
-        // Pending workout plans
-        const {
-            count: pendingWorkoutCount,
-            error: pendingWorkoutError
-        } = await supabaseClient
-            .from("workout_plans")
-            .select("*", {
-                count: "exact",
-                head: true
-            })
-            .eq("status", "pending_review");
-
-
-        // Display combined pending content count
-        if (pendingMealError) {
-            console.error(
-                "Error loading pending meal plans:",
-                pendingMealError.message
-            );
-        }
-
-        if (pendingWorkoutError) {
-            console.error(
-                "Error loading pending workout plans:",
-                pendingWorkoutError.message
-            );
-        }
-
-        if (!pendingMealError && !pendingWorkoutError) {
-            const totalPendingContent =
-                (pendingMealCount ?? 0) +
-                (pendingWorkoutCount ?? 0);
-
-            const pendingContent =
-                document.getElementById("pending-content");
-
-            const pendingContentSmall =
-                document.getElementById("pending-content-small");
-
-            if (pendingContent) {
-                pendingContent.textContent =
-                    totalPendingContent;
-            }
-
-            if (pendingContentSmall) {
-                pendingContentSmall.textContent =
-                    totalPendingContent;
-            }
-        }
-
-    } catch (error) {
-        console.error(
-            "Unable to load dashboard statistics:",
-            error
-        );
-    }
-}
-
-
-/* =========================================
-   COACH MANAGEMENT TABS
-========================================= */
-
-const coachTabs =
-    document.querySelectorAll(".coach-tab");
-
-const coachTabPanels =
-    document.querySelectorAll(".coach-tab-panel");
-
-coachTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-        const selectedTab = tab.dataset.coachTab;
-
-        // Remove active state
-        coachTabs.forEach((item) => {
-            item.classList.remove("active");
-        });
-
-        coachTabPanels.forEach((panel) => {
-            panel.classList.remove("active");
-        });
-
-        // Activate selected tab
-        tab.classList.add("active");
-
-        const selectedPanel =
-            document.getElementById(
-                `${selectedTab}-panel`
-            );
-
-        if (selectedPanel) {
-            selectedPanel.classList.add("active");
-        }
-    });
-});
 
 
 /* =========================================
