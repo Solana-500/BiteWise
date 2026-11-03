@@ -4,11 +4,14 @@ import {
 } from "../control/auth-controller.js";
  
 
-// redirect to landing
-const ACCESS_DENIED_URL = "../website/index.html";
-const LOGGED_OUT_URL = "../../website/index.html";
+const LANDING_PAGE_URL = "../../website/index.html";
+ 
+// redirect to landing 
+const ACCESS_DENIED_URL = LANDING_PAGE_URL + "?login=1";
+const LOGGED_OUT_URL = LANDING_PAGE_URL;
  
  
+// admin profile 
 function showAdminProfile({ user, profile }) {
  
     const avatar = document.getElementById("admin-avatar");
@@ -32,7 +35,7 @@ function showAdminProfile({ user, profile }) {
         roleElement.textContent = "Admin";
     }
 }
- 
+
  
 async function handleLogout() {
  
