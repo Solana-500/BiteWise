@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Ionicons from '@expo/vector-icons/Ionicons'
 import {
   ActivityIndicator,
   Alert,
@@ -792,8 +793,10 @@ function openEditFood() {
               {analyzingImage ? (
                 <ActivityIndicator color="#1E5C35" />
               ) : (
-                <Text style={styles.actionIcon}>📷</Text>
-              )}
+              <View style={{ marginBottom: 7 }}>
+                <Ionicons name="camera-outline" size={29} color="#1E5C35" />
+              </View>
+                )}
             
               <Text style={styles.actionText}>
                 {analyzingImage ? 'Scanning...' : 'AI Food Scanner'}
@@ -814,7 +817,14 @@ function openEditFood() {
               accessibilityRole="button"
               accessibilityLabel="Log food using voice"
             >
-              <Text style={styles.actionIcon}>🎤</Text>
+              <View style={{ marginBottom: 7 }}>
+                <Ionicons
+                  name={recorderState.isRecording ? 'stop-circle-outline' : 'mic-outline'}
+                  size={29}
+                  color="#1E5C35"
+                />
+              </View>
+              
               <Text style={styles.actionText}>
                 {recorderState.isRecording ? 'Stop Recording' : 'AI Voice'}
               </Text>
