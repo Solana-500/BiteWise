@@ -2201,7 +2201,6 @@ button {
     color: #1f2937;
 }
 
-/* Section tabs */
 .landing-section-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -2233,7 +2232,6 @@ button {
     font-weight: 600;
 }
 
-/* Tab panels */
 .landing-tab-panel {
     min-width: 0;
 }
@@ -2328,7 +2326,7 @@ button {
 }
 
 
-/* HERO IMAGE — Remove button */
+/* Hero image remove button */
 .hero-image-card [data-remove-hero-image] {
     display: block;
     width: 100%;
@@ -2377,7 +2375,6 @@ button {
     margin: 0 auto 0 0;
 }
 
-/* Disabled feature fields */
 .feature-editor-card input:disabled,
 .feature-editor-card textarea:disabled,
 .feature-editor-card select:disabled {
@@ -2423,7 +2420,7 @@ button {
     display: none;
 }
 
-/* EDIT — blue */
+/* Edit */
 .feature-editor-header [data-edit-feature],
 .feature-editor-header [data-edit-step] {
     color: #2563eb;
@@ -2438,7 +2435,7 @@ button {
     border-color: #93c5fd;
 }
 
-/* SAVE — green */
+/* Save */
 .feature-editor-header [data-save-feature],
 .feature-editor-header [data-save-step] {
     color: #15803d;
@@ -2453,7 +2450,7 @@ button {
     border-color: #86efac;
 }
 
-/* CANCEL — neutral grey */
+/* Cancel */
 .feature-editor-header [data-cancel-feature],
 .feature-editor-header [data-cancel-step] {
     color: #475569;
@@ -2468,7 +2465,7 @@ button {
     border-color: #94a3b8;
 }
 
-/* REMOVE — red */
+/* Remove */
 .feature-editor-header [data-remove-feature],
 .feature-editor-header [data-remove-step] {
     color: #dc2626;
@@ -2483,7 +2480,7 @@ button {
     border-color: #f87171;
 }
 
-/* ADD FEATURE / STEP — green */
+/* Add feature */
 #add-feature-button,
 #add-step-button {
     color: #ffffff;
@@ -2721,7 +2718,6 @@ button {
 
 
 /* Reviews pagination */
-
 .review-pagination {
     display: flex;
     align-items: center;
@@ -2822,7 +2818,7 @@ button {
     background: #f4f8f4;
 }
 
-/* Checkbox — first column */
+/* Checkbox */
 .coach-editor-card > input[type="checkbox"] {
     grid-column: 1;
     grid-row: 1;
@@ -2839,7 +2835,7 @@ button {
     cursor: not-allowed;
 }
 
-/* Avatar and coach details — second column */
+/* Avatar and coach details */
 .coach-editor-card > .coach-card-main {
     grid-column: 2;
     grid-row: 1;
@@ -2897,7 +2893,6 @@ button {
     font-weight: 600;
 }
 
-/* Selection order — third column */
 .coach-editor-card > .coach-rank {
     grid-column: 3;
     grid-row: 1;
@@ -2968,7 +2963,6 @@ button {
 
 
 /* Coach pagination */
-
 .coach-pagination {
     display: flex;
     align-items: center;
@@ -3046,7 +3040,7 @@ button {
     display: none;
 }
 
-/* Shared header button appearance */
+/* Shared header button */
 .plan-editor-header button {
     flex-shrink: 0;
     padding: 9px 16px;
@@ -3062,7 +3056,7 @@ button {
         color 0.2s ease;
 }
 
-/* EDIT — blue */
+/* Edit */
 .plan-editor-header [data-edit-plan] {
     color: #2563eb;
     background-color: #eff6ff;
@@ -3075,7 +3069,7 @@ button {
     border-color: #93c5fd;
 }
 
-/* SAVE — green */
+/* Save */
 .plan-editor-header [data-save-plan] {
     color: #15803d;
     background-color: #f0fdf4;
@@ -3088,7 +3082,7 @@ button {
     border-color: #86efac;
 }
 
-/* CANCEL — neutral grey */
+/* Cancel */
 .plan-editor-header [data-cancel-plan] {
     color: #475569;
     background-color: #ffffff;
@@ -3101,7 +3095,7 @@ button {
     border-color: #94a3b8;
 }
 
-/* REMOVE PLAN — red */
+/* Remove plan */
 .plan-editor-header [data-remove-plan] {
     color: #dc2626;
     background-color: #ffffff;
@@ -3119,10 +3113,7 @@ button {
     display: none;
 }
 
-/* ==============================================
-   PLAN EDITOR FIELDS
-============================================== */
-
+/* Plan editor */
 .plan-editor-fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3168,10 +3159,7 @@ button {
     border-color: #2563eb;
 }
 
-/* ==============================================
-   PLAN FEATURES
-============================================== */
-
+/* Plan features */
 .plan-feature-list {
     display: flex;
     flex-direction: column;
@@ -3229,7 +3217,7 @@ button {
     border-color: #f87171;
 }
 
-/* ADD PLAN — green */
+/* Add plan */
 #add-plan-button {
     padding: 10px 16px;
     border: 1px solid #185d35;
@@ -3271,11 +3259,6 @@ button {
         flex-wrap: wrap;
     }
 }
-
-
-/* ==============================================
-   REFINED SUBSCRIPTION PLAN EDITOR
-============================================== */
 
 .plan-editor-card {
     padding: 24px;
@@ -3374,7 +3357,6 @@ button {
     font-size: 12px;
 }
 
-/* Disabled fields */
 .plan-editor-fields input:disabled,
 .plan-editor-fields select:disabled,
 .plan-editor-fields textarea:disabled,
@@ -3442,7 +3424,6 @@ button {
     box-shadow: 0 0 0 3px rgba(57, 149, 99, 0.12);
 }
 
-/* Dynamic editor lists */
 .landing-editor-panel .editor-list {
     margin-bottom: 16px;
 }
@@ -3533,7 +3514,6 @@ button {
     outline-offset: 2px;
 }
 
-/* Preview iframe */
 #landing-preview-frame {
     display: block;
     width: 100%;
@@ -3551,16 +3531,11 @@ button {
     line-height: 1.6;
 }
 
-/* Respect the HTML hidden attribute */
 .landing-content [hidden] {
     display: none !important;
 }
 
-/* =========================================
-   EXPANDED PREVIEW MODE
-========================================= */
-
-/* Make preview occupy the available width */
+/* Expand preview mode */
 .landing-management-layout.preview-mode {
     display: block;
 }
@@ -3612,10 +3587,7 @@ button {
     cursor: not-allowed;
 }
 
-/* =========================================
-   RESPONSIVE LAYOUT
-========================================= */
-
+/* Responsive */
 @media (max-width: 1200px) {
     .landing-management-layout:not(.preview-mode) {
         grid-template-columns: minmax(0, 1fr);
@@ -3690,7 +3662,7 @@ button {
 }
 
 /* Notification */
-.admin-notification {
+/* .admin-notification {
     position: fixed;
     top: 24px;
     right: 24px;
@@ -3723,7 +3695,7 @@ button {
 
 #admin-notification-message {
     flex: 1;
-}
+} */
 
 
 
@@ -3759,7 +3731,6 @@ button {
 }
 
 /* Main panel */
-
 .review-moderation-panel {
     padding: 24px;
     background-color: #ffffff;
@@ -3778,7 +3749,6 @@ button {
 }
 
 /* Toolbar and tabs */
-
 .review-toolbar {
     display: flex;
     justify-content: space-between;
@@ -3841,7 +3811,6 @@ button {
 }
 
 /* Search */
-
 .review-search {
     display: flex;
     flex-direction: column;
@@ -3874,7 +3843,6 @@ button {
 }
 
 /* Review filter */
-
 #review-type-filter {
     height: 36px;
     width: 150px;
@@ -3899,7 +3867,6 @@ button {
 }
 
 /* Review cards */
-
 .moderation-review-list {
     display: flex;
     flex-direction: column;
@@ -4027,7 +3994,6 @@ button {
 }
 
 /* Card footer and actions */
-
 .moderation-review-footer {
     display: flex;
     justify-content: space-between;
@@ -4095,7 +4061,6 @@ button {
 }
 
 /* Empty state */
-
 .review-empty-state {
     padding: 48px 20px;
     text-align: center;
@@ -4118,8 +4083,7 @@ button {
     font-size: 13px;
 }
 
-/* Responsive layout */
-
+/* Responsive */
 @media (max-width: 900px) {
     .review-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4207,9 +4171,6 @@ button {
     line-height: 1.6;
 }
 
-/* ==============================================
-   REVIEW QUEUE PANEL
-============================================== */
 
 .review-moderation-panel {
     padding: 24px;
@@ -4235,10 +4196,6 @@ button {
     color: #6b7280;
     font-size: 14px;
 }
-
-/* ==============================================
-   REVIEW TABS — MATCH COACH MANAGEMENT
-============================================== */
 
 .review-toolbar {
     align-items: center;
@@ -4330,10 +4287,7 @@ button {
     }
 }
 
-/* ==============================================
-   REVIEW CARDS
-============================================== */
-
+/* Review cards */
 .moderation-review-list {
     display: flex;
     flex-direction: column;
@@ -4382,8 +4336,6 @@ button {
     font-size: 13px;
 }
 
-/* Status badge */
-
 .review-status {
     display: inline-flex;
     align-items: center;
@@ -4408,8 +4360,6 @@ button {
     color: #991b1b;
 }
 
-/* Rating and feedback text */
-
 .review-rating {
     margin-bottom: 12px;
     color: #b7791f;
@@ -4425,10 +4375,7 @@ button {
     overflow-wrap: anywhere;
 }
 
-/* ==============================================
-   MODERATION ACTION BUTTONS
-============================================== */
-
+/* Action buttons */
 .moderation-review-actions {
     display: flex;
     align-items: center;
@@ -4479,10 +4426,7 @@ button {
     cursor: not-allowed;
 }
 
-/* ==============================================
-   EMPTY AND LOADING STATES
-============================================== */
-
+/* Empty and loading */
 .review-empty-state {
     padding: 42px 20px;
     text-align: center;
@@ -4505,10 +4449,7 @@ button {
     text-align: center;
 }
 
-/* ==============================================
-   RESPONSIVE LAYOUT
-============================================== */
-
+/* Responsive */
 @media (max-width: 900px) {
     .review-summary-grid {
         grid-template-columns: 1fr;
@@ -4552,11 +4493,7 @@ button {
     }
 }
 
-
-/* ==============================================
-   REVIEW CARD DESIGN
-============================================== */
-
+/* Review card */
 .moderation-review-card {
     padding: 24px 28px;
     margin-bottom: 18px;
@@ -4702,6 +4639,7 @@ button {
     filter: brightness(0.96);
 }
 
+/* Responsive */
 @media (max-width: 600px) {
     .moderation-review-card {
         padding: 18px;
@@ -4744,11 +4682,6 @@ button {
     color: #78817b;
     font-size: 14px;
 }
-
-
-/* =========================================
-   CONTENT TABS
-========================================= */
 
 .content-tabs {
     display: flex;
@@ -4799,11 +4732,6 @@ button {
     color: #185d35;
 }
 
-
-/* =========================================
-   CONTENT TAB PANELS
-========================================= */
-
 .content-tab-panel {
     display: none;
 }
@@ -4811,11 +4739,6 @@ button {
 .content-tab-panel.active {
     display: block;
 }
-
-
-/* =========================================
-   CONTENT CARD HEADER
-========================================= */
 
 .content-management-page .management-card-header {
     display: flex;
@@ -4836,11 +4759,7 @@ button {
     font-size: 12px;
 }
 
-
-/* =========================================
-   CONTENT SEARCH AND FILTER
-========================================= */
-
+/* Content search and filter */
 .content-filters {
     display: flex;
     align-items: center;
@@ -4877,10 +4796,7 @@ button {
 }
 
 
-/* =========================================
-   CONTENT TABLE
-========================================= */
-
+/* Content table */
 .content-table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -4916,14 +4832,10 @@ button {
     border-bottom: none;
 }
 
+/* Content empty */
 .content-table tbody tr:not(.table-empty-row):hover {
     background: #fbfcfb;
 }
-
-
-/* =========================================
-   CONTENT EMPTY STATE
-========================================= */
 
 .content-table .table-empty-row td {
     padding: 55px 20px;
@@ -4948,10 +4860,7 @@ button {
 }
 
 
-/* =========================================
-   CONTENT ACTION BUTTONS
-========================================= */
-
+/* Content action buttons */
 .content-management-page .content-row-actions {
     display: flex;
     align-items: center;
@@ -4982,11 +4891,7 @@ button {
     outline-offset: 2px;
 }
 
-
-/* =========================================
-   CONTENT STATUS
-========================================= */
-
+/* Content status */
 .content-status {
     display: inline-flex;
     padding: 5px 9px;
@@ -5011,12 +4916,7 @@ button {
 }
 
 
-
-/* ==============================================
-   CONTENT DETAILS & FEEDBACK MODALS
-============================================== */
-
-/* Modal overlay */
+/* Content details and feedback */
 #content-details-modal:not([hidden]),
 #content-feedback-modal:not([hidden]) {
     display: flex;
@@ -5063,7 +4963,6 @@ button {
     border-bottom: 1px solid #e5e7eb;
 }
 
-/* Default header title: feedback modal */
 #content-feedback-modal .modal-header h2 {
     margin: 0;
     color: #111827;
@@ -5161,6 +5060,7 @@ button {
     color: #111827;
 }
 
+/* Responsive */
 @media (max-width: 600px) {
     #content-details-modal .content-details-header {
         padding: 18px;
@@ -5434,11 +5334,7 @@ button {
     white-space: nowrap;
 }
 
-
-/* ==============================================
-   MODAL FOOTERS & BUTTONS
-============================================== */
-
+/* Footer and buttons */
 #content-details-modal .modal-footer,
 #content-feedback-modal .modal-footer {
     display: flex;
@@ -5503,7 +5399,6 @@ button {
     background-color: #f3f4f6;
 }
 
-/* Disabled buttons */
 #content-details-modal .modal-footer button:disabled,
 #content-feedback-modal .modal-footer button:disabled {
     opacity: 0.55;
@@ -5593,7 +5488,7 @@ button {
     cursor: not-allowed;
 }
 
-/* REQUEST CHANGES BUTTON */
+/* Request Changes button */
 #content-details-modal #content-details-reject {
     padding: 10px 20px;
     border: 1px solid #d97706;
@@ -5612,7 +5507,6 @@ button {
     border-color: #b45309;
 }
 
-/* SEND FEEDBACK BUTTON */
 #content-feedback-modal #content-feedback-confirm {
     padding: 10px 20px;
     border: 1px solid #b45309;
@@ -5637,7 +5531,6 @@ button {
 }
 
 /* Admin change-request feedback */
-
 .admin-change-request {
     display: block;
     margin-top: 20px;
@@ -5687,8 +5580,6 @@ button {
     white-space: pre-wrap;
 }
 
-/* Meal plan coach notes */
-
 .meal-coach-notes {
     margin: 20px 0;
 }
@@ -5697,7 +5588,6 @@ button {
     display: block;
     margin-bottom: 8px;
 }
-
 
 
 .meal-coach-notes-content {
@@ -5729,11 +5619,7 @@ button {
 }
 
 
-
-/* ==============================================
-   RESPONSIVE MODALS
-============================================== */
-
+/* Responsive */
 @media (max-width: 600px) {
     #content-details-modal:not([hidden]),
     #content-feedback-modal:not([hidden]) {
@@ -5773,10 +5659,6 @@ button {
     }
 }
 
-
-/* =========================================
-   CONTENT RESPONSIVE
-========================================= */
 
 @media (max-width: 760px) {
     .content-management-page {
@@ -5880,7 +5762,6 @@ button {
     background: #ffffff;
 }
 
-/* Destructive button */
 .warning-button {
     padding: 10px 20px;
     border: none;
@@ -6273,7 +6154,7 @@ button {
     column-gap: 32px;
 }
 
-/* Payment history heading */
+/* Payment history */
 .subscription-payment-history {
     margin-top: 0;
 }
@@ -6286,7 +6167,6 @@ button {
     line-height: 1.4;
 }
 
-/* Payment history table */
 .subscription-payment-history .content-table-wrapper {
     margin-top: 0;
 }
@@ -6324,7 +6204,6 @@ button {
    REPORTS & ANALYTICS
 ========================================= */
  
-/* Tabs */
 .report-tabs {
     display: flex;
     gap: 8px;
@@ -6625,7 +6504,7 @@ button {
 }
  
  
-/* Status badges used in report tables */
+/* Status badges */
 .report-badge {
     display: inline-flex;
     align-items: center;
@@ -6671,7 +6550,6 @@ button {
    AUDIT LOGS PAGE
 ========================================= */
  
-/* Filter row above a table */
 .audit-filters {
     display: flex;
     flex-wrap: wrap;
@@ -6909,4 +6787,542 @@ button {
     #status-refresh {
         display: none !important;
     }
+}
+
+
+
+/* =========================================
+   CATEGORY MANAGEMENT
+========================================= */
+
+.category-management-content {
+    padding: 34px 38px 50px;
+}
+
+.category-page-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 26px;
+}
+
+.category-page-heading h1 {
+    margin: 0 0 7px;
+
+    color: #1f2933;
+    font-size: 26px;
+}
+
+.category-page-heading p {
+    margin: 0;
+
+    color: #78817b;
+    font-size: 14px;
+}
+
+.category-main-tabs {
+    display: flex;
+    gap: 8px;
+
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #dfe6e1;
+}
+
+.category-main-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 16px;
+
+    background: transparent;
+    color: #6d766f;
+
+    border: none;
+    border-bottom: 2px solid transparent;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.category-main-tab:hover {
+    color: #185d35;
+}
+
+.category-main-tab.active {
+    color: #185d35;
+    border-bottom-color: #185d35;
+}
+
+.category-tab-content {
+    display: none;
+}
+
+.category-tab-content.active {
+    display: block;
+}
+
+.category-content-panel {
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8e4;
+    border-radius: 12px;
+}
+
+.category-content-panel .category-section-heading {
+    padding: 16px 22px;
+}
+
+.category-content-panel .category-section-heading h3 {
+    margin-bottom: 4px;
+}
+
+.category-content-panel .category-section-heading p {
+    line-height: 1.5;
+}
+
+.category-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 22px;
+
+    border-bottom: 1px solid #e8ede9;
+}
+
+.category-section-heading h3 {
+    margin: 0 0 5px;
+
+    color: #1f2933;
+    font-size: 16px;
+}
+
+.category-section-heading h4 {
+    margin: 0 0 5px;
+
+    color: #1f2933;
+    font-size: 15px;
+}
+
+.category-section-heading p {
+    margin: 0;
+
+    color: #8a928d;
+    font-size: 12px;
+}
+
+.category-section-controls {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+/* Search and filter */
+.category-search-input {
+    width: 240px;
+
+    padding: 10px 13px;
+
+    background: #ffffff;
+    color: #303832;
+
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+
+    outline: none;
+
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.category-section-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.category-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.category-status-filter {
+    height: 36px;
+    min-width: 145px;
+    padding: 0 13px;
+
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+
+    background-color: #ffffff;
+    color: #303832;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.category-status-filter:focus
+.category-search-input:focus {
+    border-color: #6c9b7d;
+    box-shadow:
+        0 0 0 3px rgba(24, 93, 53, 0.08);
+}
+
+/* Add Category */
+.category-add-button {
+    position: fixed;
+    right: 48px;
+    bottom: 28px;
+    z-index: 1000;
+
+    padding: 10px 14px;
+    border: 1px solid #185d35;
+    border-radius: 8px;
+
+    background-color: #166534;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    transition: background-color 0.2s ease,
+                transform 0.2s ease;
+
+    cursor: pointer;
+}
+
+.category-add-button:hover {
+    background-color: #14532d;
+    transform: translateY(-2px);
+}
+
+.workout-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 22px;
+    border-bottom: 1px solid #e8ede9;
+}
+
+.workout-category-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    background: #ffffff;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.workout-category-tab:hover {
+    background: #f0f7f2;
+    border-color: #9bbda7;
+}
+
+.workout-category-tab.active {
+    background: #e6f4ea;
+    border-color: #a8d5b5;
+    color: #185d35;
+
+    font-weight: 600;
+}
+
+.workout-subtab-content {
+    display: none;
+}
+
+.workout-subtab-content.active {
+    display: block;
+}
+
+.workout-subtab-content .category-section-heading {
+    padding: 16px 22px;
+}
+
+.category-table-container {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.category-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    text-align: left;
+}
+
+.category-table th {
+    padding: 13px 20px;
+
+    background: #fafcfa;
+    color: #7b847e;
+
+    border-bottom: 1px solid #e8ede9;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.category-table td {
+    padding: 18px 20px;
+
+    color: #3e4741;
+
+    border-bottom: 1px solid #edf0ee;
+
+    font-size: 13px;
+
+    vertical-align: middle;
+}
+
+.category-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.category-table tbody tr:hover {
+    background: #fbfcfb;
+}
+
+.category-status {
+    display: inline-flex;
+
+    padding: 5px 9px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.category-status.active {
+    background: #e5f3e9;
+    color: #185d35;
+}
+
+.category-status.inactive {
+    background: #f4e8e8;
+    color: #9a4141;
+}
+
+
+/* Action buttons */
+.category-action-button {
+    padding: 8px 13px;
+
+    background: #ffffff;
+    color: #185d35;
+
+    border: 1px solid #b9d0c0;
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.category-action-button:hover {
+    background: #edf6f0;
+}
+
+/* Edit */
+.category-action-button.edit {
+    color: #185d35;
+    border-color: #b9d0c0;
+}
+
+.category-action-button.edit:hover {
+    background: #edf6f0;
+}
+
+/* Deactivate */
+.category-action-button.deactivate {
+    color: #9a4141;
+    border-color: #e7bcbc;
+}
+
+.category-action-button.deactivate:hover {
+    background: #fdf1f1;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+
+    .category-management-content {
+        padding: 26px 20px;
+    }
+
+    .category-main-tabs {
+        overflow-x: auto;
+    }
+
+    .category-main-tab {
+        white-space: nowrap;
+    }
+
+    .category-section-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .category-section-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .category-search-input {
+        width: 100%;
+    }
+
+    .category-add-button {
+        width: 100%;
+    }
+
+    .category-table {
+        min-width: 600px;
+    }
+
+    .workout-category-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .workout-category-tab {
+        white-space: nowrap;
+    }
+}
+
+.category-edit-modal {
+    text-align: left;
+}
+
+.category-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    margin: 24px 0;
+}
+
+.category-edit-form label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.category-edit-form input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 11px 13px;
+
+    border: 1px solid #d8e0da;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.category-edit-form input:focus {
+    outline: none;
+    border-color: #6c9b7d;
+}
+
+.category-management-content .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.category-deactivate-button {
+    background: #b42318;
+    border: 1px solid #b42318;
+    color: #ffffff;
+
+    padding: 12px 24px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.category-deactivate-button:hover {
+    background: #991b1b;
+    border-color: #991b1b;
+}
+
+.category-edit-modal h2,
+.category-edit-modal p {
+    text-align: center;
+}
+
+.input-error {
+    display: block;
+    margin-top: 6px;
+
+    color: #b42318;
+    font-size: 13px;
+    text-align: left;
+}
+
+.category-no-results td {
+    padding: 32px 16px;
+    text-align: center;
+}
+
+.category-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.category-empty-state h3 {
+    margin: 0;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.category-empty-state p {
+    margin-top: 0px;
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 400;
 }

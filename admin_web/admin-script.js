@@ -11,6 +11,7 @@ import { loadContentPage } from "./boundary/content-boundary.js";
 import { loadSubscriptionsPage } from "./boundary/subscriptions-boundary.js";
 import { loadReportsPage } from "./boundary/reports-boundary.js";
 import { loadAuditPage } from "./boundary/audit-boundary.js";
+import { loadCategoriesPage } from "./boundary/category-boundary.js";
  
  
 // load only the page containing the element of that page
@@ -23,7 +24,8 @@ const PAGES = [
     ["#content-table-body", loadContentPage],
     ["#subscription-list-panel", loadSubscriptionsPage],
     ["#report-range", loadReportsPage],
-    ["#audit-toolbar", loadAuditPage]
+    ["#audit-toolbar", loadAuditPage],
+    ["[data-category-content]", loadCategoriesPage]
 ];
  
  
