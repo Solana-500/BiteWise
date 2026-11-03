@@ -47,7 +47,7 @@ async function loadLandingPageContent() {
         }
     }
 
-    // Request the selected version.
+    // Request the selected version
     let { data: landing, error } = await supabaseClient
         .from("landing_page_content")
         .select("id, status, content")
@@ -130,6 +130,9 @@ async function loadLandingPageContent() {
     renderLandingHowItWorks(landing.content.howItWorks);
     renderLandingFeaturedCoaches(
         landing.content.featuredCoaches?.coachIds || []
+    );
+    renderLandingFeaturedReviews(
+        landing.content.featuredReviews?.reviewIds || []
     );
     renderLandingPlans(landing.content.plans);
 }
@@ -338,6 +341,146 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
         container.appendChild(card);
     });
 }
+
+
+
+async function renderLandingFeaturedReviews(selectedReviewIds = []) {
+    const container = document.getElementById(
+        "landing-reviews"
+    );
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (
+        !Array.isArray(selectedReviewIds) ||
+        selectedReviewIds.length === 0
+    ) {
+        return;
+    }
+
+    const { data: reviews, error } = await supabaseClient
+        .from("app_feedback")
+        .select(`
+            id,
+            user_id,
+            rating,
+            feedback_text,
+            created_at
+        `)
+        .in("id", selectedReviewIds)
+        .eq("moderation_status", "published")
+        .not("feedback_text", "is", null)
+        .neq("feedback_text", "");
+
+    if (error) {
+        console.error("Failed to load featured reviews:", error);
+        return;
+    }
+
+    // Preserve the order selected by the admin
+    const featuredReviews = selectedReviewIds
+        .map((id) =>
+            (reviews || []).find((review) => review.id === id)
+        )
+        .filter(Boolean);
+
+    if (featuredReviews.length === 0) {
+        return;
+    }
+
+    // Retrieve reviewer names
+    const profileIds = [
+        ...new Set(featuredReviews.map((review) => review.user_id))
+    ];
+
+    const { data: profiles, error: profileError } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", profileIds);
+
+    if (profileError) {
+        console.error("Failed to load review authors:", profileError);
+        return;
+    }
+
+    const profileNames = Object.fromEntries(
+        (profiles || []).map((profile) => [
+            profile.id,
+            profile.full_name
+        ])
+    );
+
+    featuredReviews.forEach((review) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+
+        // Rating stars
+        const rating = document.createElement("div");
+        rating.className = "stars";
+
+        const ratingValue = Math.max(
+            0,
+            Math.min(5, Number(review.rating) || 0)
+        );
+
+        rating.textContent = "★".repeat(ratingValue);
+
+        // Review text
+        const reviewText = document.createElement("p");
+        reviewText.className = "review-text";
+        reviewText.textContent = review.feedback_text || "";
+
+        // Reviewer information
+        const reviewerContainer = document.createElement("div");
+        reviewerContainer.className = "review-user";
+
+        const reviewerName =
+            profileNames[review.user_id] || "Unknown User";
+
+        // Reviewer avatar
+        const avatar = document.createElement("div");
+        avatar.className = "review-avatar";
+
+        avatar.textContent = reviewerName
+            .split(/\s+/)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+
+        // Reviewer name
+        const reviewerDetails = document.createElement("div");
+
+        const name = document.createElement("h3");
+        name.textContent = reviewerName;
+
+        // Review date
+        const date = document.createElement("p");
+        date.textContent = review.created_at
+            ? new Date(review.created_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+            })
+            : "";
+
+        reviewerDetails.append(name, date);
+
+        reviewerContainer.append(avatar, reviewerDetails);
+
+        // Add elements to card
+        card.append(
+            rating,
+            reviewText,
+            reviewerContainer
+        );
+
+        container.appendChild(card);
+    });
+}
+
 
 
 
@@ -1611,9 +1754,7 @@ loginForm?.addEventListener(
             // ==================================
 
             if (profile.app_role === "admin") {
-                window.location.href =
-                    "/admin_web/ui/admin-dashboard.html";
-
+                window.location.href = "../admin_web/ui/admin-dashboard.html";
                 return;
             }
 
