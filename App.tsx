@@ -208,38 +208,25 @@ function PremiumHomeStackNavigator() {
   )
 }
 
-function s() {
+function PremiumTabs() {
   const unreadCount = useCoachUnreadCount()
   const insets = useSafeAreaInsets()
 
-  return
-}
-  <PremiumTab.Navigator
-    screenOptions={{
-      headerShown: false,
-      tabBarStyle: {
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: '#E2ECE6',
-        height: 60 + insets.bottom,
-        paddingBottom: Math.max(insets.bottom, 8),
-        paddingTop: 7,
-      },
-    }}
-  >
+  return (
+    <PremiumTab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2ECE6',
+          height: 60 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 7,
+        },
+      }}
+    >
 
-      
-    tabBarStyle: {
-      backgroundColor: '#FFFFFF',
-      borderTopWidth: 1,
-      borderTopColor: '#E2ECE6',
-      height: 60 + insets.bottom,
-      paddingBottom: Math.max(insets.bottom, 8),
-      paddingTop: 7,
-    },
-
-    }}
-  >
       <PremiumTab.Screen
         name="PuHome"
         component={PremiumHomeStackNavigator}
