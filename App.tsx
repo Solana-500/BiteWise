@@ -208,24 +208,25 @@ function PremiumHomeStackNavigator() {
   )
 }
 
-function PremiumTabs() {
+function s() {
   const unreadCount = useCoachUnreadCount()
   const insets = useSafeAreaInsets()
 
-  return (
+  return
+}
   <PremiumTab.Navigator
-  screenOptions={{
-      bottom: 12,
-    }}
     screenOptions={{
       headerShown: false,
-      tabBarActiveTintColor: '#1E5C35',
-      tabBarInactiveTintColor: '#7C8F83',
-
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '700',
+      tabBarStyle: {
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E2ECE6',
+        height: 60 + insets.bottom,
+        paddingBottom: Math.max(insets.bottom, 8),
+        paddingTop: 7,
       },
+    }}
+  >
 
       
     tabBarStyle: {
