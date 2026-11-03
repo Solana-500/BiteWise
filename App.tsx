@@ -210,10 +210,11 @@ function PremiumHomeStackNavigator() {
 
 function PremiumTabs() {
   const unreadCount = useCoachUnreadCount()
+  const insets = useSafeAreaInsets()
 
   return (
   <PremiumTab.Navigator
-    safeAreaInsets={{
+  screenOptions={{
       bottom: 12,
     }}
     screenOptions={{
@@ -226,11 +227,16 @@ function PremiumTabs() {
         fontWeight: '700',
       },
 
-      tabBarStyle: {
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: '#E2ECE6',
-      },
+      
+    tabBarStyle: {
+      backgroundColor: '#FFFFFF',
+      borderTopWidth: 1,
+      borderTopColor: '#E2ECE6',
+      height: 60 + insets.bottom,
+      paddingBottom: Math.max(insets.bottom, 8),
+      paddingTop: 7,
+    },
+
     }}
   >
       <PremiumTab.Screen
