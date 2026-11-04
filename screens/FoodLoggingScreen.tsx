@@ -220,84 +220,70 @@ async function stopVoiceRecording() {
   }
 }
 
+
 async function pickFoodImage() {
-  try { 
-      const permission = await ImagePicker.requestCameraPermissionsAsync()
-      
-      if (!permission.granted) {
-        Alert.alert(
-          'Camera Permission Required',
-          'Please allow BiteWise to access your camera to photograph your food.'
-        )
-        return
-      }
-      
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        quality: 0.5,
-        base64: false,
-      })
+  try {
+    const permission =
+      await ImagePicker.requestCameraPermissionsAsync()
 
+    if (!permission.granted) {
+      Alert.alert(
+        'Camera Permission Required',
+        'Please allow BiteWise to access your camera.'
+      )
+      return
+    }
 
-    if (result.canceled || result.assets.length === 0) {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.5,
+      base64: false,
+    })
+
+    if (result.canceled || !result.assets?.length) {
       return
     }
 
     const imageUri = result.assets[0].uri
+
     setSelectedImage(imageUri)
     setAnalyzingImage(true)
 
-    
-   
+    // Analyse the image with Gemini
     const analysis = await analyzeFoodImage(imageUri)
-    
-    // Mark this food as AI-generated and not yet reviewed.
+
+    // Store the actual Gemini results
+    setSelectedFood({
+      name: analysis.name,
+      serving: analysis.serving,
+      calories: analysis.calories,
+      protein: analysis.protein,
+      carbs: analysis.carbs,
+      fat: analysis.fat,
+    })
+
+    // Populate the editable review form
+    setEditFoodName(analysis.name)
+    setEditServing(analysis.serving)
+    setEditCalories(String(analysis.calories))
+    setEditProtein(String(analysis.protein))
+    setEditCarbs(String(analysis.carbs))
+    setEditFat(String(analysis.fat))
+
+    // Require the user to review AI estimates
     setIsAiFood(true)
     setAiFoodReviewed(false)
-    
-    // Display the AI result in the food logging card.
-        
-  
-    const calories = Number(editCalories)
-    const protein = Number(editProtein)
-    const carbs = Number(editCarbs)
-    const fat = Number(editFat)
-    
-    setSelectedFood({
-      name: editFoodName.trim(),
-      serving: editServing.trim(),
-      calories,
-      protein,
-      carbs,
-      fat,
-    })
-    
-    if (isAiFood) {
-      setAiFoodReviewed(true)
-    }
-    
-    setShowEditFood(false)
 
-    
-    // Confirm the user has reviewed the AI estimates.
-    if (isAiFood) {
-      setAiFoodReviewed(true)
-    }
-    
-    setShowEditFood(false)
-    
-    Alert.alert(
-      'Food Reviewed',
-      'Your food details have been confirmed. You can now save the meal.'
-    )
+    // Open the review form
+    setShowEditFood(true)
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Food image analysis failed:', error)
 
     Alert.alert(
       'AI Analysis Failed',
-      'Unable to analyze this photo. Please try again.'
+      error?.message || 'Unable to analyse this photo.'
     )
   } finally {
     setAnalyzingImage(false)
