@@ -5161,11 +5161,13 @@ button {
 }
 
 #content-details-modal .workout-sessions-count {
+    display: block;
     margin: 0 0 16px;
     color: #6b7280;
     font-size: 13px;
 }
 
+/* Workout session */
 #content-details-modal .workout-session {
     margin-bottom: 12px;
     overflow: hidden;
@@ -5174,31 +5176,44 @@ button {
     background-color: #ffffff;
 }
 
-#content-details-modal .workout-session summary {
+#content-details-modal .workout-session > summary {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px;
+    padding: 16px 20px 16px 42px;
     cursor: pointer;
     list-style: none;
 }
 
-#content-details-modal .workout-session summary::-webkit-details-marker {
+#content-details-modal .workout-session > summary::-webkit-details-marker {
     display: none;
 }
 
-#content-details-modal .workout-session summary::after {
-    content: "+";
-    flex-shrink: 0;
-    color: #6b7280;
-    font-size: 20px;
+#content-details-modal .workout-session > summary::marker {
+    content: "";
 }
 
-#content-details-modal .workout-session[open] summary::after {
-    content: "−";
+/* Expand / collapse arrow */
+#content-details-modal .workout-session > summary::before {
+    content: "";
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid #6b7280;
+    border-bottom: 1.5px solid #6b7280;
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 0.2s ease;
 }
 
+#content-details-modal .workout-session[open] > summary::before {
+    transform: translateY(-30%) rotate(225deg);
+}
+
+/* Session title */
 #content-details-modal .workout-session summary > span:first-child {
     display: flex;
     flex-direction: column;
@@ -5217,17 +5232,20 @@ button {
     font-size: 12px;
 }
 
+/* Exercise count */
 #content-details-modal .workout-session summary > span:nth-child(2) {
     color: #6b7280;
     font-size: 12px;
     white-space: nowrap;
 }
 
+/* Session exercises*/
 #content-details-modal .workout-session-exercises {
-    padding: 0 16px 12px;
+    padding: 0 20px 12px;
     border-top: 1px solid #f0f1f3;
 }
 
+/* Individual exercise */
 #content-details-modal .workout-exercise {
     display: flex;
     align-items: flex-start;
@@ -5245,6 +5263,7 @@ button {
     min-width: 0;
 }
 
+/* Name */
 #content-details-modal .workout-exercise strong {
     display: block;
     color: #111827;
@@ -5252,6 +5271,7 @@ button {
     font-weight: 600;
 }
 
+/* Category */
 #content-details-modal .workout-exercise small {
     display: block;
     margin-top: 4px;
@@ -5259,13 +5279,16 @@ button {
     font-size: 12px;
 }
 
+/* Description */
 #content-details-modal .workout-exercise p {
     margin: 6px 0 0;
     color: #6b7280;
     font-size: 12px;
+    line-height: 1.5;
     overflow-wrap: anywhere;
 }
 
+/* Statistics */
 #content-details-modal .workout-exercise-stats {
     display: flex;
     flex-wrap: wrap;
@@ -5282,7 +5305,7 @@ button {
     white-space: nowrap;
 }
 
-/* Footer and buttons */
+/* Footer */
 #content-details-modal .modal-footer,
 #content-feedback-modal .modal-footer {
     display: flex;
@@ -5306,6 +5329,17 @@ button {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #content-details-modal .workout-exercise {
+        flex-direction: column;
+    }
+
+    #content-details-modal .workout-exercise-stats {
+        justify-content: flex-start;
+    }
 }
 
 /* Approve */
@@ -5534,7 +5568,10 @@ button {
 
 /* Coach notes */
 .meal-coach-notes {
-    margin: 20px 0;
+    display: block;
+    width: 100%;
+    margin: 10px 0 20px;
+    padding: 0;
 }
 
 .meal-coach-notes .content-detail-label {
@@ -5560,24 +5597,225 @@ button {
     white-space: normal;
 }
 
-.meal-coach-notes {
-    display: block;
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    margin: 20px 0;
-    padding: 0;
-}
+
 
 /* ==============================================
-   RECIPE DETAILS
+   MEAL PLAN CONTENT
+============================================== */
+
+#content-details-modal .meal-plan-day {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+#content-details-modal .meal-plan-day-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 20px 18px 42px;
+    cursor: pointer;
+    list-style: none;
+}
+
+#content-details-modal .meal-plan-day-header::-webkit-details-marker {
+    display: none;
+}
+
+#content-details-modal .meal-plan-day-header::marker {
+    content: "";
+}
+
+/* Expand / collapse arrow */
+#content-details-modal .meal-plan-day-header::before {
+    content: "";
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid #6b7280;
+    border-bottom: 1.5px solid #6b7280;
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+#content-details-modal .meal-plan-day[open] > .meal-plan-day-header::before {
+    transform: translateY(-30%) rotate(225deg);
+}
+
+/* Day information */
+#content-details-modal .meal-plan-day-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+#content-details-modal .meal-plan-day-info strong {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#content-details-modal .meal-plan-day-info span {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Daily calorie progress */
+#content-details-modal .meal-plan-day-calories {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+#content-details-modal .meal-plan-day-calories > span {
+    color: #111827;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+#content-details-modal .meal-plan-calorie-progress {
+    width: 120px;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e5e7eb;
+}
+
+#content-details-modal .meal-plan-calorie-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #20613f;
+    transition: width 0.3s ease;
+}
+
+/* Meal plan rows */
+#content-details-modal .meal-plan-day-meals {
+    border-top: 1px solid #f1f3f5;
+}
+
+#content-details-modal .meal-plan-row {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr) 100px;
+    align-items: start;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+#content-details-modal .meal-plan-row:last-child {
+    border-bottom: none;
+}
+
+/* Meal type */
+#content-details-modal .meal-plan-type {
+    padding-top: 3px;
+    color: #6b7280;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+}
+
+/* Meal details */
+#content-details-modal .meal-plan-details {
+    min-width: 0;
+}
+
+#content-details-modal .meal-plan-name {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#content-details-modal .meal-plan-name strong {
+    color: #111827;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#content-details-modal .meal-plan-name span {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+/* Meal tags */
+#content-details-modal .meal-plan-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+#content-details-modal .meal-plan-tags span {
+    padding: 4px 8px;
+    border-radius: 20px;
+    background: #f1f5f3;
+    color: #374151;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* Meal calories */
+#content-details-modal .meal-plan-row-calories {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+#content-details-modal .meal-plan-row-calories strong {
+    color: #111827;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#content-details-modal .meal-plan-row-calories span {
+    color: #6b7280;
+    font-size: 11px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #content-details-modal .meal-plan-day-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    #content-details-modal .meal-plan-day-calories {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #content-details-modal .meal-plan-row {
+        grid-template-columns: 65px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    #content-details-modal .meal-plan-row-calories {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+}
+
+
+/* ==============================================
+   RECIPE CONTENT
 ============================================== */
 
 /* Recipe description */
 #content-details-modal .recipe-description {
     display: block;
     width: 100%;
-    margin: 20px 0;
+    margin: 8px 0 20px;
     padding: 0;
 }
 
@@ -5601,88 +5839,87 @@ button {
     white-space: normal;
 }
 
-/* Recipe instructions */
-#content-details-modal .recipe-instruction {
-    line-height: 1.6;
-    white-space: pre-wrap;
+#content-details-modal .recipe-content-section {
+    margin-top: 28px;
 }
 
-/* Recipe ingredient quantities */
-#content-details-modal .recipe-ingredient-quantity {
-    display: inline-flex;
+/* Recipe section headings */
+#content-details-modal .recipe-section-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+#content-details-modal .recipe-section-heading h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#content-details-modal .recipe-section-heading > span {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Ingredients */
+#content-details-modal .recipe-ingredients-list {
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+#content-details-modal .recipe-ingredient-row {
+    display: flex;
     align-items: center;
-    padding: 5px 8px;
-    border-radius: 5px;
-    background-color: #f3f4f6;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+#content-details-modal .recipe-ingredient-row:last-child {
+    border-bottom: none;
+}
+
+#content-details-modal .recipe-ingredient-name {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+#content-details-modal .recipe-ingredient-quantity {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #f3f4f6;
     color: #374151;
     font-size: 12px;
+    font-weight: 500;
+}
+
+/* Instructions */
+#content-details-modal .recipe-step-content p {
+    margin: 0;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
-    #content-details-modal:not([hidden]),
-    #content-feedback-modal:not([hidden]) {
-        padding: 12px;
+    #content-details-modal .recipe-ingredient-row {
+        align-items: flex-start;
     }
 
-    #content-details-modal .modal-box,
-    #content-feedback-modal .modal-box {
-        max-height: 92vh;
-    }
-
-    .content-detail-item {
-        grid-template-columns: 1fr;
-        gap: 6px;
-    }
-
-    #content-details-modal .workout-plan-summary,
-    #content-details-modal .workout-plan-preferences {
-        grid-template-columns: 1fr;
-    }
-
-    #content-details-modal .workout-exercise {
-        flex-direction: column;
-    }
-
-    #content-details-modal .workout-exercise-stats {
-        justify-content: flex-start;
-    }
-
-    #content-details-modal .modal-header,
-    #content-feedback-modal .modal-header,
-    #content-details-modal .modal-body,
-    #content-feedback-modal .modal-body,
-    #content-details-modal .modal-footer,
-    #content-feedback-modal .modal-footer {
-        padding: 16px;
-    }
-}
-
-
-@media (max-width: 760px) {
-    .content-management-page {
-        padding: 26px 20px;
-    }
-
-    .content-tabs {
-        overflow-x: auto;
-    }
-
-    .content-management-page .management-card-header {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .content-filters {
-        flex-wrap: wrap;
-    }
-
-    .content-filters input {
-        width: 100%;
-    }
-
-    .content-filters select {
-        flex: 1;
+    #content-details-modal .recipe-step {
+        gap: 10px;
     }
 }
 

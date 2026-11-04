@@ -1,6 +1,7 @@
 import {
     getAllCoachContent,
     getWorkoutPlanDetails,
+    getMealPlanMeals,
     updateContentStatus
 } from "../entity/content-entity.js";
 
@@ -200,6 +201,15 @@ export async function loadWorkoutPlanDetails(planId) {
         return await getWorkoutPlanDetails(planId);
     } catch (error) {
         console.error("Unable to load workout plan details:", error);
+        throw error;
+    }
+}
+
+export async function loadMealPlanMeals(planId) {
+    try {
+        return await getMealPlanMeals(planId);
+    } catch (error) {
+        console.error("Unable to load meal plan meals:", error);
         throw error;
     }
 }

@@ -346,3 +346,26 @@ export async function getWorkoutPlanDetails(planId) {
         )
     }));
 }
+
+export async function getMealPlanMeals(planId) {
+    const { data, error } = await supabaseClient
+        .from("meal_plan_meals")
+        .select(`
+            id,
+            plan_id,
+            day,
+            meal_type,
+            name,
+            calories,
+            serving,
+            tags
+        `)
+        .eq("plan_id", planId)
+        .order("day", { ascending: true });
+
+    if (error) {
+        throw new Error(`Unable to load meal plan meals: ${error.message}`);
+    }
+
+    return data ?? [];
+}

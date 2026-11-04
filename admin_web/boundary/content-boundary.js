@@ -1,6 +1,7 @@
 import {
     loadCoachContent,
     loadWorkoutPlanDetails,
+    loadMealPlanMeals,
     setContentStatusFilter,
     setContentSearch,
     setContentTypeFilter,
@@ -340,7 +341,8 @@ async function showContentDetails(item) {
 
     try {
         if (isMealPlan) {
-            renderMealPlanDetails(item, body);
+            const meals = await loadMealPlanMeals(item.id);
+            renderMealPlanDetails(item, meals, body);
         } else if (isWorkoutPlan) {
             const sessions = await loadWorkoutPlanDetails(item.id);
             renderWorkoutPlanDetails(item, sessions, body);
@@ -371,7 +373,7 @@ async function showContentDetails(item) {
 }
 
 
-function renderMealPlanDetails(item, body) {
+function renderMealPlanDetails(item, meals, body) {
     const summaryCards = [
         ["Goal", item.goal],
         ["Duration", item.duration],
@@ -393,15 +395,26 @@ function renderMealPlanDetails(item, body) {
         ]
     ];
 
-    // No additional detail rows are needed.
-    // Admin feedback is displayed in its own panel below.
     const otherDetails = [];
 
-    // Extract the number of days from durations such as "7 days".
+    // Extract the number of days from duration
     const durationMatch = String(item.duration ?? "").match(/\d+/);
     const numberOfDays = durationMatch
         ? Math.min(Number(durationMatch[0]), 31)
         : 0;
+
+    // Group meals by day
+    const mealsByDay = meals.reduce((groups, meal) => {
+        const day = meal.day;
+
+        if (!groups[day]) {
+            groups[day] = [];
+        }
+
+        groups[day].push(meal);
+
+        return groups;
+    }, {});
 
     body.innerHTML = `
         <div class="workout-plan-summary">
@@ -426,6 +439,7 @@ function renderMealPlanDetails(item, body) {
                     <span class="content-detail-label">
                         Coach notes
                     </span>
+
                     <p class="meal-coach-notes-content">
                         ${escapeHTML(item.coach_notes)}
                     </p>
@@ -445,6 +459,7 @@ function renderMealPlanDetails(item, body) {
                     <span class="content-detail-label">
                         ${escapeHTML(label)}
                     </span>
+
                     <span class="content-detail-value">
                         ${escapeHTML(String(value))}
                     </span>
@@ -455,37 +470,124 @@ function renderMealPlanDetails(item, body) {
         <section class="workout-sessions-section">
             <div class="workout-sessions-heading">
                 <h3>Plan Contents</h3>
+
                 <span class="workout-sessions-count">
-                    ${numberOfDays} days
+                    ${meals.length} meals
                 </span>
             </div>
 
-            ${numberOfDays > 0
-                ? Array.from({ length: numberOfDays }, (_, index) => `
-                    <details
-                        class="workout-session"
-                        ${index === 0 ? "open" : ""}
-                    >
-                        <summary>
-                            <span class="workout-session-title">
-                                <strong>Day ${index + 1}</strong>
-                            </span>
+            ${meals.length > 0
+                ? Object.entries(mealsByDay)
+                    .map(([day, dayMeals], index) => {
+                        const totalCalories = dayMeals.reduce(
+                            (total, meal) => total + Number(meal.calories || 0),
+                            0
+                        );
 
-                            <span class="workout-session-count">
-                                0 meals
-                            </span>
-                        </summary>
+                        const dailyTarget = Number(item.daily_calorie_target || 0);
 
-                        <div class="workout-session-exercises">
-                            <p class="content-detail-value">
-                                No meals added for this day.
-                            </p>
-                        </div>
-                    </details>
-                `).join("")
+                        const caloriePercentage = dailyTarget > 0
+                            ? Math.min((totalCalories / dailyTarget) * 100, 100)
+                            : 0;
+
+                        return `
+                            <details
+                                class="meal-plan-day"
+                                ${index === 0 ? "open" : ""}
+                            >
+                                <summary class="meal-plan-day-header">
+
+                                    <div class="meal-plan-day-info">
+                                        <strong>${escapeHTML(day)}</strong>
+
+                                        <span>
+                                            ${dayMeals.length} meals
+                                        </span>
+                                    </div>
+
+                                    <div class="meal-plan-day-calories">
+
+                                        <div class="meal-plan-calorie-progress">
+                                            <div
+                                                class="meal-plan-calorie-progress-fill"
+                                                style="width: ${caloriePercentage}%"
+                                            ></div>
+                                        </div>
+
+                                        <span>
+                                            ${totalCalories.toLocaleString()} /
+                                            ${dailyTarget > 0
+                                                ? dailyTarget.toLocaleString()
+                                                : "—"
+                                            } kcal
+                                        </span>
+
+                                    </div>
+
+                                </summary>
+
+                                <div class="meal-plan-day-meals">
+
+                                    ${dayMeals.map(meal => `
+                                        <div class="meal-plan-row">
+
+                                            <div class="meal-plan-type">
+                                                ${escapeHTML(
+                                                    meal.meal_type
+                                                        ? meal.meal_type.toUpperCase()
+                                                        : "MEAL"
+                                                )}
+                                            </div>
+
+                                            <div class="meal-plan-details">
+
+                                                <div class="meal-plan-name">
+                                                    <strong>
+                                                        ${escapeHTML(meal.name)}
+                                                    </strong>
+
+                                                    <span>
+                                                        ${escapeHTML(
+                                                            meal.serving || ""
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                ${meal.tags?.length
+                                                    ? `
+                                                        <div class="meal-plan-tags">
+                                                            ${meal.tags.map(tag => `
+                                                                <span>
+                                                                    ${escapeHTML(tag)}
+                                                                </span>
+                                                            `).join("")}
+                                                        </div>
+                                                    `
+                                                    : ""
+                                                }
+
+                                            </div>
+
+                                            <div class="meal-plan-row-calories">
+                                                <strong>
+                                                    ${Number(meal.calories || 0).toLocaleString()}
+                                                </strong>
+
+                                                <span>kcal</span>
+                                            </div>
+
+                                        </div>
+                                    `).join("")}
+
+                                </div>
+
+                            </details>
+                        `;
+                    })
+                    .join("")
                 : `
                     <p class="content-detail-value">
-                        No daily plan structure available.
+                        No meals have been added to this plan yet.
                     </p>
                 `
             }
@@ -498,6 +600,7 @@ function renderMealPlanDetails(item, body) {
                         <span class="admin-change-request-label">
                             Your Change Request
                         </span>
+
                         <p>
                             Feedback you provided when requesting changes
                             to this plan.
@@ -513,7 +616,6 @@ function renderMealPlanDetails(item, body) {
         }
     `;
 }
-
 
 
 function renderWorkoutPlanDetails(item, sessions, body) {
@@ -640,7 +742,7 @@ function renderWorkoutPlanDetails(item, sessions, body) {
 
         <section class="workout-sessions-section">
             <div class="workout-sessions-heading">
-                <h3>Plan contents</h3>
+                <h3>Plan Contents</h3>
                 <span class="workout-sessions-count">
                     ${sessions.length} sessions · ${totalExercises} exercises
                 </span>
@@ -765,12 +867,6 @@ function renderRecipeDetails(item, body) {
     const nutrition = item.nutrition ?? {};
 
     const summaryCards = [
-        [
-            "Meal Type",
-            item.meal_type
-                ? item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)
-                : null
-        ],
         ["Servings", item.servings],
         [
             "Preparation Time",
@@ -788,7 +884,7 @@ function renderRecipeDetails(item, body) {
 
     body.innerHTML = `
         <!-- Recipe summary -->
-        <div class="workout-plan-summary">
+        <div class="workout-plan-summary recipe-summary">
             ${summaryCards
                 .filter(([, value]) =>
                     value !== null &&
@@ -820,11 +916,27 @@ function renderRecipeDetails(item, body) {
             : ""
         }
 
+        <!-- Coach notes -->
+        ${item.coach_notes
+            ? `
+                <section class="meal-coach-notes">
+                    <span class="content-detail-label">
+                        Coach Notes
+                    </span>
+
+                    <p class="meal-coach-notes-content">
+                        ${escapeHTML(item.coach_notes)}
+                    </p>
+                </section>
+            `
+            : ""
+        }
+
         <!-- Ingredients -->
-        <section class="workout-sessions-section">
-            <div class="workout-sessions-heading">
+        <section class="recipe-content-section recipe-ingredients-section">
+            <div class="recipe-section-heading">
                 <h3>Ingredients</h3>
-                <span class="workout-sessions-count">
+                <span>
                     ${ingredients.length}
                     ${ingredients.length === 1
                         ? "ingredient"
@@ -833,23 +945,28 @@ function renderRecipeDetails(item, body) {
             </div>
 
             ${ingredients.length
-                ? ingredients.map((ingredient, index) => `
-                    <div class="workout-exercise">
-                        <div class="workout-exercise-info">
-                            <strong>
-                                ${escapeHTML(
-                                    ingredient.name || "Unknown Ingredient"
-                                )}
-                            </strong>
-                        </div>
+                ? `
+                    <div class="recipe-ingredients-list">
+                        ${ingredients.map(ingredient => `
+                            <div class="recipe-ingredient-row">
+                                <span class="recipe-ingredient-name">
+                                    ${escapeHTML(
+                                        ingredient.name || "Unknown Ingredient"
+                                    )}
+                                </span>
 
-                        <div class="workout-exercise-stats">
-                            ${ingredient.quantity
-                                ? `<span>${escapeHTML(ingredient.quantity)}</span>`
-                                : ""}
-                        </div>
+                                ${ingredient.quantity
+                                    ? `
+                                        <span class="recipe-ingredient-quantity">
+                                            ${escapeHTML(ingredient.quantity)}
+                                        </span>
+                                    `
+                                    : ""
+                                }
+                            </div>
+                        `).join("")}
                     </div>
-                `).join("")
+                `
                 : `
                     <p class="content-detail-value">
                         No ingredients provided.
@@ -881,7 +998,7 @@ function renderRecipeDetails(item, body) {
                         </summary>
 
                         <div class="workout-session-exercises">
-                            <p class="content-detail-value">
+                            <p class="content-detail-value recipe-instruction">
                                 ${escapeHTML(String(step))}
                             </p>
                         </div>
@@ -894,22 +1011,6 @@ function renderRecipeDetails(item, body) {
                 `
             }
         </section>
-
-        <!-- Coach notes -->
-        ${item.coach_notes
-            ? `
-                <section class="meal-coach-notes">
-                    <span class="content-detail-label">
-                        Coach Notes
-                    </span>
-
-                    <p class="meal-coach-notes-content">
-                        ${escapeHTML(item.coach_notes)}
-                    </p>
-                </section>
-            `
-            : ""
-        }
 
         <!-- Admin feedback -->
         ${item.admin_feedback
