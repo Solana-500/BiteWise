@@ -337,6 +337,58 @@
         </div>
     </div>
 
+    
+    <!-- =====================================
+        LOGOUT CONFIRMATION MODAL
+    ====================================== -->
+
+    <div class="modal-overlay" id="logout-modal">
+
+        <div class="confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="logout-modal-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <div class="logout-modal-icon">
+                ↪
+            </div>
+
+            <h2>Log Out?</h2>
+
+            <p>
+                Are you sure you want to log out of the
+                BiteWise Admin Portal?
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-logout"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-logout"
+                >
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="../admin-script.js"></script>
