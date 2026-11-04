@@ -38,3 +38,9 @@ export async function reactivateCategory(categoryId) {
         isActive: true
     });
 }
+
+export async function loadActiveCategories(categoryType) {
+    const categories = await loadCategories(categoryType);
+
+    return categories.filter(category => category.is_active);
+}
