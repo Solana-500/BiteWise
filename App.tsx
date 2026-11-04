@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import type { Session } from '@supabase/supabase-js'
 import {
   SafeAreaProvider,
+  SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context'
 import LoginScreen from './screens/LoginScreen'
@@ -103,7 +104,7 @@ function HomeStackNavigator() {
 
 function MainTabs() {
   const insets = useSafeAreaInsets()
-
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -525,9 +526,14 @@ void checkInitialRecoveryLink()
   }
 
   return (
-    <SafeAreaProvider>
-      <CoachUnreadProvider>
-        <NavigationContainer>
+   return (
+      <SafeAreaProvider>
+        <SafeAreaView
+          edges={['top']}
+          style={{ flex: 1, backgroundColor: '#F5FAF6' }}
+        >
+          <CoachUnreadProvider>
+            <NavigationContainer>
           <Stack.Navigator
             screenOptions={{
               animation: 'none',
@@ -802,10 +808,11 @@ void checkInitialRecoveryLink()
               />
             </>
           )}
-        </Stack.Navigator>
-      </NavigationContainer>
+               </Stack.Navigator>
+        </NavigationContainer>
       </CoachUnreadProvider>
-    </SafeAreaProvider>
+    </SafeAreaView>
+</SafeAreaProvider>
   )
 }
 
