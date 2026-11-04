@@ -65,7 +65,7 @@ export function setContentSearch(search) {
 
 
 export function setContentTypeFilter(type) {
-    const allowedTypes = ["all", "meal", "workout"];
+    const allowedTypes = ["all", "meal", "workout", "recipe"];
 
     if (!allowedTypes.includes(type)) {
         throw new Error("Invalid content type filter.");
@@ -74,6 +74,7 @@ export function setContentTypeFilter(type) {
     currentContentType = type;
     return getContentViewData();
 }
+
 
 export function setContentCoachFilter(coachId) {
     currentCoachId = coachId || null;

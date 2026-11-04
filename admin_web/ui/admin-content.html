@@ -160,13 +160,11 @@
                                     aria-label="Search content"
                                 >
 
-                                <select
-                                    id="content-type-filter"
-                                    aria-label="Filter by content type"
-                                >
+                                <select id="content-type-filter">
                                     <option value="all">All Types</option>
                                     <option value="meal">Meal Plans</option>
                                     <option value="workout">Workout Plans</option>
+                                    <option value="recipe">Recipes</option>
                                 </select>
                             </div>
                         </div>
@@ -175,7 +173,7 @@
                             <table class="content-table">
                                 <thead>
                                     <tr>
-                                        <th>Plan</th>
+                                        <th>Content</th>
                                         <th>Coach</th>
                                         <th>Type</th>
                                         <th>Submitted</th>
@@ -221,7 +219,6 @@
                 <div class="content-details-heading">
                     <h2 id="content-details-title">Content Details</h2>
 
-                    <!-- Filled dynamically by content-boundary.js -->
                     <div class="content-details-meta" id="content-details-meta">
                         <span
                             class="content-type-tag"

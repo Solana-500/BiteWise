@@ -728,12 +728,13 @@ button {
 }
  
  
-/* =========================================
-   DASHBOARD RESPONSIVE
-========================================= */
- 
+/* Dashboard responsive */
 @media (max-width: 1000px) {
     .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .statistics-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -741,10 +742,6 @@ button {
 @media (max-width: 700px) {
     .dashboard-content {
         padding: 24px 18px 40px;
-    }
- 
-    .statistics-grid {
-        grid-template-columns: 1fr;
     }
  
     .activity-item {
@@ -755,7 +752,58 @@ button {
         margin-top: 5px;
     }
 }
- 
+
+/* Shared admin responsive */
+@media (max-width: 760px) {
+
+    .admin-sidebar {
+        width: 70px;
+    }
+
+    .sidebar-brand h1 {
+        font-size: 15px;
+    }
+
+    .sidebar-brand span,
+    .nav-item:not(.active) {
+        font-size: 0;
+    }
+
+    .nav-item {
+        justify-content: center;
+    }
+
+    .nav-icon {
+        font-size: 18px;
+    }
+
+    .logout-button {
+        justify-content: center;
+        font-size: 0;
+    }
+
+    .logout-button span {
+        font-size: 18px;
+    }
+
+    .admin-main {
+        width: calc(100% - 70px);
+        margin-left: 70px;
+    }
+
+    .admin-header {
+        padding: 0 20px;
+    }
+
+    .dashboard-content {
+        padding: 26px 20px;
+    }
+
+    .admin-profile-text {
+        display: none;
+    }
+
+}
 
 /* =========================================
    COACH MANAGEMENT
@@ -786,10 +834,7 @@ button {
 }
 
 
-/* =========================================
-   COACH TABS
-========================================= */
-
+/* Tabs */
 .coach-tabs {
     display: flex;
     gap: 8px;
@@ -846,11 +891,6 @@ button {
     color: #185d35;
 }
 
-
-/* =========================================
-   TAB PANELS
-========================================= */
-
 .coach-tab-panel {
     display: none;
 }
@@ -858,11 +898,6 @@ button {
 .coach-tab-panel.active {
     display: block;
 }
-
-
-/* =========================================
-   MANAGEMENT CARD
-========================================= */
 
 .management-card {
     overflow: hidden;
@@ -898,10 +933,7 @@ button {
 }
 
 
-/* =========================================
-   SEARCH
-========================================= */
-
+/* Search */
 .coach-search input {
     width: 240px;
 
@@ -926,10 +958,7 @@ button {
 }
 
 
-/* =========================================
-   COACH TABLE
-========================================= */
-
+/* Table */
 .coach-table-wrapper {
     width: 100%;
 
@@ -978,11 +1007,7 @@ button {
     background: #fbfcfb;
 }
 
-
-/* =========================================
-   TABLE EMPTY STATE
-========================================= */
-
+/* Empty state */
 .table-empty-row td {
     padding: 55px 20px;
 }
@@ -1010,10 +1035,7 @@ button {
 }
 
 
-/* =========================================
-   COACH STATUS
-========================================= */
-
+/* Status */
 .coach-status {
     display: inline-flex;
 
@@ -1041,10 +1063,7 @@ button {
 }
 
 
-/* =========================================
-   COACH ACTION BUTTONS
-========================================= */
-
+/* Action buttons */
 .coach-action-button {
     padding: 8px 13px;
 
@@ -1064,11 +1083,7 @@ button {
     background: #edf6f0;
 }
 
-
-/* =========================================
-   COACH MANAGEMENT RESPONSIVE
-========================================= */
-
+/* Coach responsive */
 @media (max-width: 760px) {
 
     .coach-management-content {
@@ -1093,76 +1108,6 @@ button {
     }
 
 }
-
-
-/* =========================================
-   RESPONSIVE
-========================================= */
-
-@media (max-width: 1000px) {
-
-    .statistics-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-}
-
-
-@media (max-width: 760px) {
-
-    .admin-sidebar {
-        width: 70px;
-    }
-
-    .sidebar-brand h1 {
-        font-size: 15px;
-    }
-
-    .sidebar-brand span,
-    .nav-item:not(.active) {
-        font-size: 0;
-    }
-
-    .nav-item {
-        justify-content: center;
-    }
-
-    .nav-icon {
-        font-size: 18px;
-    }
-
-    .logout-button {
-        justify-content: center;
-        font-size: 0;
-    }
-
-    .logout-button span {
-        font-size: 18px;
-    }
-
-    .admin-main {
-        width: calc(100% - 70px);
-        margin-left: 70px;
-    }
-
-    .admin-header {
-        padding: 0 20px;
-    }
-
-    .dashboard-content {
-        padding: 26px 20px;
-    }
-
-    .admin-profile-text {
-        display: none;
-    }
-
-}
-
 
 
 /* =========================================
@@ -1199,7 +1144,6 @@ button {
 }
 
 /* Header */
-
 .coach-review-header {
     padding: 0 36px 18px 0;
     border-bottom: 1px solid #e5e7eb;
@@ -1244,7 +1188,6 @@ button {
 }
 
 /* Information sections */
-
 #coach-review-modal .review-section {
     padding: 17px 0;
     border-top: 0;
@@ -1259,7 +1202,6 @@ button {
 }
 
 /* Applicant information cards */
-
 .applicant-info-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1290,7 +1232,6 @@ button {
 }
 
 /* Professional information */
-
 .professional-info {
     display: flex;
     flex-direction: column;
@@ -1319,7 +1260,6 @@ button {
 }
 
 /* Credentials */
-
 .credentials-heading {
     display: flex;
     align-items: center;
@@ -1396,7 +1336,6 @@ button {
 }
 
 /* Footer actions */
-
 #coach-review-modal .coach-review-actions {
     position: sticky;
     bottom: 0;
@@ -1471,7 +1410,6 @@ button {
 }
 
 /* Reject confirmation modal */
-
 .confirmation-modal {
     max-width: 440px;
     text-align: center;
@@ -4910,6 +4848,11 @@ button {
     color: #185d35;
 }
 
+.content-status.changes {
+    background: #e8edff;
+    color: #3b55b5;
+}
+
 .content-status.rejected {
     background: #f4e8e8;
     color: #9a4141;
@@ -5036,6 +4979,11 @@ button {
 #content-details-modal .content-type-tag.meal-tag {
     color: #8a5a16;
     background-color: #fff0d6;
+}
+
+#content-details-modal .content-type-tag.recipe-tag {
+    color: #5b4b8a;
+    background-color: #eee9fa;
 }
 
 /* Close buttons */
@@ -5494,7 +5442,8 @@ button {
     border: 1px solid #d97706;
     border-radius: 8px;
     background: #fff;
-    color: #b45309;
+    color: #3b55b5;
+    border-color: #3b55b5;
     font-family: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -5503,16 +5452,18 @@ button {
 }
 
 #content-details-modal #content-details-reject:hover {
-    background: #fffbeb;
-    border-color: #b45309;
+    background: #e8edff;
+    color: #30469b;
+    border-color: #30469b;
 }
 
 #content-feedback-modal #content-feedback-confirm {
     padding: 10px 20px;
     border: 1px solid #b45309;
     border-radius: 8px;
-    background: #b45309;
-    color: #fff;
+    background: #3b55b5;
+    border-color: #3b55b5;
+    color: #ffffff;
     font-family: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -5521,8 +5472,9 @@ button {
 }
 
 #content-feedback-modal #content-feedback-confirm:hover {
+    background: #30469b;
+    border-color: #30469b;
     color: #ffffff;
-    background: #92400e;
 }
 
 #content-feedback-modal #content-feedback-confirm:disabled {
@@ -5580,6 +5532,7 @@ button {
     white-space: pre-wrap;
 }
 
+/* Coach notes */
 .meal-coach-notes {
     margin: 20px 0;
 }
@@ -5588,7 +5541,6 @@ button {
     display: block;
     margin-bottom: 8px;
 }
-
 
 .meal-coach-notes-content {
     display: block;
@@ -5608,7 +5560,6 @@ button {
     white-space: normal;
 }
 
-
 .meal-coach-notes {
     display: block;
     width: 100%;
@@ -5618,6 +5569,54 @@ button {
     padding: 0;
 }
 
+/* ==============================================
+   RECIPE DETAILS
+============================================== */
+
+/* Recipe description */
+#content-details-modal .recipe-description {
+    display: block;
+    width: 100%;
+    margin: 20px 0;
+    padding: 0;
+}
+
+#content-details-modal .recipe-description .content-detail-label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+#content-details-modal .recipe-description-content {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+/* Recipe instructions */
+#content-details-modal .recipe-instruction {
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Recipe ingredient quantities */
+#content-details-modal .recipe-ingredient-quantity {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background-color: #f3f4f6;
+    color: #374151;
+    font-size: 12px;
+}
 
 /* Responsive */
 @media (max-width: 600px) {

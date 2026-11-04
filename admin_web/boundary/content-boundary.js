@@ -62,10 +62,6 @@ function formatDate(value) {
     });
 }
 
-/* ==============================================
-   CONTENT STATUS LABELS
-============================================== */
-
 function getContentStatusLabel(status) {
     const statusLabels = {
         pending_review: "Pending Review",
@@ -78,10 +74,6 @@ function getContentStatusLabel(status) {
 
     return statusLabels[status] ?? status ?? "Unknown";
 }
-
-/* ==============================================
-   CONTENT TABLE
-============================================== */
 
 function renderContentRows(items) {
     const tbody = document.getElementById("content-table-body");
@@ -104,9 +96,11 @@ function renderContentRows(items) {
     }
 
     items.forEach(item => {
-        const typeLabel = item.content_type === "meal"
-            ? "Meal Plan"
-            : "Workout Plan";
+        const typeLabel = {
+            meal: "Meal Plan",
+            workout: "Workout Plan",
+            recipe: "Recipe"
+        }[item.content_type] ?? "Unknown Content";
 
         const statusLabel = getContentStatusLabel(item.status);
 
@@ -114,7 +108,7 @@ function renderContentRows(items) {
             pending_review: "pending",
             approved: "approved",
             active: "approved",
-            changes_requested: "rejected",
+            changes_requested: "changes",
             draft: "draft",
             archived: "archived"
         }[item.status] ?? "";
@@ -127,7 +121,7 @@ function renderContentRows(items) {
 
         row.innerHTML = `
             <td>
-                <strong>${escapeHTML(item.title || "Untitled Plan")}</strong>
+                <strong>${escapeHTML(item.title || "Untitled Content")}</strong>
             </td>
             <td>${escapeHTML(item.coach_name || item.coach_id || "Unknown Coach")}</td>
             <td>${typeLabel}</td>
@@ -156,9 +150,6 @@ function renderContentRows(items) {
     });
 }
 
-/* ==============================================
-   CONTENT VIEW
-============================================== */
 
 function renderView(viewData) {
     window.__coachContentItems = viewData.items;
@@ -224,10 +215,6 @@ function setupTypeFilter() {
         renderView(setContentTypeFilter(filter.value));
     });
 }
-
-/* ==============================================
-   REQUEST CHANGES / FEEDBACK MODAL
-============================================== */
 
 function openFeedbackModal(item) {
     selectedContent = item;
@@ -303,6 +290,7 @@ async function handleContentAction(event) {
    CONTENT DETAILS MODAL
 ============================================== */
 
+
 async function showContentDetails(item) {
     selectedContent = item;
 
@@ -316,19 +304,25 @@ async function showContentDetails(item) {
     }
 
     const isMealPlan = item.content_type === "meal";
+    const isWorkoutPlan = item.content_type === "workout";
+    const isRecipe = item.content_type === "recipe";
 
-    title.textContent = item.title || "Untitled Plan";
+    title.textContent = item.title || "Untitled Content";
 
     const typeTag = document.getElementById("content-details-type-tag");
     const coachName = document.getElementById("content-details-coach");
     const submittedDate = document.getElementById("content-details-submitted");
 
     if (typeTag) {
-        typeTag.textContent =
-            isMealPlan ? "Meal Plan" : "Workout Plan";
+        typeTag.textContent = {
+            meal: "Meal Plan",
+            workout: "Workout Plan",
+            recipe: "Recipe"
+        }[item.content_type] ?? "Unknown Content";
 
-        typeTag.classList.toggle("workout-tag", !isMealPlan);
+        typeTag.classList.toggle("workout-tag", isWorkoutPlan);
         typeTag.classList.toggle("meal-tag", isMealPlan);
+        typeTag.classList.toggle("recipe-tag", isRecipe);
     }
 
     if (coachName) {
@@ -341,15 +335,17 @@ async function showContentDetails(item) {
             `Submitted ${formatDate(item.submitted_at || item.created_at)}`;
     }
 
-    body.innerHTML = `<p>Loading plan details...</p>`;
+    body.innerHTML = `<p>Loading content details...</p>`;
     modal.hidden = false;
 
     try {
         if (isMealPlan) {
             renderMealPlanDetails(item, body);
-        } else {
+        } else if (isWorkoutPlan) {
             const sessions = await loadWorkoutPlanDetails(item.id);
             renderWorkoutPlanDetails(item, sessions, body);
+        } else if (isRecipe) {
+            renderRecipeDetails(item, body);
         }
 
         const isPending = item.status === "pending_review";
@@ -362,18 +358,17 @@ async function showContentDetails(item) {
 
         if (approveButton) approveButton.hidden = !isPending;
         if (rejectButton) rejectButton.hidden = !isPending;
+
     } catch (error) {
         console.error("Unable to display content details:", error);
 
         body.innerHTML = `
             <p class="content-details-error">
-                Unable to load plan details. Please try again.
+                Unable to load content details. Please try again.
             </p>
         `;
     }
 }
-
-
 
 
 function renderMealPlanDetails(item, body) {
@@ -755,9 +750,192 @@ function renderWorkoutPlanDetails(item, sessions, body) {
     `;
 }
 
-/* ==============================================
-   MODAL EVENT LISTENERS
-============================================== */
+
+
+
+function renderRecipeDetails(item, body) {
+    const ingredients = Array.isArray(item.ingredients)
+        ? item.ingredients
+        : [];
+
+    const steps = Array.isArray(item.steps)
+        ? item.steps
+        : [];
+
+    const nutrition = item.nutrition ?? {};
+
+    const summaryCards = [
+        [
+            "Meal Type",
+            item.meal_type
+                ? item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)
+                : null
+        ],
+        ["Servings", item.servings],
+        [
+            "Preparation Time",
+            item.preparation_minutes != null
+                ? `${item.preparation_minutes} min`
+                : null
+        ],
+        [
+            "Calories per Serving",
+            nutrition.calories_per_serving != null
+                ? `${nutrition.calories_per_serving} kcal`
+                : null
+        ]
+    ];
+
+    body.innerHTML = `
+        <!-- Recipe summary -->
+        <div class="workout-plan-summary">
+            ${summaryCards
+                .filter(([, value]) =>
+                    value !== null &&
+                    value !== undefined &&
+                    value !== ""
+                )
+                .map(([label, value]) => `
+                    <div class="workout-summary-card">
+                        <span>${escapeHTML(label)}</span>
+                        <strong>${escapeHTML(String(value))}</strong>
+                    </div>
+                `)
+                .join("")}
+        </div>
+
+        <!-- Description -->
+        ${item.description
+            ? `
+                <section class="recipe-description">
+                    <span class="content-detail-label">
+                        Description
+                    </span>
+
+                    <p class="recipe-description-content">
+                        ${escapeHTML(item.description)}
+                    </p>
+                </section>
+            `
+            : ""
+        }
+
+        <!-- Ingredients -->
+        <section class="workout-sessions-section">
+            <div class="workout-sessions-heading">
+                <h3>Ingredients</h3>
+                <span class="workout-sessions-count">
+                    ${ingredients.length}
+                    ${ingredients.length === 1
+                        ? "ingredient"
+                        : "ingredients"}
+                </span>
+            </div>
+
+            ${ingredients.length
+                ? ingredients.map((ingredient, index) => `
+                    <div class="workout-exercise">
+                        <div class="workout-exercise-info">
+                            <strong>
+                                ${escapeHTML(
+                                    ingredient.name || "Unknown Ingredient"
+                                )}
+                            </strong>
+                        </div>
+
+                        <div class="workout-exercise-stats">
+                            ${ingredient.quantity
+                                ? `<span>${escapeHTML(ingredient.quantity)}</span>`
+                                : ""}
+                        </div>
+                    </div>
+                `).join("")
+                : `
+                    <p class="content-detail-value">
+                        No ingredients provided.
+                    </p>
+                `
+            }
+        </section>
+
+        <!-- Instructions -->
+        <section class="workout-sessions-section">
+            <div class="workout-sessions-heading">
+                <h3>Instructions</h3>
+                <span class="workout-sessions-count">
+                    ${steps.length}
+                    ${steps.length === 1 ? "step" : "steps"}
+                </span>
+            </div>
+
+            ${steps.length
+                ? steps.map((step, index) => `
+                    <details
+                        class="workout-session"
+                        ${index === 0 ? "open" : ""}
+                    >
+                        <summary>
+                            <span class="workout-session-title">
+                                <strong>Step ${index + 1}</strong>
+                            </span>
+                        </summary>
+
+                        <div class="workout-session-exercises">
+                            <p class="content-detail-value">
+                                ${escapeHTML(String(step))}
+                            </p>
+                        </div>
+                    </details>
+                `).join("")
+                : `
+                    <p class="content-detail-value">
+                        No instructions provided.
+                    </p>
+                `
+            }
+        </section>
+
+        <!-- Coach notes -->
+        ${item.coach_notes
+            ? `
+                <section class="meal-coach-notes">
+                    <span class="content-detail-label">
+                        Coach Notes
+                    </span>
+
+                    <p class="meal-coach-notes-content">
+                        ${escapeHTML(item.coach_notes)}
+                    </p>
+                </section>
+            `
+            : ""
+        }
+
+        <!-- Admin feedback -->
+        ${item.admin_feedback
+            ? `
+                <section class="admin-change-request">
+                    <div class="admin-change-request-heading">
+                        <span class="admin-change-request-label">
+                            Your Change Request
+                        </span>
+
+                        <p>
+                            Feedback you provided when requesting changes
+                            to this recipe.
+                        </p>
+                    </div>
+
+                    <p class="admin-change-request-message">
+                        ${escapeHTML(item.admin_feedback)}
+                    </p>
+                </section>
+            `
+            : ""
+        }
+    `;
+}
+
 
 function closeContentDetailsModal() {
     const modal = document.getElementById("content-details-modal");
@@ -857,10 +1035,6 @@ function setupFeedbackModal() {
             }
         });
 }
-
-/* ==============================================
-   INITIALISE CONTENT PAGE
-============================================== */
 
 export async function loadContentPage() {
     setupTabs();

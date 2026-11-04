@@ -2,7 +2,8 @@ import { supabaseClient } from "../supabase-client.js";
 
 const CONTENT_TABLES = {
     meal: "meal_plans",
-    workout: "workout_plans"
+    workout: "workout_plans",
+    recipe: "coach_recipes"
 };
 
 
@@ -141,19 +142,97 @@ export async function getWorkoutPlans() {
     }));
 }
 
+
+
+export async function getCoachRecipes() {
+    const { data, error } = await supabaseClient
+        .from(CONTENT_TABLES.recipe)
+        .select(`
+            id,
+            coach_id,
+            client_id,
+            request_key,
+            title,
+            description,
+            meal_type,
+            servings,
+            preparation_minutes,
+            ingredients,
+            steps,
+            nutrition,
+            coach_notes,
+            status,
+            admin_feedback,
+            submitted_at,
+            reviewed_at,
+            reviewed_by,
+            created_at,
+            updated_at
+        `)
+        .order("submitted_at", { ascending: false });
+
+    if (error) {
+        throw new Error(`Unable to load recipes: ${error.message}`);
+    }
+
+    const recipes = data ?? [];
+
+    if (recipes.length === 0) {
+        return [];
+    }
+
+    // Retrieve coach names
+    const coachIds = [
+        ...new Set(recipes.map(recipe => recipe.coach_id).filter(Boolean))
+    ];
+
+    let coachNameMap = {};
+
+    if (coachIds.length > 0) {
+        const { data: coaches, error: coachError } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", coachIds);
+
+        if (coachError) {
+            console.error(
+                "Unable to load recipe coach names:",
+                coachError.message
+            );
+        } else {
+            coachNameMap = Object.fromEntries(
+                (coaches ?? []).map(coach => [
+                    coach.id,
+                    coach.full_name
+                ])
+            );
+        }
+    }
+
+    return recipes.map(recipe => ({
+        ...recipe,
+        coach_name: coachNameMap[recipe.coach_id] || "Unknown Coach",
+        content_type: "recipe"
+    }));
+}
+
+
+
 export async function getAllCoachContent() {
-    const [mealPlans, workoutPlans] = await Promise.all([
+    const [mealPlans, workoutPlans, recipes] = await Promise.all([
         getMealPlans(),
-        getWorkoutPlans()
+        getWorkoutPlans(),
+        getCoachRecipes()
     ]);
 
-    return [...mealPlans, ...workoutPlans].sort((a, b) => {
+    return [...mealPlans, ...workoutPlans, ...recipes].sort((a, b) => {
         const dateA = new Date(a.submitted_at ?? a.created_at ?? 0).getTime();
         const dateB = new Date(b.submitted_at ?? b.created_at ?? 0).getTime();
 
         return dateB - dateA;
     });
 }
+
 
 
 export async function updateContentStatus({
@@ -189,8 +268,7 @@ export async function updateContentStatus({
         throw new Error("Admin feedback is required when rejecting content.");
     }
 
-    // Only meal_plans has these columns.
-    if (contentType === "meal") {
+    if (contentType === "meal" || contentType === "recipe") {
         updates.reviewed_at = new Date().toISOString();
         updates.reviewed_by = adminId;
     }
