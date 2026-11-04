@@ -525,7 +525,6 @@ void checkInitialRecoveryLink()
     )
   }
 
-  return (
    return (
       <SafeAreaProvider>
         <SafeAreaView
