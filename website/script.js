@@ -10,6 +10,7 @@ const supabaseClient = supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
+import { loadActiveCategories } from "../admin_web/control/category-controller.js";
 
 /* ==============================================
    LANDING PAGE CONTENT
@@ -1902,10 +1903,10 @@ const coachDetailsBack =
         "coach-details-back"
     );
 
-const specialtyOptions =
-    document.querySelectorAll(
-        ".specialty-option"
-    );
+const specialtyOptionsContainer = 
+    document.getElementById(
+    "coach-specialty-options"
+);
 
 const specialtyMessage =
     document.getElementById(
@@ -2890,93 +2891,111 @@ onboardingForm?.addEventListener(
     }
 );
 
+// ==============================================
+// LOAD COACH SPECIALTIES
+// ==============================================
 
+async function loadCoachSpecialties() {
+
+    if (!specialtyOptionsContainer) return;
+
+    try {
+
+        const categories = await loadActiveCategories(
+            "coach_specialty"
+        );
+
+        specialtyOptionsContainer.innerHTML =
+            categories.map(category => `
+                <button
+                    type="button"
+                    class="specialty-option"
+                    data-specialty="${category.name}"
+                    aria-pressed="false"
+                >
+                    ${category.name}
+                </button>
+            `).join("");
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load coach specialties:",
+            error
+        );
+
+        specialtyOptionsContainer.textContent =
+            "Unable to load specialties. Please try again.";
+
+    }
+
+}
 
 // ==============================================
 // COACH SPECIALTY SELECTION
 // ==============================================
 
-specialtyOptions.forEach(
-    (option) => {
+specialtyOptionsContainer?.addEventListener(
+    "click",
+    function(event) {
 
-        option.addEventListener(
-            "click",
-            function() {
+        const option = event.target.closest(
+            ".specialty-option"
+        );
 
-                const specialty =
-                    option.dataset.specialty;
+        if (!option) return;
 
-                const alreadySelected =
-                    selectedSpecialties.includes(
-                        specialty
-                    );
+        const specialty = option.dataset.specialty;
 
+        const alreadySelected =
+            selectedSpecialties.includes(specialty);
 
-                // Remove selected specialty
+        // Remove selected specialty
+        if (alreadySelected) {
 
-                if (alreadySelected) {
+            selectedSpecialties =
+                selectedSpecialties.filter(
+                    item => item !== specialty
+                );
 
-                    selectedSpecialties =
-                        selectedSpecialties.filter(
-                            (item) =>
-                                item !== specialty
-                        );
+            option.classList.remove("active");
 
-                    option.classList.remove(
-                        "active"
-                    );
+            option.setAttribute("aria-pressed", "false");
 
-                }
+        }
 
-                // Add specialty if below limit
+        // Add specialty if below limit
+        else {
 
-                else {
-
-                    if (
-                        selectedSpecialties.length >= 3
-                    ) {
-
-                        if (specialtyMessage) {
-
-                            specialtyMessage.textContent =
-                                "You can select up to 3 specialties.";
-
-                        }
-
-                        return;
-
-                    }
-
-
-                    selectedSpecialties.push(
-                        specialty
-                    );
-
-                    option.classList.add(
-                        "active"
-                    );
-
-                }
-
-
-                // Update counter
-
-                if (specialtyCount) {
-
-                    specialtyCount.textContent =
-                        `${selectedSpecialties.length}/3 selected`;
-
-                }
-
+            if (selectedSpecialties.length >= 3) {
 
                 if (specialtyMessage) {
-
-                    specialtyMessage.textContent = "";
-
+                    specialtyMessage.textContent =
+                        "You can select up to 3 specialties.";
                 }
 
+                return;
             }
-        );
+
+            selectedSpecialties.push(specialty);
+
+            option.classList.add("active");
+
+            option.setAttribute("aria-pressed", "true");
+
+        }
+
+        // Update counter
+        if (specialtyCount) {
+
+            specialtyCount.textContent =
+                `${selectedSpecialties.length}/3 selected`;
+
+        }
+
+        if (specialtyMessage) {
+            specialtyMessage.textContent = "";
+        }
 
     }
 );
@@ -3374,4 +3393,5 @@ if (pageParams.get("login") === "1") {
     );
 }
 
+loadCoachSpecialties();
 loadLandingPageContent();
