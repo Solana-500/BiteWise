@@ -102,6 +102,9 @@ export type RootStackParamList = {
   PremiumTabs: NavigatorScreenParams<PremiumTabParamList>
 
   PuCoach: undefined
+  PuCoachMealPlans: undefined
+  PuCoachRecipes: undefined
+  PuCoachWorkoutPlans: undefined
   PuChat: undefined
   FoodLogging: undefined
   FavoriteList: undefined
