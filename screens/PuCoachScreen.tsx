@@ -238,6 +238,42 @@ export default function PuCoachScreen({ navigation }: Props) {
 
       if (updateErr) throw updateErr
 
+if (updateErr) throw updateErr
+
+  // Synchronise the coach assignment used by Premium Chat.
+  const { data: existingChatAssignment, error: lookupError } =
+    await supabase
+      .from('coach_assignments')
+      .select('id, coach_id')
+      .eq('client_id', user.id)
+      .maybeSingle()
+  
+  if (lookupError) throw lookupError
+  
+  if (existingChatAssignment) {
+    // Preserve the conversation assignment ID.
+    if (existingChatAssignment.coach_id !== matchedCoach.id) {
+      const { error: chatUpdateError } = await supabase
+        .from('coach_assignments')
+        .update({ coach_id: matchedCoach.id })
+        .eq('id', existingChatAssignment.id)
+        .eq('client_id', user.id)
+  
+      if (chatUpdateError) throw chatUpdateError
+    }
+  } else {
+    const { error: chatInsertError } = await supabase
+      .from('coach_assignments')
+      .insert({
+        client_id: user.id,
+        coach_id: matchedCoach.id,
+      })
+  
+    if (chatInsertError) throw chatInsertError
+  }
+
+setCoach(matchedCoach as CoachProfile)
+
       setCoach(matchedCoach as CoachProfile)
 
       Alert.alert(
