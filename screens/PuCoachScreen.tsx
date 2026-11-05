@@ -334,7 +334,7 @@ export default function PuCoachScreen({ navigation }: Props) {
             <CoachActionCard
               title="View Coach Workout Plan"
               subtitle="See your assigned workout plan"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachWorkoutPlans')}
             />
 
             <View style={styles.coachNoteCard}>
