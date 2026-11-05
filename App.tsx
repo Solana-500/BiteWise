@@ -29,6 +29,7 @@ import PuHomeScreen from './screens/PuHomeScreen'
 import AiMealPlanningScreen from './screens/AiMealPlanningScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
 import PuCoachMealPlansScreen from './screens/PuCoachMealPlansScreen'
+import PuCoachRecipesScreen from './screens/PuCoachRecipesScreen'
 import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
@@ -721,6 +722,11 @@ void checkInitialRecoveryLink()
               <Stack.Screen
                 name="PuCoachMealPlans"
                 component={PuCoachMealPlansScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PuCoachRecipes"
+                component={PuCoachRecipesScreen}
                 options={{ headerShown: false }}
               />
               <Stack.Screen
