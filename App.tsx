@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import type { Session } from '@supabase/supabase-js'
 import {
   SafeAreaProvider,
+  SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context'
 import LoginScreen from './screens/LoginScreen'
@@ -27,6 +28,9 @@ import AdminUsersScreen from './screens/AdminUserListScreen'
 import PuHomeScreen from './screens/PuHomeScreen'
 import AiMealPlanningScreen from './screens/AiMealPlanningScreen'
 import PuCoachScreen from './screens/PuCoachScreen'
+import PuCoachMealPlansScreen from './screens/PuCoachMealPlansScreen'
+import PuCoachRecipesScreen from './screens/PuCoachRecipesScreen'
+import PuCoachWorkoutPlansScreen from './screens/PuCoachWorkoutPlansScreen'
 import ExerciseLibraryScreen from './screens/ExerciseLibraryScreen'
 import ExerciseEntryScreen from './screens/ExerciseEntryScreen'
 import WorkoutRoutineBuilderScreen from './screens/WorkoutRoutineBuilderScreen'
@@ -103,7 +107,7 @@ function HomeStackNavigator() {
 
 function MainTabs() {
   const insets = useSafeAreaInsets()
-
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -210,29 +214,23 @@ function PremiumHomeStackNavigator() {
 
 function PremiumTabs() {
   const unreadCount = useCoachUnreadCount()
+  const insets = useSafeAreaInsets()
 
   return (
-  <PremiumTab.Navigator
-    safeAreaInsets={{
-      bottom: 12,
-    }}
-    screenOptions={{
-      headerShown: false,
-      tabBarActiveTintColor: '#1E5C35',
-      tabBarInactiveTintColor: '#7C8F83',
+    <PremiumTab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2ECE6',
+          height: 60 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 7,
+        },
+      }}
+    >
 
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '700',
-      },
-
-      tabBarStyle: {
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: '#E2ECE6',
-      },
-    }}
-  >
       <PremiumTab.Screen
         name="PuHome"
         component={PremiumHomeStackNavigator}
@@ -393,7 +391,7 @@ export default function App() {
       return
     }
 
-    await handleRecoveryLink(initialUrl)
+    await handleRecoveryLink(initialUrl ?? null)
   } catch (error) {
     console.warn('Unable to check initial recovery link', error)
   } finally {
@@ -530,10 +528,14 @@ void checkInitialRecoveryLink()
     )
   }
 
-  return (
-    <SafeAreaProvider>
-      <CoachUnreadProvider>
-        <NavigationContainer>
+   return (
+      <SafeAreaProvider>
+        <SafeAreaView
+          edges={['top']}
+          style={{ flex: 1, backgroundColor: '#F5FAF6' }}
+        >
+          <CoachUnreadProvider>
+            <NavigationContainer>
           <Stack.Navigator
             screenOptions={{
               animation: 'none',
@@ -719,6 +721,21 @@ void checkInitialRecoveryLink()
                 options={{ headerShown: false }}
               />
               <Stack.Screen
+                name="PuCoachMealPlans"
+                component={PuCoachMealPlansScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PuCoachRecipes"
+                component={PuCoachRecipesScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PuCoachWorkoutPlans"
+                component={PuCoachWorkoutPlansScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="RateCoach"
                 component={RateCoachScreen}
                 options={{ headerShown: false }}
@@ -808,10 +825,11 @@ void checkInitialRecoveryLink()
               />
             </>
           )}
-        </Stack.Navigator>
-      </NavigationContainer>
+               </Stack.Navigator>
+        </NavigationContainer>
       </CoachUnreadProvider>
-    </SafeAreaProvider>
+    </SafeAreaView>
+</SafeAreaProvider>
   )
 }
 

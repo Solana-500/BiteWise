@@ -10,7 +10,10 @@ import {
   View,
 } from 'react-native'
 import { supabase } from '../services/supabase'
-import { getAiMealRecommendation } from '../services/aiRecommendations'
+import {
+  getAiMealRecommendation,
+  type AiMealRecommendation,
+} from '../services/aiRecommendations'
 
 type Props = {
   navigation: any
@@ -70,10 +73,8 @@ export default function PuHomeScreen({ navigation }: Props) {
     fiber: { value: 0, goal: 0 },
   })
 
-  const [recommendation, setRecommendation] = useState({
-    name: 'Suggested meal name',
-    kcal: 0,
-  })
+ const [recommendation, setRecommendation] =
+  useState<AiMealRecommendation | null>(null)
   
 const [aiLoading, setAiLoading] = useState(false)
 
@@ -82,11 +83,10 @@ async function fetchAiRecommendation() {
     setAiLoading(true)
 
     const result = await getAiMealRecommendation()
-
-    setRecommendation({
-      name: result,
-      kcal: 0,
-    })
+      console.log('AI recommendation:', result)
+      console.log('Recommendation length:', result.meal_name)
+    
+   setRecommendation(result)
   } catch (error) {
     console.error('Failed to get AI recommendation:', error)
   } finally {
@@ -474,33 +474,124 @@ const caloriePercent = hasCalorieTarget
 
         
 
-        <View style={styles.recommendationSection}>
-          <View style={styles.summaryLinkCard}>
-            <View style={styles.summaryLinkHeaderRow}>
-              <Text style={styles.summaryLinkHeading}>
-                Personalized Recommendation
-              </Text>
-            </View>
-
-            <Text style={styles.recommendationText}>
-              {recommendation.name === 'Suggested meal name'
-                ? 'No AI recommendation generated yet'
-                : recommendation.name}
-            </Text>
-
-            <Pressable
-              style={styles.logMealButton}
-              onPress={fetchAiRecommendation}
-              disabled={aiLoading}
-            >
-              <Text style={styles.logMealText}>
-                {aiLoading
-                  ? 'Generating...'
-                  : 'Generate AI Recommendation'}
-              </Text>
-            </Pressable>
-          </View>
+        
+  <View style={styles.recommendationSection}>
+    <View style={styles.aiRecommendationCard}>
+  
+      {/* Header */}
+      <View style={styles.aiRecommendationHeader}>
+        <View style={styles.aiHeaderLeft}>
+          <Text style={styles.aiSparkle}>✦</Text>
+          <Text style={styles.aiRecommendationHeading}>
+            AI MEAL RECOMMENDATION
+          </Text>
         </View>
+  
+        <View style={styles.aiPremiumBadge}>
+          <Text style={styles.aiPremiumBadgeText}>
+            PREMIUM
+          </Text>
+        </View>
+      </View>
+  
+      {/* Recommendation content */}
+      <View style={styles.aiRecommendationContent}>
+        <Text style={styles.aiRecommendationLabel}>
+          PERSONALISED FOR YOU
+        </Text>
+  
+        <Text style={styles.aiRecommendationText}>
+          
+{recommendation ? (
+  <View>
+    <Text style={styles.aiRecommendationLabel}>
+      RECOMMENDED FOR YOU
+    </Text>
+
+    <Text style={styles.aiMealName}>
+      {recommendation.meal_name}
+    </Text>
+
+    {Boolean(recommendation.description) && (
+      <Text style={styles.aiRecommendationText}>
+        {recommendation.description}
+      </Text>
+    )}
+
+    {[
+      recommendation.calories,
+      recommendation.protein_g,
+      recommendation.carbs_g,
+      recommendation.fat_g,
+    ].some((value) => value !== null) && (
+      <View style={styles.aiMacroRow}>
+        {[
+          ['Calories', recommendation.calories, 'kcal'],
+          ['Protein', recommendation.protein_g, 'g'],
+          ['Carbs', recommendation.carbs_g, 'g'],
+          ['Fat', recommendation.fat_g, 'g'],
+        ].map(([label, value, unit]) => (
+          <View key={String(label)} style={styles.aiMacroBox}>
+            <Text style={styles.aiMacroValue}>
+              {value === null ? '—' : `${value}${unit === 'g' ? 'g' : ''}`}
+            </Text>
+            <Text style={styles.aiMacroLabel}>
+              {label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+
+    {Boolean(recommendation.reason) && (
+      <View style={styles.aiReasonBox}>
+        <Text style={styles.aiReasonHeading}>
+          Why this meal suits you
+        </Text>
+
+        <Text style={styles.aiRecommendationText}>
+          {recommendation.reason}
+        </Text>
+      </View>
+    )}
+  </View>
+) : (
+  <Text style={styles.aiRecommendationText}>
+    Generate a personalised meal recommendation
+    based on your fitness goals and dietary preferences.
+  </Text>
+)}
+
+        </Text>
+      </View>
+  
+      {/* Generate button */}
+      <Pressable
+        style={[
+          styles.aiGenerateButton,
+          aiLoading && styles.aiGenerateButtonDisabled,
+        ]}
+        onPress={fetchAiRecommendation}
+        disabled={aiLoading}
+      >
+        {aiLoading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={styles.aiGenerateButtonText}>
+            {recommendation === null
+              ? '✦ Generate AI Recommendation'
+              : '↻ Generate Another Recommendation'}
+          </Text>
+        )}
+      </Pressable>
+  
+      <Text style={styles.aiDisclaimer}>
+        AI-generated suggestions are estimates. Please verify nutritional information.
+      </Text>
+  
+    </View>
+  </View>
+
         
             <Pressable
               style={styles.summaryLinkCard}
@@ -832,9 +923,13 @@ mealDescription: {
   },
 
   recommendationText: {
-    color: '#7C8F83',
-    fontSize: 13,
-  },
+  color: '#7C8F83',
+  fontSize: 13,
+  lineHeight: 21,
+  flexShrink: 1,
+  flexWrap: 'wrap',
+},
+  
 progressShortcutButton: {
   flexDirection: 'row',
   alignItems: 'center',
@@ -856,8 +951,163 @@ progressShortcutChevron: {
   fontWeight: '400',
   lineHeight: 18,
 },
-recommendationSection: {
-  flexGrow: 1,
-  justifyContent: 'flex-end',
+  
+aiRecommendationCard: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: '#DCE9DF',
+  padding: 18,
+  marginBottom: 14,
 },
+
+aiRecommendationHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 18,
+},
+
+aiHeaderLeft: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  flexShrink: 1,
+},
+
+aiSparkle: {
+  fontSize: 22,
+  color: '#1E5C35',
+  marginRight: 8,
+},
+
+aiRecommendationHeading: {
+  color: '#16281D',
+  fontSize: 12,
+  fontWeight: '900',
+  letterSpacing: 0.4,
+  flexShrink: 1,
+},
+
+aiPremiumBadge: {
+  backgroundColor: '#FFF4D6',
+  paddingHorizontal: 9,
+  paddingVertical: 5,
+  borderRadius: 20,
+  marginLeft: 6,
+},
+
+aiPremiumBadgeText: {
+  color: '#957115',
+  fontSize: 9,
+  fontWeight: '800',
+  letterSpacing: 0.5,
+},
+
+aiRecommendationContent: {
+  backgroundColor: '#F5FAF6',
+  borderRadius: 14,
+  padding: 16,
+  marginBottom: 16,
+},
+
+aiRecommendationLabel: {
+  color: '#1E5C35',
+  fontSize: 10,
+  fontWeight: '800',
+  letterSpacing: 1.2,
+  marginBottom: 10,
+},
+
+aiRecommendationText: {
+  color: '#283F30',
+  fontSize: 14,
+  lineHeight: 23,
+  flexShrink: 1,
+},
+
+aiGenerateButton: {
+  backgroundColor: '#1E5C35',
+  borderRadius: 14,
+  minHeight: 46,
+  paddingVertical: 12,
+  paddingHorizontal: 12,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+aiGenerateButtonDisabled: {
+  opacity: 0.65,
+},
+
+aiGenerateButtonText: {
+  color: '#FFFFFF',
+  fontSize: 13,
+  fontWeight: '800',
+  textAlign: 'center',
+},
+
+aiDisclaimer: {
+  color: '#87978B',
+  fontSize: 10,
+  lineHeight: 16,
+  textAlign: 'center',
+  marginTop: 12,
+},
+
+recommendationSection: {
+  width: '100%',
+},
+  
+aiMealName: {
+  color: '#16281D',
+  fontSize: 19,
+  fontWeight: '800',
+  marginBottom: 8,
+},
+
+aiMacroRow: {
+  flexDirection: 'row',
+  gap: 6,
+  marginTop: 16,
+  marginBottom: 16,
+},
+
+aiMacroBox: {
+  flex: 1,
+  minWidth: 0,
+  alignItems: 'center',
+  backgroundColor: '#EAF3EC',
+  borderRadius: 10,
+  paddingVertical: 12,
+  paddingHorizontal: 3,
+},
+
+aiMacroValue: {
+  color: '#1E5C35',
+  fontSize: 13,
+  fontWeight: '800',
+},
+
+aiMacroLabel: {
+  color: '#5C7267',
+  fontSize: 10,
+  marginTop: 4,
+},
+
+aiReasonBox: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+  padding: 14,
+  marginTop: 4,
+  borderWidth: 1,
+  borderColor: '#DCE9DF',
+},
+
+aiReasonHeading: {
+  color: '#16281D',
+  fontSize: 14,
+  fontWeight: '800',
+  marginBottom: 8,
+},
+
 })

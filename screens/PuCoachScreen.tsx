@@ -1,15 +1,23 @@
+
 import React, { useEffect, useState } from 'react'
+
 import {
   ActivityIndicator,
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
+
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context'
+
 import { supabase } from '../services/supabase'
+
 
 type Props = {
   navigation: any
@@ -57,7 +65,8 @@ export default function PuCoachScreen({ navigation }: Props) {
   const [assigning, setAssigning] = useState(false)
   const [coach, setCoach] = useState<CoachProfile | null>(null)
   const [userGoal, setUserGoal] = useState<string | null>(null)
-
+  const insets = useSafeAreaInsets()
+  
   useEffect(() => {
     void loadAssignedCoach()
   }, [])
@@ -229,6 +238,42 @@ export default function PuCoachScreen({ navigation }: Props) {
 
       if (updateErr) throw updateErr
 
+if (updateErr) throw updateErr
+
+  // Synchronise the coach assignment used by Premium Chat.
+  const { data: existingChatAssignment, error: lookupError } =
+    await supabase
+      .from('coach_assignments')
+      .select('id, coach_id')
+      .eq('client_id', user.id)
+      .maybeSingle()
+  
+  if (lookupError) throw lookupError
+  
+  if (existingChatAssignment) {
+    // Preserve the conversation assignment ID.
+    if (existingChatAssignment.coach_id !== matchedCoach.id) {
+      const { error: chatUpdateError } = await supabase
+        .from('coach_assignments')
+        .update({ coach_id: matchedCoach.id })
+        .eq('id', existingChatAssignment.id)
+        .eq('client_id', user.id)
+  
+      if (chatUpdateError) throw chatUpdateError
+    }
+  } else {
+    const { error: chatInsertError } = await supabase
+      .from('coach_assignments')
+      .insert({
+        client_id: user.id,
+        coach_id: matchedCoach.id,
+      })
+  
+    if (chatInsertError) throw chatInsertError
+  }
+
+setCoach(matchedCoach as CoachProfile)
+
       setCoach(matchedCoach as CoachProfile)
 
       Alert.alert(
@@ -268,7 +313,7 @@ export default function PuCoachScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['bottom']}>
       <View style={styles.topBar}>
         <Pressable
           hitSlop={12}
@@ -322,19 +367,19 @@ export default function PuCoachScreen({ navigation }: Props) {
             <CoachActionCard
               title="View Coach Meal Plan"
               subtitle="See your coach’s meal plan"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachMealPlans')}
             />
 
             <CoachActionCard
               title="View Coach Recipes"
               subtitle="View and search recipes created by your coach"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachRecipes')}
             />
 
             <CoachActionCard
               title="View Coach Workout Plan"
               subtitle="See your assigned workout plan"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachWorkoutPlans')}
             />
 
             <View style={styles.coachNoteCard}>
@@ -378,7 +423,12 @@ export default function PuCoachScreen({ navigation }: Props) {
       </ScrollView>
 
       {coach ? (
-        <View style={styles.bottomActions}>
+        <View
+          style={[
+            styles.bottomActions,
+            { paddingBottom: Math.max(insets.bottom, 18) },
+          ]}
+        >
           <Pressable
             style={({ pressed }) => [
               styles.messageButton,

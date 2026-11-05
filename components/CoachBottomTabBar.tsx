@@ -60,9 +60,15 @@ export default function CoachBottomTabBar({
 }: CoachBottomTabBarProps) {
   const { totalUnreadCount } = useCoachUnread()
   const insets = useSafeAreaInsets();
-  
+    
   return (
-    <View style={styles.bottomTabSafeArea}>
+    <View
+      style={[
+        styles.bottomTabSafeArea,
+        { paddingBottom: insets.bottom },
+      ]}
+    >
+
       <View style={styles.bottomTabBar}>
         {COACH_TABS.map((tab) => {
           const isActive = activeTab === tab.route
