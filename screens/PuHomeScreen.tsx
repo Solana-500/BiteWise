@@ -82,7 +82,9 @@ async function fetchAiRecommendation() {
     setAiLoading(true)
 
     const result = await getAiMealRecommendation()
-
+      console.log('AI recommendation:', result)
+      console.log('Recommendation length:', result.length)
+    
     setRecommendation({
       name: result,
       kcal: 0,
@@ -832,9 +834,13 @@ mealDescription: {
   },
 
   recommendationText: {
-    color: '#7C8F83',
-    fontSize: 13,
-  },
+  color: '#7C8F83',
+  fontSize: 13,
+  lineHeight: 21,
+  flexShrink: 1,
+  flexWrap: 'wrap',
+},
+  
 progressShortcutButton: {
   flexDirection: 'row',
   alignItems: 'center',
@@ -856,8 +862,8 @@ progressShortcutChevron: {
   fontWeight: '400',
   lineHeight: 18,
 },
+  
 recommendationSection: {
-  flexGrow: 1,
-  justifyContent: 'flex-end',
+  width: '100%',
 },
 })
