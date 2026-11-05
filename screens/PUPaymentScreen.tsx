@@ -7,62 +7,33 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-
 import { supabase } from '../services/supabase'
-
-type PaymentMethod = 'card' | 'paynow'
 
 export default function PUPaymentScreen() {
   const navigation = useNavigation<any>()
-
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
-  const [cardNumber, setCardNumber] = useState('')
-  const [expiry, setExpiry] = useState('')
-  const [cvv, setCvv] = useState('')
-  const [cardHolder, setCardHolder] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  // Format Card Number (XXXX XXXX XXXX XXXX)
-  function handleCardNumberChange(text: string) {
-    const cleaned = text.replace(/\D/g, '').slice(0, 16)
-    const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned
-    setCardNumber(formatted)
-  }
-
-  // Format Expiry (MM/YY)
-  function handleExpiryChange(text: string) {
-    const cleaned = text.replace(/\D/g, '').slice(0, 4)
-    if (cleaned.length >= 3) {
-      setExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`)
-    } else {
-      setExpiry(cleaned)
-    }
-  }
-
-  
 async function handleConfirmPayment() {
   if (isProcessing) return
 
   try {
     setIsProcessing(true)
 
-    // Verify the user is authenticated
+    // Step 1: Check that the user is logged in
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      throw new Error('Please log in again to activate demo Premium.')
+      throw new Error('Please log in again.')
     }
 
-    // Request Premium activation through the secure backend.
-    // The database checks the demo allowlist and eligibility.
+    // Step 2: Activate Premium through Supabase
     const { data, error } = await supabase.rpc(
       'redeem_demo_premium'
     )
@@ -72,32 +43,29 @@ async function handleConfirmPayment() {
     }
 
     if (!data?.success) {
-      throw new Error('Demo Premium activation was unsuccessful.')
+      throw new Error('Premium activation failed.')
     }
 
-    // Refresh authentication state and allow the app
-    // to reload the user's updated profile.
+    // Step 3: Refresh authentication state
     const { error: refreshError } =
       await supabase.auth.refreshSession()
 
     if (refreshError) {
-      console.warn(
-        'Premium activated, but session refresh failed:',
-        refreshError.message
-      )
+      console.warn('Session refresh failed:', refreshError.message)
     }
 
+    // Step 4: Show success message
     Alert.alert(
       'Demo Premium Activated!',
-      'Your BiteWise Premium demo subscription is now active for 30 days.'
+      'Your 30-day BiteWise Premium demo is now active.'
     )
 
   } catch (error: any) {
-    console.error('Demo Premium activation error:', error)
+    console.error('Premium activation error:', error)
 
     Alert.alert(
       'Activation Failed',
-      error?.message || 'Unable to activate demo Premium.'
+      error?.message || 'Please try again.'
     )
   } finally {
     setIsProcessing(false)
@@ -127,29 +95,52 @@ async function handleConfirmPayment() {
         <Text style={styles.pageSubtitle}>
           Demo checkout — no real payment will be collected.
         </Text>
+        
         {/* ORDER SUMMARY */}
-        <Text style={styles.sectionHeading}>Order Summary</Text>
+        <Text style={styles.sectionHeading}>
+          Order Summary
+        </Text>
+        
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Plan</Text>
-            <Text style={styles.summaryValue}>BiteWise Premium</Text>
+            <Text style={styles.summaryValue}>
+              BiteWise Premium
+            </Text>
           </View>
+        
           <View style={styles.summaryDivider} />
+        
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Billing Cycle</Text>
-            <Text style={styles.summaryValue}>Monthly (Auto-renews)</Text>
+            <Text style={styles.summaryLabel}>Duration</Text>
+            <Text style={styles.summaryValue}>
+              30 Days
+            </Text>
           </View>
+        
           <View style={styles.summaryDivider} />
+        
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>$9.90 SGD</Text>
+            <Text style={styles.summaryLabel}>
+              Regular Plan Price
+            </Text>
+            <Text style={styles.summaryValue}>
+              S$9.90 / month
+            </Text>
           </View>
+        
           <View style={styles.summaryDivider} />
+        
           <View style={styles.summaryRow}>
-            <Text style={styles.totalLabel}>Total Due Today</Text>
-            <Text style={styles.totalAmount}>$9.90</Text>
+            <Text style={styles.totalLabel}>
+              Amount Charged Today
+            </Text>
+            <Text style={styles.totalAmount}>
+              S$0.00
+            </Text>
           </View>
         </View>
+
         
         {/* DEMO SUBSCRIPTION NOTICE */}
         <View style={styles.payNowBox}>
