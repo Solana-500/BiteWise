@@ -272,21 +272,33 @@ setCalories({
   goal: dailyCalorieTarget,
 })
 
-      setNutrition((current) => ({
-        ...current,
-        protein: {
-          ...current.protein,
-          value: Math.round(totals.protein * 10) / 10,
-        },
-        carb: {
-          ...current.carb,
-          value: Math.round(totals.carbs * 10) / 10,
-        },
-        fat: {
-          ...current.fat,
-          value: Math.round(totals.fat * 10) / 10,
-        },
-      }))
+      
+const dailyCalories = Number(profile?.daily_calorie_target) || 0
+
+// Calculate daily macronutrient goals from calorie target
+const proteinGoal = Math.round((dailyCalories * 0.30) / 4)
+const carbGoal = Math.round((dailyCalories * 0.45) / 4)
+const fatGoal = Math.round((dailyCalories * 0.25) / 9)
+
+setNutrition((current) => ({
+  ...current,
+  protein: {
+    value: Math.round(totals.protein * 10) / 10,
+    goal: proteinGoal,
+  },
+  carb: {
+    value: Math.round(totals.carbs * 10) / 10,
+    goal: carbGoal,
+  },
+  fat: {
+    value: Math.round(totals.fat * 10) / 10,
+    goal: fatGoal,
+  },
+  fiber: {
+    ...current.fiber,
+  },
+}))
+
      
     } catch (error) {
       console.error('Unable to load premium user dashboard:', error)
