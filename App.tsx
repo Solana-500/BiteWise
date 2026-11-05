@@ -1,5 +1,5 @@
 import { type ComponentType, useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Linking, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, AppState, Linking, StyleSheet, Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -476,6 +476,23 @@ const checkProfile = useCallback(async (userId: string) => {
     setIsPremium(false)
   }
 }, [])
+
+useEffect(() => {
+  if (!session?.user?.id) return
+
+  const subscription = AppState.addEventListener(
+    'change',
+    (nextAppState) => {
+      if (nextAppState === 'active') {
+        void checkProfile(session.user.id)
+      }
+    }
+  )
+
+  return () => {
+    subscription.remove()
+  }
+}, [session?.user?.id, checkProfile])
 
 
   useEffect(() => {
