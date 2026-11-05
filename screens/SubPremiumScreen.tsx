@@ -151,33 +151,11 @@ export default function SubPremiumScreen() {
               )
 
 
-              const currentEndDate = profile?.subscription_end_date
-              const nextBillingDate = currentEndDate
-                ? new Date(currentEndDate)
-                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
-              const { error } = await supabase
-                .from('profiles')
-                .update({
-                  subscription_status: 'cancelled',
-                  subscription_end_date: nextBillingDate.toISOString(),
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id)
-
-              if (error) {
-                throw error
-              }
-
-              setSubscriptionStatus('cancelled')
-              setSubscriptionEndDate(nextBillingDate.toISOString())
-
-              Alert.alert(
-                'Subscription Cancelled',
-                `Premium access will remain active until ${nextBillingDate.toLocaleDateString()}.`
-              )
+            
+                       
             } catch (error: any) {
               console.error('Cancel subscription error:', error)
+            
               Alert.alert(
                 'Cancellation Failed',
                 error?.message || 'Unable to cancel subscription.'
@@ -185,11 +163,7 @@ export default function SubPremiumScreen() {
             } finally {
               setCancelling(false)
             }
-          },
-        },
-      ]
-    )
-  }
+
 
   function handleBack() {
     if (navigation.canGoBack()) {
