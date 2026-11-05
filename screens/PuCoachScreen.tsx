@@ -328,7 +328,7 @@ export default function PuCoachScreen({ navigation }: Props) {
             <CoachActionCard
               title="View Coach Recipes"
               subtitle="View and search recipes created by your coach"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachRecipes')}
             />
 
             <CoachActionCard
