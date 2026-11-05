@@ -322,7 +322,7 @@ export default function PuCoachScreen({ navigation }: Props) {
             <CoachActionCard
               title="View Coach Meal Plan"
               subtitle="See your coach’s meal plan"
-              onPress={() => navigation.navigate('PuChat')}
+              onPress={() => navigation.navigate('PuCoachMealPlans')}
             />
 
             <CoachActionCard
