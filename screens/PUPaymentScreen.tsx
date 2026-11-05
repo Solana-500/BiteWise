@@ -150,116 +150,36 @@ async function handleConfirmPayment() {
             <Text style={styles.totalAmount}>$9.90</Text>
           </View>
         </View>
+        
+        {/* DEMO SUBSCRIPTION NOTICE */}
+        <View style={styles.payNowBox}>
+          <Text style={styles.payNowTitle}>
+            BiteWise Premium Demonstration
+          </Text>
+        
+          <Text style={styles.qrSub}>
+            This is a simulated subscription checkout for
+            educational and testing purposes.
+          </Text>
+        
+          <Text style={[styles.qrSub, { marginTop: 12 }]}>
+            No actual payment will be processed.
+            No credit card information is required.
+          </Text>
+        
+          <Text style={[styles.qrSub, { marginTop: 12 }]}>
+            Premium activation is available only to
+            authorised demonstration accounts.
+          </Text>
+        </View>
 
-        {/* PAYMENT METHOD SELECTOR */}
-        <Text style={styles.sectionHeading}>Payment Method</Text>
-
-        <TouchableOpacity
-          style={[styles.methodOption, paymentMethod === 'card' && styles.methodOptionSelected]}
-          onPress={() => setPaymentMethod('card')}
-          activeOpacity={0.8}
-        >
-          <View style={styles.methodLeft}>
-            <View style={styles.methodIconCircle}><Text style={styles.methodIcon}>💳</Text></View>
-            <View>
-              <Text style={styles.methodTitle}>Credit or Debit Card</Text>
-              <Text style={styles.methodSubtitle}>Visa, Mastercard, AMEX</Text>
-            </View>
-          </View>
-          <View style={[styles.radioOuter, paymentMethod === 'card' && styles.radioOuterSelected]}>
-            {paymentMethod === 'card' && <View style={styles.radioInner} />}
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.methodOption, paymentMethod === 'paynow' && styles.methodOptionSelected]}
-          onPress={() => setPaymentMethod('paynow')}
-          activeOpacity={0.8}
-        >
-          <View style={styles.methodLeft}>
-            <View style={styles.methodIconCircle}><Text style={styles.methodIcon}>📱</Text></View>
-            <View>
-              <Text style={styles.methodTitle}>PayNow QR</Text>
-              <Text style={styles.methodSubtitle}>Instant bank transfer (Singapore)</Text>
-            </View>
-          </View>
-          <View style={[styles.radioOuter, paymentMethod === 'paynow' && styles.radioOuterSelected]}>
-            {paymentMethod === 'paynow' && <View style={styles.radioInner} />}
-          </View>
-        </TouchableOpacity>
-
-        {/* CARD INPUT FORM */}
-        {paymentMethod === 'card' ? (
-          <View style={styles.cardFormContainer}>
-            <Text style={styles.fieldLabel}>Name on Card</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Edmund Koh"
-              placeholderTextColor="#8D8A9A"
-              value={cardHolder}
-              onChangeText={setCardHolder}
-              editable={!isProcessing}
-            />
-
-            <Text style={styles.fieldLabel}>Card Number</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="1234 5678 9012 3456"
-              placeholderTextColor="#8D8A9A"
-              keyboardType="number-pad"
-              maxLength={19}
-              value={cardNumber}
-              onChangeText={handleCardNumberChange}
-              editable={!isProcessing}
-            />
-
-            <View style={styles.dualRow}>
-              <View style={styles.dualCol}>
-                <Text style={styles.fieldLabel}>Expiry Date</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="MM/YY"
-                  placeholderTextColor="#8D8A9A"
-                  keyboardType="number-pad"
-                  maxLength={5}
-                  value={expiry}
-                  onChangeText={handleExpiryChange}
-                  editable={!isProcessing}
-                />
-              </View>
-
-              <View style={styles.dualCol}>
-                <Text style={styles.fieldLabel}>CVV / CVC</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123"
-                  placeholderTextColor="#8D8A9A"
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  secureTextEntry
-                  value={cvv}
-                  onChangeText={(t) => setCvv(t.replace(/\D/g, ''))}
-                  editable={!isProcessing}
-                />
-              </View>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.payNowBox}>
-            <Text style={styles.payNowTitle}>Scan & Pay with PayNow</Text>
-            <View style={styles.qrPlaceholder}>
-              <Text style={styles.qrIcon}>📷</Text>
-              <Text style={styles.qrText}>UEN: 2026BITEWISE01</Text>
-              <Text style={styles.qrSub}>Simulated PayNow QR Gateway</Text>
-            </View>
-          </View>
-        )}
-
-        {/* SECURITY NOTE */}
+       
+               {/* DEMO SECURITY NOTE */}
         <View style={styles.securityNote}>
           <Text style={styles.securityIcon}>🔒</Text>
           <Text style={styles.securityText}>
-            256-bit SSL encrypted. Cancel anytime in Profile Settings.
+            Demo activation is verified by Supabase.
+            No payment information is collected.
           </Text>
         </View>
 
