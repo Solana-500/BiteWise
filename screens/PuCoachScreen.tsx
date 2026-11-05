@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
-import { supabase } from '../services/supabase'
+
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context'
 
 type Props = {
   navigation: any
@@ -57,7 +59,8 @@ export default function PuCoachScreen({ navigation }: Props) {
   const [assigning, setAssigning] = useState(false)
   const [coach, setCoach] = useState<CoachProfile | null>(null)
   const [userGoal, setUserGoal] = useState<string | null>(null)
-
+  const insets = useSafeAreaInsets()
+  
   useEffect(() => {
     void loadAssignedCoach()
   }, [])
@@ -268,7 +271,7 @@ export default function PuCoachScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['bottom']}>
       <View style={styles.topBar}>
         <Pressable
           hitSlop={12}
@@ -378,7 +381,12 @@ export default function PuCoachScreen({ navigation }: Props) {
       </ScrollView>
 
       {coach ? (
-        <View style={styles.bottomActions}>
+        <View
+          style={[
+            styles.bottomActions,
+            { paddingBottom: Math.max(insets.bottom, 18) },
+          ]}
+        >
           <Pressable
             style={({ pressed }) => [
               styles.messageButton,
