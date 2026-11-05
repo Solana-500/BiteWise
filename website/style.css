@@ -10,6 +10,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 80px;
 }
 
 body {
@@ -43,6 +44,9 @@ select {
 
     background-color: #ffffff;
     border-bottom: 1px solid #edf0ed;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .nav-container {
