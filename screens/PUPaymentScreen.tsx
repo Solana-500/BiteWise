@@ -44,63 +44,66 @@ export default function PUPaymentScreen() {
     }
   }
 
-  async function handleConfirmPayment() {
-  if (paymentMethod === 'card') {
-    const rawCard = cardNumber.replace(/\s/g, '')
-    if (rawCard.length < 16) {
-      Alert.alert('Invalid Card', 'Please enter a valid 16-digit card number.')
-      return
-    }
-    if (expiry.length < 5) {
-      Alert.alert('Invalid Expiry', 'Please enter a valid expiration date (MM/YY).')
-      return
-    }
-    if (cvv.length < 3) {
-      Alert.alert('Invalid CVV', 'Please enter a 3-digit security code.')
-      return
-    }
-  }
+  
+async function handleConfirmPayment() {
+  if (isProcessing) return
 
   try {
     setIsProcessing(true)
 
+    // Verify the user is authenticated
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      throw new Error('Please log in again before completing your subscription.')
+      throw new Error('Please log in again to activate demo Premium.')
     }
 
-    // Simulate payment delay
-    await new Promise((resolve) => setTimeout(resolve, 1200))
+    // Request Premium activation through the secure backend.
+    // The database checks the demo allowlist and eligibility.
+    const { data, error } = await supabase.rpc(
+      'redeem_demo_premium'
+    )
 
-    // 1. Update database
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        subscription_tier: 'premium',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id)
+    if (error) {
+      throw error
+    }
 
-    if (updateError) throw updateError
+    if (!data?.success) {
+      throw new Error('Demo Premium activation was unsuccessful.')
+    }
 
-    // 2. Refresh session so App.tsx immediately switches isPremium to true
-    await supabase.auth.refreshSession()
+    // Refresh authentication state and allow the app
+    // to reload the user's updated profile.
+    const { error: refreshError } =
+      await supabase.auth.refreshSession()
+
+    if (refreshError) {
+      console.warn(
+        'Premium activated, but session refresh failed:',
+        refreshError.message
+      )
+    }
 
     Alert.alert(
-      '🎉 Payment Successful!',
-      'Welcome to BiteWise Premium! All premium features, AI logging, and coach tools are now unlocked.'
+      'Demo Premium Activated!',
+      'Your BiteWise Premium demo subscription is now active for 30 days.'
     )
+
   } catch (error: any) {
-    console.error('Payment processing error:', error)
-    Alert.alert('Payment Failed', error?.message || 'Unable to complete transaction.')
+    console.error('Demo Premium activation error:', error)
+
+    Alert.alert(
+      'Activation Failed',
+      error?.message || 'Unable to activate demo Premium.'
+    )
   } finally {
     setIsProcessing(false)
   }
 }
+
 
   return (
     <KeyboardAvoidingView
@@ -120,9 +123,10 @@ export default function PUPaymentScreen() {
           <Text style={styles.backText}>‹ Back</Text>
         </TouchableOpacity>
 
-        <Text style={styles.pageTitle}>Confirm Subscription</Text>
-        <Text style={styles.pageSubtitle}>Review order details and choose your payment method.</Text>
-
+       <Text style={styles.pageTitle}>Activate BiteWise Premium</Text>
+        <Text style={styles.pageSubtitle}>
+          Demo checkout — no real payment will be collected.
+        </Text>
         {/* ORDER SUMMARY */}
         <Text style={styles.sectionHeading}>Order Summary</Text>
         <View style={styles.summaryCard}>
@@ -269,7 +273,7 @@ export default function PUPaymentScreen() {
           {isProcessing ? (
             <ActivityIndicator color="#16281D" />
           ) : (
-            <Text style={styles.payButtonText}>Pay $9.90 & Upgrade</Text>
+           <Text style={styles.payButtonText}>Activate Demo Premium</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
