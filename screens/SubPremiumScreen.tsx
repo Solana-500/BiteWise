@@ -94,75 +94,76 @@ export default function SubPremiumScreen() {
     }
   }
 
-  async function handleCancelSubscription() {
-    Alert.alert(
-      'Cancel Premium Subscription',
-      'Your premium benefits will remain active until the end of your current billing period.',
-      [
-        {
-          text: 'Keep Premium',
-          style: 'cancel',
-        },
-        {
-          text: 'Cancel Subscription',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setCancelling(true)
-
-              const {
-                data: { user },
-                error: userError,
-              } = await supabase.auth.getUser()
-
-              if (userError) {
-                throw userError
-              }
-
-              if (!user) {
-                Alert.alert('Login required', 'Please log in again.')
-                return
-              }
-
-             
-              const { data, error } = await supabase.rpc(
-                'cancel_demo_premium'
-              )
-              
-              if (error) {
-                throw error
-              }
-              
-              if (!data?.success) {
-                throw new Error('Subscription cancellation was unsuccessful.')
-              }
-              
-              const cancelledExpiry = data.expires_at as string
-              
-              // Update the screen after successful backend cancellation
-              setSubscriptionStatus('cancelled')
-              setSubscriptionEndDate(cancelledExpiry)
-              
-              Alert.alert(
-                'Subscription Cancelled',
-                `Your Premium access will remain active until ${new Date(
-                  cancelledExpiry
-                ).toLocaleDateString()}.`
-              )
-
-
-            
-                       
-            } catch (error: any) {
-              console.error('Cancel subscription error:', error)
-            
-              Alert.alert(
-                'Cancellation Failed',
-                error?.message || 'Unable to cancel subscription.'
-              )
-            } finally {
-              setCancelling(false)
-            }
+        
+      async function handleCancelSubscription() {
+        Alert.alert(
+          'Cancel Premium Subscription',
+          'Your Premium benefits will remain active until the end of your current subscription period.',
+          [
+            {
+              text: 'Keep Premium',
+              style: 'cancel',
+            },
+            {
+              text: 'Cancel Subscription',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  setCancelling(true)
+      
+                  const {
+                    data: { user },
+                    error: userError,
+                  } = await supabase.auth.getUser()
+      
+                  if (userError || !user) {
+                    throw new Error('Please log in again.')
+                  }
+      
+                  // Cancel through the secure Supabase function
+                  const { data, error } = await supabase.rpc(
+                    'cancel_demo_premium'
+                  )
+      
+                  if (error) {
+                    throw error
+                  }
+      
+                  if (!data?.success) {
+                    throw new Error(
+                      'Subscription cancellation was unsuccessful.'
+                    )
+                  }
+      
+                  const cancelledExpiry = data.expires_at as string
+      
+                  // Refresh local subscription information
+                  setSubscriptionStatus('cancelled')
+                  setSubscriptionEndDate(cancelledExpiry)
+      
+                  Alert.alert(
+                    'Subscription Cancelled',
+                    `Your Premium access will remain active until ${new Date(
+                      cancelledExpiry
+                    ).toLocaleDateString()}.`
+                  )
+      
+                } catch (error: any) {
+                  console.error('Cancel subscription error:', error)
+      
+                  Alert.alert(
+                    'Cancellation Failed',
+                    error?.message || 'Unable to cancel subscription.'
+                  )
+      
+                } finally {
+                  setCancelling(false)
+                }
+              },
+            },
+          ]
+        )
+      }
 
 
   function handleBack() {
