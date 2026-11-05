@@ -84,7 +84,7 @@ async function fetchAiRecommendation() {
 
     const result = await getAiMealRecommendation()
       console.log('AI recommendation:', result)
-      console.log('Recommendation length:', result.length)
+      console.log('Recommendation length:', result.meal_name)
     
    setRecommendation(result)
   } catch (error) {
