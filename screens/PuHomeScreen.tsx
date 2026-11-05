@@ -10,7 +10,10 @@ import {
   View,
 } from 'react-native'
 import { supabase } from '../services/supabase'
-import { getAiMealRecommendation } from '../services/aiRecommendations'
+import {
+  getAiMealRecommendation,
+  type AiMealRecommendation,
+} from '../services/aiRecommendations'
 
 type Props = {
   navigation: any
@@ -70,10 +73,8 @@ export default function PuHomeScreen({ navigation }: Props) {
     fiber: { value: 0, goal: 0 },
   })
 
-  const [recommendation, setRecommendation] = useState({
-    name: 'Suggested meal name',
-    kcal: 0,
-  })
+ const [recommendation, setRecommendation] =
+  useState<AiMealRecommendation | null>(null)
   
 const [aiLoading, setAiLoading] = useState(false)
 
@@ -85,10 +86,7 @@ async function fetchAiRecommendation() {
       console.log('AI recommendation:', result)
       console.log('Recommendation length:', result.length)
     
-    setRecommendation({
-      name: result,
-      kcal: 0,
-    })
+   setRecommendation(result)
   } catch (error) {
     console.error('Failed to get AI recommendation:', error)
   } finally {
@@ -503,9 +501,67 @@ const caloriePercent = hasCalorieTarget
         </Text>
   
         <Text style={styles.aiRecommendationText}>
-          {recommendation.name === 'Suggested meal name'
-            ? 'Generate an AI-powered meal recommendation tailored to your fitness goals and dietary preferences.'
-            : recommendation.name}
+          
+{recommendation ? (
+  <View>
+    <Text style={styles.aiRecommendationLabel}>
+      RECOMMENDED FOR YOU
+    </Text>
+
+    <Text style={styles.aiMealName}>
+      {recommendation.meal_name}
+    </Text>
+
+    {Boolean(recommendation.description) && (
+      <Text style={styles.aiRecommendationText}>
+        {recommendation.description}
+      </Text>
+    )}
+
+    {[
+      recommendation.calories,
+      recommendation.protein_g,
+      recommendation.carbs_g,
+      recommendation.fat_g,
+    ].some((value) => value !== null) && (
+      <View style={styles.aiMacroRow}>
+        {[
+          ['Calories', recommendation.calories, 'kcal'],
+          ['Protein', recommendation.protein_g, 'g'],
+          ['Carbs', recommendation.carbs_g, 'g'],
+          ['Fat', recommendation.fat_g, 'g'],
+        ].map(([label, value, unit]) => (
+          <View key={String(label)} style={styles.aiMacroBox}>
+            <Text style={styles.aiMacroValue}>
+              {value === null ? '—' : `${value}${unit === 'g' ? 'g' : ''}`}
+            </Text>
+            <Text style={styles.aiMacroLabel}>
+              {label}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )}
+
+    {Boolean(recommendation.reason) && (
+      <View style={styles.aiReasonBox}>
+        <Text style={styles.aiReasonHeading}>
+          Why this meal suits you
+        </Text>
+
+        <Text style={styles.aiRecommendationText}>
+          {recommendation.reason}
+        </Text>
+      </View>
+    )}
+  </View>
+) : (
+  <Text style={styles.aiRecommendationText}>
+    Generate a personalised meal recommendation
+    based on your fitness goals and dietary preferences.
+  </Text>
+)}
+
         </Text>
       </View>
   
@@ -522,7 +578,7 @@ const caloriePercent = hasCalorieTarget
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <Text style={styles.aiGenerateButtonText}>
-            {recommendation.name === 'Suggested meal name'
+            {recommendation === null
               ? '✦ Generate AI Recommendation'
               : '↻ Generate Another Recommendation'}
           </Text>
@@ -1001,4 +1057,57 @@ aiDisclaimer: {
 recommendationSection: {
   width: '100%',
 },
+  
+aiMealName: {
+  color: '#16281D',
+  fontSize: 19,
+  fontWeight: '800',
+  marginBottom: 8,
+},
+
+aiMacroRow: {
+  flexDirection: 'row',
+  gap: 6,
+  marginTop: 16,
+  marginBottom: 16,
+},
+
+aiMacroBox: {
+  flex: 1,
+  minWidth: 0,
+  alignItems: 'center',
+  backgroundColor: '#EAF3EC',
+  borderRadius: 10,
+  paddingVertical: 12,
+  paddingHorizontal: 3,
+},
+
+aiMacroValue: {
+  color: '#1E5C35',
+  fontSize: 13,
+  fontWeight: '800',
+},
+
+aiMacroLabel: {
+  color: '#5C7267',
+  fontSize: 10,
+  marginTop: 4,
+},
+
+aiReasonBox: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+  padding: 14,
+  marginTop: 4,
+  borderWidth: 1,
+  borderColor: '#DCE9DF',
+},
+
+aiReasonHeading: {
+  color: '#16281D',
+  fontSize: 14,
+  fontWeight: '800',
+  marginBottom: 8,
+},
+
 })
