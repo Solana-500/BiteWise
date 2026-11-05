@@ -413,31 +413,70 @@ void checkInitialRecoveryLink()
     }
   }, [])
 
-  const checkProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, app_role, subscription_tier')
-      .eq('id', userId)
-      .maybeSingle()
+ 
+const checkProfile = useCallback(async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      app_role,
+      subscription_tier,
+      subscription_status,
+      subscription_end_date,
+      is_suspended
+    `)
+    .eq('id', userId)
+    .maybeSingle()
 
-    if (error) {
-      console.error('Profile check failed:', error.message)
-      setHasProfile(false)
-      setUserRole(null)
-      setIsPremium(false)
-      return
-    }
+  if (error) {
+    console.error('Profile check failed:', error.message)
 
-    if (data) {
-      setHasProfile(true)
-      setUserRole((data.app_role ?? 'user') as 'user' | 'coach' | 'admin')
-      setIsPremium(data.subscription_tier === 'premium')
-    } else {
-      setHasProfile(false)
-      setUserRole(null)
-      setIsPremium(false)
-    }
-  }, [])
+    setHasProfile(false)
+    setUserRole(null)
+    setIsPremium(false)
+    return
+  }
+
+  if (data) {
+    setHasProfile(true)
+
+    const role = (data.app_role ?? 'user') as
+      | 'user'
+      | 'coach'
+      | 'admin'
+
+    setUserRole(role)
+
+    // Check subscription expiry
+    const expiryDate = data.subscription_end_date
+      ? new Date(data.subscription_end_date).getTime()
+      : NaN
+
+    const hasValidExpiry =
+      Number.isFinite(expiryDate) &&
+      expiryDate > Date.now()
+
+    // Cancelled subscriptions retain access until expiry.
+    const validSubscriptionStatus =
+      data.subscription_status === 'active' ||
+      data.subscription_status === 'cancelled'
+
+    const hasPremiumAccess =
+      role === 'user' &&
+      data.is_suspended !== true &&
+      data.subscription_tier === 'premium' &&
+      validSubscriptionStatus &&
+      hasValidExpiry
+
+    setIsPremium(hasPremiumAccess)
+
+  } else {
+    setHasProfile(false)
+    setUserRole(null)
+    setIsPremium(false)
+  }
+}, [])
+
 
   useEffect(() => {
     const channel = supabase
