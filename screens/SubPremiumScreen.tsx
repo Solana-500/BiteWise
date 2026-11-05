@@ -124,15 +124,32 @@ export default function SubPremiumScreen() {
                 return
               }
 
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('subscription_end_date')
-                .eq('id', user.id)
-                .maybeSingle<{ subscription_end_date: string | null }>()
-
-              if (profileError) {
-                throw profileError
+             
+              const { data, error } = await supabase.rpc(
+                'cancel_demo_premium'
+              )
+              
+              if (error) {
+                throw error
               }
+              
+              if (!data?.success) {
+                throw new Error('Subscription cancellation was unsuccessful.')
+              }
+              
+              const cancelledExpiry = data.expires_at as string
+              
+              // Update the screen after successful backend cancellation
+              setSubscriptionStatus('cancelled')
+              setSubscriptionEndDate(cancelledExpiry)
+              
+              Alert.alert(
+                'Subscription Cancelled',
+                `Your Premium access will remain active until ${new Date(
+                  cancelledExpiry
+                ).toLocaleDateString()}.`
+              )
+
 
               const currentEndDate = profile?.subscription_end_date
               const nextBillingDate = currentEndDate
