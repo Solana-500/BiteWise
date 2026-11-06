@@ -19,7 +19,8 @@ export default function RateCoachScreen({ navigation, route }: Props) {
   const [saving, setSaving] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [existing, setExisting] = useState(false)
-
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null)
+  
   useEffect(() => {
     let active = true
     async function load() {
@@ -29,7 +30,7 @@ export default function RateCoachScreen({ navigation, route }: Props) {
         if (!user) throw new Error('Please log in again.')
         const { data, error } = await supabase
           .from('coach_reviews')
-          .select('rating, review_text')
+          .select('rating, review_text, moderation_status')
           .eq('client_id', user.id)
           .eq('coach_id', coachId)
           .maybeSingle()
@@ -38,6 +39,7 @@ export default function RateCoachScreen({ navigation, route }: Props) {
           setRating(data.rating)
           setReview(data.review_text || '')
           setExisting(true)
+          setReviewStatus(data.moderation_status)
         }
       } catch (error) {
         if (active) {
@@ -58,6 +60,17 @@ export default function RateCoachScreen({ navigation, route }: Props) {
       Alert.alert('Choose a rating', 'Please select between 1 and 5 stars.')
       return
     }
+    
+    const trimmedReview = review.trim()
+    
+    if (trimmedReview.length > 0 && trimmedReview.length < 10) {
+      Alert.alert(
+        'Review too short',
+        'Please write at least 10 characters, or leave the review blank to submit a star-only rating.'
+      )
+      return
+    }
+
     try {
       setSaving(true)
       const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -127,6 +140,29 @@ export default function RateCoachScreen({ navigation, route }: Props) {
               <Text style={styles.helper}>Your health coach</Text>
             </View>
             <View style={styles.card}>
+              
+              {existing && reviewStatus && (
+                <View style={{ marginBottom: 14 }}>
+                  <Text style={{
+                    color: '#1E5C35',
+                    fontWeight: '800',
+                    fontSize: 13,
+                  }}>
+                    Review status: {reviewStatus.toUpperCase()}
+                  </Text>
+              
+                  <Text style={styles.helper}>
+                    {reviewStatus === 'pending'
+                      ? 'Your review is awaiting administrator approval.'
+                      : reviewStatus === 'published'
+                      ? 'Your review is approved and publicly visible.'
+                      : reviewStatus === 'rejected'
+                      ? 'Your review was not approved. You may revise it after the editing cooldown.'
+                      : 'Your review is currently hidden from public view.'}
+                  </Text>
+                </View>
+              )}
+
               <Text style={styles.title}>How was your coaching experience?</Text>
               <Text style={styles.helper}>Your honest feedback helps your coach improve.</Text>
               <View style={styles.stars}>
