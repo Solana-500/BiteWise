@@ -59,6 +59,29 @@ export default function FeedbackScreen() {
         return
       }
 
+// Check whether the user already has an active app review.
+      const { data: existingReview, error: reviewCheckError } =
+        await supabase
+          .from('app_feedback')
+          .select('id, moderation_status')
+          .eq('user_id', user.id)
+          .neq('moderation_status', 'hidden')
+          .limit(1)
+          .maybeSingle()
+      
+      if (reviewCheckError) {
+        throw reviewCheckError
+      }
+      
+      if (existingReview) {
+        Alert.alert(
+          'Review already submitted',
+          `You already have a ${existingReview.moderation_status} review. ` +
+            'Please wait for moderation before submitting another review.'
+        )
+        return
+      }
+
       const { error } = await supabase.from('app_feedback').insert({
         user_id: user.id,
         rating,
@@ -70,8 +93,8 @@ export default function FeedbackScreen() {
       }
 
       Alert.alert(
-        'Thank you!',
-        'Your feedback helps us improve BiteWise.',
+        'Review submitted!',
+        'Thank you for reviewing BiteWise. Your review is now pending administrator approval.',
         [
           {
             text: 'Done',
