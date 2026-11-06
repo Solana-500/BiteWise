@@ -265,10 +265,7 @@ export default function PuCoachScreen({ navigation }: Props) {
       : `You have been matched with Coach ${assignedCoach.full_name} based on your fitness goal.`
   )
 
-      Alert.alert(
-        '🎯 Coach Assigned!',
-        `You have been matched with Coach ${matchedCoach.full_name || 'Expert'} based on your fitness goal (${userProfile?.fitness_goal || 'General Health'}).`
-      )
+  
     } catch (error: any) {
       console.error('Assign coach error:', error)
       Alert.alert(
