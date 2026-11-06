@@ -227,54 +227,43 @@ export default function PuCoachScreen({ navigation }: Props) {
     ) || coaches[0]
 }
 
-      // 4. Update current premium user's assigned_coach_id in Supabase
-      const { error: updateErr } = await supabase
-        .from('profiles')
-        .update({
-          assigned_coach_id: matchedCoach.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id)
-
-      if (updateErr) throw updateErr
-
-if (updateErr) throw updateErr
-
-  // Synchronise the coach assignment used by Premium Chat.
-  const { data: existingChatAssignment, error: lookupError } =
-    await supabase
-      .from('coach_assignments')
-      .select('id, coach_id')
-      .eq('client_id', user.id)
-      .maybeSingle()
+      
+  // Assign coach securely through Supabase
+  const { data: assignment, error: assignmentError } =
+    await supabase.rpc('assign_premium_coach', {
+      p_coach_id: matchedCoach.id,
+    })
   
-  if (lookupError) throw lookupError
-  
-  if (existingChatAssignment) {
-    // Preserve the conversation assignment ID.
-    if (existingChatAssignment.coach_id !== matchedCoach.id) {
-      const { error: chatUpdateError } = await supabase
-        .from('coach_assignments')
-        .update({ coach_id: matchedCoach.id })
-        .eq('id', existingChatAssignment.id)
-        .eq('client_id', user.id)
-  
-      if (chatUpdateError) throw chatUpdateError
-    }
-  } else {
-    const { error: chatInsertError } = await supabase
-      .from('coach_assignments')
-      .insert({
-        client_id: user.id,
-        coach_id: matchedCoach.id,
-      })
-  
-    if (chatInsertError) throw chatInsertError
+  if (assignmentError) {
+    throw assignmentError
   }
-
-setCoach(matchedCoach as CoachProfile)
-
-      setCoach(matchedCoach as CoachProfile)
+  
+  if (!assignment?.success || !assignment.coach_id) {
+    throw new Error('Unable to assign a health coach.')
+  }
+  
+  // The backend may return an existing assignment.
+  // Always display the coach confirmed by the backend.
+  const assignedCoach = coaches.find(
+    (c) => c.id === assignment.coach_id
+  )
+  
+  if (!assignedCoach) {
+    throw new Error(
+      'Your assigned coach could not be found in the available coaches.'
+    )
+  }
+  
+  setCoach(assignedCoach as CoachProfile)
+  
+  Alert.alert(
+    assignment.already_assigned
+      ? 'Health Coach'
+      : '🎯 Coach Assigned!',
+    assignment.already_assigned
+      ? `You are already assigned to Coach ${assignedCoach.full_name}.`
+      : `You have been matched with Coach ${assignedCoach.full_name} based on your fitness goal.`
+  )
 
       Alert.alert(
         '🎯 Coach Assigned!',
