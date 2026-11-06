@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +32,49 @@ export default function FeedbackScreen() {
   const [rating, setRating] = useState<number | null>(null)
   const [feedbackText, setFeedbackText] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null)
+  const [checkingReview, setCheckingReview] = useState(true)
+
+  
+useEffect(() => {
+  let active = true
+
+  async function loadExistingReview() {
+    try {
+      const { data: { user }, error: authError } =
+        await supabase.auth.getUser()
+
+      if (authError) throw authError
+      if (!user) throw new Error('Please log in again.')
+
+      const { data, error } = await supabase
+        .from('app_feedback')
+        .select('rating, feedback_text, moderation_status')
+        .eq('user_id', user.id)
+        .neq('moderation_status', 'hidden')
+        .limit(1)
+        .maybeSingle()
+
+      if (error) throw error
+
+      if (active && data) {
+        setRating(data.rating)
+        setFeedbackText(data.feedback_text || '')
+        setReviewStatus(data.moderation_status)
+      }
+    } catch (error) {
+      console.error('Unable to load existing app review:', error)
+    } finally {
+      if (active) setCheckingReview(false)
+    }
+  }
+
+  void loadExistingReview()
+
+  return () => {
+    active = false
+  }
+}, [])
 
   async function submitFeedback() {
     if (!rating) {
@@ -237,6 +280,27 @@ export default function FeedbackScreen() {
           </View>
 
           <View style={styles.feedbackCard}>
+            
+            {reviewStatus && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{
+                  color: '#1E5C35',
+                  fontWeight: '800',
+                  fontSize: 14,
+                }}>
+                  Your review: {reviewStatus.toUpperCase()}
+                </Text>
+            
+                <Text style={styles.questionText}>
+                  {reviewStatus === 'pending'
+                    ? 'Your feedback is awaiting administrator approval.'
+                    : reviewStatus === 'published'
+                    ? 'Your review has been approved and is publicly visible.'
+                    : 'Your review is not currently displayed publicly.'}
+                </Text>
+              </View>
+            )}
+
             <Text style={styles.sectionEyebrow}>APPLICATION FEEDBACK</Text>
 
             <Text style={styles.questionTitle}>
@@ -255,7 +319,7 @@ export default function FeedbackScreen() {
                   <TouchableOpacity
                     key={star}
                     style={styles.starButton}
-                    disabled={submitting}
+                    disabled={submitting || checkingReview || !!reviewStatus}
                     onPress={() => setRating(star)}
                     accessibilityRole="button"
                     accessibilityLabel={`${star} out of 5 stars`}
