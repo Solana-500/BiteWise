@@ -629,6 +629,27 @@ const caloriePercent = hasCalorieTarget
               </Text>
             </Pressable>
 
+            <Pressable
+              onPress={() => navigation.getParent()?.navigate('Feedback')}
+              style={{
+                backgroundColor: '#EAF3EC',
+                padding: 16,
+                borderRadius: 12,
+                marginVertical: 8,
+              }}
+            >
+              <Text style={{
+                color: '#1E5C35',
+                fontWeight: '800',
+                fontSize: 15,
+              }}>
+                ⭐ Rate BiteWise
+              </Text>
+              <Text style={{ color: '#5C7267', marginTop: 4 }}>
+                Share your experience and help us improve
+              </Text>
+            </Pressable>
+
       </ScrollView>
     </SafeAreaView>
   )
