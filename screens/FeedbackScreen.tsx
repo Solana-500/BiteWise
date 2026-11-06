@@ -353,7 +353,7 @@ useEffect(() => {
               style={styles.feedbackInput}
               value={feedbackText}
               onChangeText={setFeedbackText}
-              editable={!submitting}
+              editable={!submitting && !checkingReview && !reviewStatus}
               multiline
               maxLength={800}
               placeholder="What do you enjoy? What should we improve?"
