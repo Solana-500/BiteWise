@@ -71,9 +71,11 @@ export default function CoachRatingScreen({ navigation }: Props) {
               .from('coach_reviews')
               .select('client_id, rating, review_text, updated_at')
               .eq('coach_id', user.id)
+              .eq('moderation_status', 'published')
               .order('updated_at', { ascending: false })
               .order('client_id', { ascending: true })
               .range(offset, offset + pageSize - 1)
+
 
             if (queryError) throw queryError
             if (!active) return
