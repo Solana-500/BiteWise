@@ -628,27 +628,28 @@ const caloriePercent = hasCalorieTarget
                 your fitness goals and dietary preferences.
               </Text>
             </Pressable>
-
+            
+            {/* Rate BiteWise */}
             <Pressable
-              onPress={() => navigation.getParent()?.navigate('Feedback')}
-              style={{
-                backgroundColor: '#EAF3EC',
-                padding: 16,
-                borderRadius: 12,
-                marginVertical: 8,
-              }}
+              style={styles.summaryLinkCard}
+              onPress={() =>
+                navigation.getParent()?.getParent()?.navigate('Feedback')
+              }
+              accessibilityRole="button"
+              accessibilityLabel="Rate and review BiteWise"
             >
-              <Text style={{
-                color: '#1E5C35',
-                fontWeight: '800',
-                fontSize: 15,
-              }}>
-                ⭐ Rate BiteWise
-              </Text>
-              <Text style={{ color: '#5C7267', marginTop: 4 }}>
-                Share your experience and help us improve
+              <View style={styles.summaryLinkHeaderRow}>
+                <Text style={styles.summaryLinkHeading}>
+                  ⭐ Rate BiteWise
+                </Text>
+                <Text style={styles.chevron}>›</Text>
+              </View>
+            
+              <Text style={styles.recommendationText}>
+                Share your experience and help us improve BiteWise.
               </Text>
             </Pressable>
+
 
       </ScrollView>
     </SafeAreaView>
