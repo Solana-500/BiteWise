@@ -63,18 +63,45 @@ export default function RateCoachScreen({ navigation, route }: Props) {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) throw authError
       if (!user) throw new Error('Please log in again.')
-      const { error } = await supabase.from('coach_reviews').upsert({
-        client_id: user.id,
-        coach_id: coachId,
+     
+      const reviewData = {
         rating,
         review_text: review.trim() || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'client_id,coach_id' })
-      if (error) throw error
-      setExisting(true)
-      Alert.alert('Thank you!', 'Your coach review has been saved.', [
-        { text: 'Done', onPress: () => navigation.goBack() },
-      ])
+      }
+      
+      let saveError
+      
+      if (existing) {
+        // Update an existing review.
+        // The database manages updated_at and moderation status.
+        const { error } = await supabase
+          .from('coach_reviews')
+          .update(reviewData)
+          .eq('client_id', user.id)
+          .eq('coach_id', coachId)
+      
+        saveError = error
+      } else {
+        // Submit a new review.
+        // The database automatically sets moderation_status to pending.
+        const { error } = await supabase
+          .from('coach_reviews')
+          .insert({
+            client_id: user.id,
+            coach_id: coachId,
+            ...reviewData,
+          })
+      
+        saveError = error
+      }
+      
+      if (saveError) throw saveError
+
+      Alert.alert(
+        'Review submitted',
+        'Your review has been submitted for moderation. It will become publicly visible once approved.',
+        [{ text: 'Done', onPress: () => navigation.goBack() }]
+      )
     } catch (error) {
       Alert.alert('Review not saved', error instanceof Error ? error.message : 'Please check your connection and try again.')
     } finally {
