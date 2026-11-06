@@ -365,12 +365,14 @@ useEffect(() => {
               {feedbackText.length}/800
             </Text>
 
+                        
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                (!rating || submitting) && styles.submitButtonDisabled,
+                (!rating || submitting || checkingReview || !!reviewStatus) &&
+                  styles.submitButtonDisabled,
               ]}
-              disabled={!rating || submitting}
+              disabled={!rating || submitting || checkingReview || !!reviewStatus}
               onPress={() => void submitFeedback()}
               accessibilityRole="button"
               accessibilityLabel="Submit feedback"
@@ -378,9 +380,12 @@ useEffect(() => {
               {submitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.submitButtonText}>Submit Feedback</Text>
+                <Text style={styles.submitButtonText}>
+                  {reviewStatus ? 'Review already submitted' : 'Submit Feedback'}
+                </Text>
               )}
             </TouchableOpacity>
+
           </View>
 
           <View style={styles.noteCard}>
