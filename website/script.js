@@ -126,12 +126,11 @@ async function loadLandingPageContent() {
         secondaryButton.textContent = hero.secondaryButton || "";
     }
 
-    renderLandingFeatures(landing.content.features);
-    renderLandingHowItWorks(landing.content.howItWorks);
-    renderLandingFeaturedCoaches(
-        landing.content.featuredCoaches?.coachIds || []
-    );
-    renderLandingPlans(landing.content.plans);
+   renderLandingFeatures(landing.content.features);
+   renderLandingHowItWorks(landing.content.howItWorks);
+   await loadLandingAppReviews();
+   await renderLandingFeaturedCoaches();
+   renderLandingPlans(landing.content.plans);
 }
 
 // Build a feature card when the page has no card to copy
@@ -230,110 +229,151 @@ function renderLandingHowItWorks(howItWorks) {
 }
 
 
+async function loadLandingAppReviews() {
+    const container = document.getElementById(
+        "landing-app-reviews"
+    );
 
-async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
+    if (!container) return;
+
+    const { data: reviews, error } = await supabaseClient
+        .from("landing_app_reviews")
+        .select("id,rating,feedback_text,created_at")
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+    container.replaceChildren();
+
+    if (error) {
+        console.error("Failed to load reviews:", error);
+        container.textContent =
+            "Unable to load reviews right now.";
+        return;
+    }
+
+    if (!reviews || reviews.length === 0) {
+        container.textContent =
+            "No published reviews available yet.";
+        return;
+    }
+
+    reviews.forEach((review) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+
+        const stars = document.createElement("div");
+        stars.className = "review-stars";
+        stars.textContent =
+            "★".repeat(review.rating) +
+            "☆".repeat(5 - review.rating);
+
+        const feedback = document.createElement("p");
+        feedback.className = "review-text";
+        feedback.textContent = review.feedback_text;
+
+        const reviewer = document.createElement("p");
+        reviewer.className = "review-author";
+        reviewer.textContent = "BiteWise User";
+
+        card.append(stars, feedback, reviewer);
+        container.appendChild(card);
+    });
+}
+
+
+async function renderLandingFeaturedCoaches() {
     const container = document.getElementById(
         "landing-featured-coaches"
     );
 
     if (!container) return;
 
-    container.replaceChildren();
-
-    if (!Array.isArray(selectedCoachIds) || selectedCoachIds.length === 0) {
-        return;
-    }
-
     const { data: coaches, error } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, coaching_specialty")
-        .eq("app_role", "coach")
-        .eq("approval_status", "approved");
+        .from("landing_featured_coaches")
+        .select(
+            "coach_id, coach_name, average_rating, review_count, latest_review_at"
+        )
+        .order("average_rating", { ascending: false })
+        .order("review_count", { ascending: false })
+        .order("latest_review_at", {
+            ascending: false,
+            nullsFirst: false
+        })
+        .limit(3);
 
     if (error) {
         console.error("Failed to load featured coaches:", error);
+        container.textContent = "Unable to load coaches right now.";
         return;
     }
 
-    const { data: reviews, error: reviewError } = await supabaseClient
-        .from("coach_reviews")
-        .select("coach_id, rating");
+    container.replaceChildren();
 
-    if (reviewError) {
-        console.error("Failed to load coach ratings:", reviewError);
+    if (!coaches || coaches.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent =
+            "Featured coaches will appear once they have received enough approved reviews.";
+        container.appendChild(empty);
         return;
     }
 
-    const coachesWithRatings = (coaches || []).map((coach) => {
-        const coachReviews = (reviews || []).filter(
-            (review) => review.coach_id === coach.id
-        );
-
-        const averageRating = coachReviews.length
-            ? coachReviews.reduce(
-                (sum, review) => sum + Number(review.rating),
-                0
-            ) / coachReviews.length
-            : null;
-
-        return {
-            ...coach,
-            averageRating,
-            reviewCount: coachReviews.length
-        };
-    });
-
-    const featuredCoaches = selectedCoachIds
-        .map((id) =>
-            coachesWithRatings.find((coach) => coach.id === id)
-        )
-        .filter(Boolean)
-        .slice(0, 3);
-
-    if (featuredCoaches.length === 0) {
-        return;
-    }
-
-    featuredCoaches.forEach((coach) => {
+    coaches.forEach((coach) => {
         const card = document.createElement("div");
         card.className = "coach-card";
 
+        // Coach initials
         const avatar = document.createElement("div");
         avatar.className = "coach-avatar";
-        avatar.textContent = (coach.full_name || "HC")
+
+        const coachName = coach.coach_name || "Health Coach";
+
+        avatar.textContent = coachName
+            .trim()
             .split(/\s+/)
-            .map((part) => part[0])
+            .map((part) => part.charAt(0))
             .join("")
             .slice(0, 2)
             .toUpperCase();
 
+        // Coach name
         const name = document.createElement("h3");
-        name.textContent = coach.full_name || "Health Coach";
+        name.textContent = coachName;
 
+        // Description
         const specialty = document.createElement("p");
         specialty.className = "coach-specialty";
-        specialty.textContent =
-            coach.coaching_specialty || "Health Coach";
+        specialty.textContent = "Verified Health Coach";
 
+        // Rating
         const ratingContainer = document.createElement("div");
         ratingContainer.className = "coach-rating";
 
         const stars = document.createElement("span");
         stars.className = "coach-stars";
 
-        const ratingValue = document.createElement("span");
+        const average = Number(coach.average_rating);
+        const count = Number(coach.review_count);
 
-        if (coach.averageRating !== null) {
-            stars.textContent = "★★★★★";
-            ratingValue.textContent =
-                `${coach.averageRating.toFixed(1)} (${coach.reviewCount})`;
-        } else {
-            stars.textContent = "No ratings";
-            ratingValue.textContent = "";
-        }
+        const filledStars = Math.round(average);
+
+        stars.textContent =
+            "★".repeat(filledStars) +
+            "☆".repeat(5 - filledStars);
+
+        const ratingValue = document.createElement("span");
+        ratingValue.textContent =
+            `${average.toFixed(1)} / 5 (${count} reviews)`;
 
         ratingContainer.append(stars, ratingValue);
-        card.append(avatar, name, specialty, ratingContainer);
+
+        // Build card
+        card.append(
+            avatar,
+            name,
+            specialty,
+            ratingContainer
+        );
+
         container.appendChild(card);
     });
 }
@@ -3233,3 +3273,4 @@ if (pageParams.get("login") === "1") {
 }
 
 loadLandingPageContent();
+

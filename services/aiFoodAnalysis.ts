@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 
 
 export async function analyzeFoodImage(imageUri: string) {
-  // Read the photo and convert it to Base64.
+  // Read the photo and convert it to Base64
   const image = new File(imageUri)
   const imageBase64 = await image.base64()
 
