@@ -126,13 +126,11 @@ async function loadLandingPageContent() {
         secondaryButton.textContent = hero.secondaryButton || "";
     }
 
-    renderLandingFeatures(landing.content.features);
-    renderLandingHowItWorks(landing.content.howItWorks);
-    await loadLandingAppReviews();
-    await renderLandingFeaturedCoaches();
-        landing.content.featuredCoaches?.coachIds || []
-    );
-    renderLandingPlans(landing.content.plans);
+   renderLandingFeatures(landing.content.features);
+   renderLandingHowItWorks(landing.content.howItWorks);
+   await loadLandingAppReviews();
+   await renderLandingFeaturedCoaches();
+   renderLandingPlans(landing.content.plans);
 }
 
 // Build a feature card when the page has no card to copy
