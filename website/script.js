@@ -229,6 +229,57 @@ function renderLandingHowItWorks(howItWorks) {
 }
 
 
+async function loadLandingAppReviews() {
+    const container = document.getElementById(
+        "landing-app-reviews"
+    );
+
+    if (!container) return;
+
+    const { data: reviews, error } = await supabaseClient
+        .from("landing_app_reviews")
+        .select("id,rating,feedback_text,created_at")
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+    container.replaceChildren();
+
+    if (error) {
+        console.error("Failed to load reviews:", error);
+        container.textContent =
+            "Unable to load reviews right now.";
+        return;
+    }
+
+    if (!reviews || reviews.length === 0) {
+        container.textContent =
+            "No published reviews available yet.";
+        return;
+    }
+
+    reviews.forEach((review) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+
+        const stars = document.createElement("div");
+        stars.className = "review-stars";
+        stars.textContent =
+            "★".repeat(review.rating) +
+            "☆".repeat(5 - review.rating);
+
+        const feedback = document.createElement("p");
+        feedback.className = "review-text";
+        feedback.textContent = review.feedback_text;
+
+        const reviewer = document.createElement("p");
+        reviewer.className = "review-author";
+        reviewer.textContent = "BiteWise User";
+
+        card.append(stars, feedback, reviewer);
+        container.appendChild(card);
+    });
+}
+
 
 async function renderLandingFeaturedCoaches() {
     const container = document.getElementById(
