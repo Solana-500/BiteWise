@@ -55,9 +55,6 @@ export default function SignUpScreen({ navigation }: Props) {
         },
       })
 
-      console.log('Signup user:', data.user)
-      console.log('Signup session:', data.session)
-      console.log('Signup error:', error)
 
       if (error) {
         Alert.alert('Registration failed', error.message)
