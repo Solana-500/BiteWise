@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { searchUsdaFoods } from '../services/usdaFoodSearch'
 import {
   ActivityIndicator,
   Alert,
@@ -53,20 +54,7 @@ type FoodResult = {
   serving: string
 }
 
-type UsdaNutrient = {
-  nutrientName?: string
-  value?: number
-  unitName?: string
-}
 
-type UsdaFood = {
-  fdcId: number
-  description: string
-  brandOwner?: string
-  servingSize?: number
-  servingSizeUnit?: string
-  foodNutrients?: UsdaNutrient[]
-}
 
 const MEAL_TYPES: MealType[] = [
   'Breakfast',
@@ -75,17 +63,6 @@ const MEAL_TYPES: MealType[] = [
   'Snack',
 ]
 
-function getNutrientValue(
-  nutrients: UsdaNutrient[] | undefined,
-  nutrientName: string
-) {
-  const nutrient = nutrients?.find(
-    (item) =>
-      item.nutrientName?.toLowerCase() === nutrientName.toLowerCase()
-  )
-
-  return Number(nutrient?.value ?? 0)
-}
 
 function mapBarcodeFoodToFoodResult(food: BarcodeFood): FoodResult {
   const nameWithBrand = food.brand
@@ -309,92 +286,55 @@ async function pickFoodImage() {
   const [quickAddFat, setQuickAddFat] = useState('')
   const [quickAddSaving, setQuickAddSaving] = useState(false)
 
-  const searchFoods = useCallback(async (query: string) => {
-    const cleanedQuery = query.trim()
+ 
+const searchFoods = useCallback(async (query: string) => {
+  const cleanedQuery = query.trim()
 
-    if (cleanedQuery.length < 2) {
-      setFoodResults([])
-      setSearchError('')
-      setSearchingFoods(false)
-      return
-    }
+  if (cleanedQuery.length < 2) {
+    setFoodResults([])
+    setSearchError('')
+    setSearchingFoods(false)
+    return
+  }
 
-    const apiKey = process.env.EXPO_PUBLIC_USDA_API_KEY
+  try {
+    setSearchingFoods(true)
+    setSearchError('')
 
-    if (!apiKey) {
-      setSearchError(
-        'USDA API key is missing. Check your .env file and restart Expo.'
-      )
-      setFoodResults([])
-      setSearchingFoods(false)
-      return
-    }
+    const foods = await searchUsdaFoods(cleanedQuery)
 
-    try {
-      setSearchingFoods(true)
-      setSearchError('')
+    const mappedFoods: FoodResult[] = foods.map((food) => ({
+      name: food.brand
+        ? `${food.name} (${food.brand})`
+        : food.name,
+      calories: Math.round(food.caloriesPer100g ?? 0),
+      protein: Number(
+        (food.proteinPer100g ?? 0).toFixed(1)
+      ),
+      carbs: Number(
+        (food.carbsPer100g ?? 0).toFixed(1)
+      ),
+      fat: Number(
+        (food.fatPer100g ?? 0).toFixed(1)
+      ),
+      serving: '100 g',
+    }))
 
-      const url =
-        'https://api.nal.usda.gov/fdc/v1/foods/search?' +
-        `api_key=${encodeURIComponent(apiKey)}` +
-        `&query=${encodeURIComponent(cleanedQuery)}` +
-        '&pageSize=10'
+    setFoodResults(mappedFoods)
+  } catch (error: any) {
+    console.error('USDA food search error:', error)
 
-      const response = await fetch(url)
+    setSearchError(
+      error?.message ||
+      'Unable to search foods. Please try again.'
+    )
 
-      if (!response.ok) {
-        throw new Error(
-          `Food search failed. USDA returned status ${response.status}.`
-        )
-      }
+    setFoodResults([])
+  } finally {
+    setSearchingFoods(false)
+  }
+}, [])
 
-      const data = await response.json()
-
-      const mappedFoods: FoodResult[] = (data.foods ?? []).map(
-        (food: UsdaFood) => {
-          const nutrients = food.foodNutrients ?? []
-
-          const serving =
-            food.servingSize && food.servingSizeUnit
-              ? `${food.servingSize} ${food.servingSizeUnit}`
-              : food.brandOwner
-                ? `${food.brandOwner} product`
-                : '100 g'
-
-          return {
-            name: food.description || 'Unnamed food',
-            calories: Math.round(getNutrientValue(nutrients, 'Energy')),
-            protein: Number(
-              getNutrientValue(nutrients, 'Protein').toFixed(1)
-            ),
-            carbs: Number(
-              getNutrientValue(
-                nutrients,
-                'Carbohydrate, by difference'
-              ).toFixed(1)
-            ),
-            fat: Number(
-              getNutrientValue(
-                nutrients,
-                'Total lipid (fat)'
-              ).toFixed(1)
-            ),
-            serving,
-          }
-        }
-      )
-
-      setFoodResults(mappedFoods)
-    } catch (error: any) {
-      console.error('USDA food search error:', error)
-      setSearchError(
-        error?.message || 'Unable to search foods. Please try again.'
-      )
-      setFoodResults([])
-    } finally {
-      setSearchingFoods(false)
-    }
-  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
