@@ -2401,4 +2401,12 @@ body.modal-open {
 .btn-download:hover {
     background-color: #D8EADF;
 }
-
+.demo-disclaimer {
+    font-size: 0.85rem;
+    color: #805c20;
+    background: #fff3d6;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 12px auto;
+    max-width: 650px;
+}
