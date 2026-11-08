@@ -128,6 +128,7 @@ async function loadLandingPageContent() {
 
     renderLandingFeatures(landing.content.features);
     renderLandingHowItWorks(landing.content.howItWorks);
+    await loadLandingAppReviews();
     renderLandingFeaturedCoaches(
         landing.content.featuredCoaches?.coachIds || []
     );
@@ -338,6 +339,73 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
     });
 }
 
+
+async function loadLandingAppReviews() {
+    const container = document.getElementById("landing-app-reviews");
+
+    if (!container) return;
+
+    const { data: reviews, error } = await supabaseClient
+        .from("landing_app_reviews")
+        .select("id, rating, feedback_text, created_at")
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+    if (error) {
+        console.error("Failed to load application reviews:", error);
+        container.textContent = "Unable to load reviews right now.";
+        return;
+    }
+
+    container.replaceChildren();
+
+    if (!reviews || reviews.length === 0) {
+        container.textContent = "No approved reviews yet.";
+        return;
+    }
+
+    reviews.forEach((review) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+
+        const stars = document.createElement("div");
+        stars.className = "stars";
+        stars.textContent =
+            "★".repeat(review.rating) +
+            "☆".repeat(5 - review.rating);
+
+        const comment = document.createElement("p");
+        comment.className = "review-text";
+        comment.textContent = review.feedback_text || "";
+
+        const user = document.createElement("div");
+        user.className = "review-user";
+
+        const avatar = document.createElement("div");
+        avatar.className = "review-avatar";
+        avatar.textContent = "BW";
+
+        const details = document.createElement("div");
+
+        const name = document.createElement("h3");
+        name.textContent = "BiteWise User";
+
+        const date = document.createElement("p");
+        date.textContent = new Date(
+            review.created_at
+        ).toLocaleDateString("en-SG", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+
+        details.append(name, date);
+        user.append(avatar, details);
+
+        card.append(stars, comment, user);
+        container.appendChild(card);
+    });
+}
 
 
 function renderLandingPlans(plans) {
