@@ -3223,20 +3223,3 @@ if (pageParams.get("login") === "1") {
 
 loadLandingPageContent();
 
-.btn-download {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 11px 18px;
-    border: 1px solid #1E5C35;
-    border-radius: 8px;
-    background-color: #EAF3EC;
-    color: #1E5C35;
-    font-weight: 700;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
-
-.btn-download:hover {
-    background-color: #D8EADF;
-}
