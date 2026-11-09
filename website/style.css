@@ -2410,3 +2410,47 @@ body.modal-open {
     margin: 12px auto;
     max-width: 650px;
 }
+
+/* BiteWise Android APK Download Button */
+
+.apk-download-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 18px 28px;
+    min-height: 60px;
+
+    background-color: #185d35;
+    color: white;
+
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+
+    border-radius: 12px;
+
+    transition: background-color 0.2s ease,
+                transform 0.2s ease;
+}
+
+.apk-download-button:hover {
+    background-color: #124629;
+    transform: translateY(-2px);
+}
+
+.apk-install-guide {
+    margin: 22px 0;
+    color: #17251d;
+}
+
+.apk-install-guide h3 {
+    margin-bottom: 12px;
+    font-size: 17px;
+}
+
+.apk-install-guide ol {
+    padding-left: 22px;
+    line-height: 1.9;
+    color: #66776d;
+}
