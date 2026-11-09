@@ -151,9 +151,15 @@ export default function CoachSignUpScreen({ navigation }: Props) {
     
     const asset = result.assets[0]
     
-    console.log('Certificate URI scheme:', asset.uri.split(':')[0])
-    console.log('Certificate name:', asset.name)
+   
+    console.log('Picked URI scheme:', asset.uri.split(':')[0])
+    console.log('Picked size:', asset.size)
     
+    const selectedFile = new File(asset.uri)
+    
+    console.log('File exists:', selectedFile.exists)
+    console.log('File size:', selectedFile.size)
+
     
     const validatedFile = await prepare(asset)
     prepared.current = validatedFile
