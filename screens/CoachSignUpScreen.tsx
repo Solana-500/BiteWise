@@ -138,39 +138,43 @@ export default function CoachSignUpScreen({ navigation }: Props) {
     }
   }
 
+   
   async function chooseCertificate() {
     if (busy || accountCreated) return
+  
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'image/jpeg', 'image/png'],
-        multiple: false,
-        copyToCacheDirectory: true,
+      const result = await File.pickFileAsync({
+        mimeTypes: [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+        ],
       })
-          
-    if (result.canceled) return
-    
-    const asset = result.assets[0]
-    
-   
-    console.log('Picked URI scheme:', asset.uri.split(':')[0])
-    console.log('Picked size:', asset.size)
-    
-    const selectedFile = new File(asset.uri)
-    
-    console.log('File exists:', selectedFile.exists)
-    console.log('File size:', selectedFile.size)
-
-    
-    const validatedFile = await prepare(asset)
-    prepared.current = validatedFile
-    setCertificate(asset)
-
-   
-  } catch (error) {
-    console.error('Certificate selection failed:', error)
-    Alert.alert('Certificate unavailable', errorText(error))
-  }
-
+  
+      if (result.canceled) return
+  
+      const pickedFile = result.result
+  
+      console.log('Picked file exists:', pickedFile.exists)
+      console.log('Picked file size:', pickedFile.size)
+  
+      const asset: DocumentPicker.DocumentPickerAsset = {
+        uri: pickedFile.uri,
+        name: pickedFile.name,
+        size: pickedFile.size,
+        mimeType: pickedFile.type ?? undefined,
+      }
+  
+      const validatedFile = await prepare(asset)
+  
+      prepared.current = validatedFile
+      setCertificate(asset)
+  
+      console.log('Certificate validated successfully')
+    } catch (error) {
+      console.error('Certificate selection failed:', error)
+      Alert.alert('Certificate unavailable', errorText(error))
+    }
   }
 
   async function register() {
