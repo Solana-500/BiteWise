@@ -336,6 +336,9 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [hasProfile, setHasProfile] = useState(false)
   const [userRole, setUserRole] = useState<'user' | 'coach' | 'admin' | null>(null)
+  const [coachApprovalStatus, setCoachApprovalStatus] =
+  useState<string | null>(null)
+  const [isSuspended, setIsSuspended] = useState(false)
   const [isPremium, setIsPremium] = useState(false)
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
@@ -420,6 +423,7 @@ const checkProfile = useCallback(async (userId: string) => {
     .select(`
       id,
       app_role,
+      approval_status,
       subscription_tier,
       subscription_status,
       subscription_end_date,
@@ -429,17 +433,20 @@ const checkProfile = useCallback(async (userId: string) => {
     .maybeSingle()
 
   if (error) {
-    console.error('Profile check failed:', error.message)
+  console.error('Profile check failed:', error.message)
 
-    setHasProfile(false)
-    setUserRole(null)
-    setIsPremium(false)
-    return
-  }
+  setHasProfile(false)
+  setUserRole(null)
+  setIsPremium(false)
+  setCoachApprovalStatus(null)
+  setIsSuspended(false)
+  return
+}
 
   if (data) {
     setHasProfile(true)
-
+    setCoachApprovalStatus(data.approval_status ?? null)
+    setIsSuspended(data.is_suspended === true)
     const role = (data.app_role ?? 'user') as
       | 'user'
       | 'coach'
@@ -470,11 +477,13 @@ const checkProfile = useCallback(async (userId: string) => {
 
     setIsPremium(hasPremiumAccess)
 
-  } else {
-    setHasProfile(false)
-    setUserRole(null)
-    setIsPremium(false)
-  }
+  } } else {
+  setHasProfile(false)
+  setUserRole(null)
+  setIsPremium(false)
+  setCoachApprovalStatus(null)
+  setIsSuspended(false)
+}
 }, [])
 
 useEffect(() => {
