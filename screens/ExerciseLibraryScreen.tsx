@@ -21,7 +21,9 @@ import {
 } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
-
+import {
+  searchExercises as searchExercisesFromServer
+} from '../services/exerciseSearch'
 import { supabase } from '../services/supabase'
 import type {
   ExerciseCategory,
@@ -38,14 +40,6 @@ type ExerciseLibraryRouteProp = RouteProp<
   'ExerciseLibrary'
 >
 
-type ApiNinjasExercise = {
-  name: string
-  type: string
-  muscle: string
-  equipment: string
-  difficulty: string
-  instructions: string
-}
 
 type ExerciseOption = {
   id: string
@@ -405,143 +399,44 @@ export default function ExerciseLibraryScreen() {
 
 
 
-  const searchExercises = useCallback(
-    async (query: string) => {
-      const cleanedQuery = query.trim()
+const searchExercises = useCallback(
+  async (query: string) => {
+    const cleanedQuery = query.trim()
 
-      if (cleanedQuery.length < 2) {
-        setExerciseResults([])
-        setSearchError('')
-        setSearchingExercises(false)
-        return
-      }
+    if (cleanedQuery.length < 2) {
+      setExerciseResults([])
+      setSearchError('')
+      setSearchingExercises(false)
+      return
+    }
 
-      const apiKey = process.env.EXPO_PUBLIC_API_NINJAS_KEY
+    try {
+      setSearchingExercises(true)
+      setSearchError('')
 
-      if (!apiKey) {
-        setSearchError(
-          'Exercise API key is missing. Add EXPO_PUBLIC_API_NINJAS_KEY to your .env file, then restart Expo.'
-        )
-        setExerciseResults([])
-        setSearchingExercises(false)
-        return
-      }
+      // Preserve existing search-term normalization.
+      const { expandedQuery } = getSearchTerms(cleanedQuery)
 
-      try {
-        setSearchingExercises(true)
-        setSearchError('')
+      // Search through Supabase instead of calling API Ninjas.
+      const results = await searchExercisesFromServer(expandedQuery)
 
-        const {
-          compactQuery,
-          expandedQuery,
-          searchTerms,
-        } = getSearchTerms(cleanedQuery)
+      setExerciseResults(results)
+    } catch (error: any) {
+      console.error('Exercise search error:', error)
 
-        const apiType = mapCategoryToApiType(category)
+      setSearchError(
+        error?.message ||
+          'Unable to search exercises. Please try again.'
+      )
 
-        const requests = searchTerms.map(async (term) => {
-          const params = new URLSearchParams({
-            name: term,
-          })
+      setExerciseResults([])
+    } finally {
+      setSearchingExercises(false)
+    }
+  },
+  []
+)
 
-          if (apiType) {
-            params.set('type', apiType)
-          }
-
-          const response = await fetch(
-            `https://api.api-ninjas.com/v1/exercises?${params.toString()}`,
-            {
-              headers: {
-                'X-Api-Key': apiKey,
-              },
-            }
-          )
-
-          if (!response.ok) {
-            const errorText = await response.text()
-
-            throw new Error(
-              `Exercise search failed (${response.status}): ${
-                errorText || 'Please try again.'
-              }`
-            )
-          }
-
-          return (await response.json()) as ApiNinjasExercise[]
-        })
-
-        const responseGroups = await Promise.all(requests)
-
-        const uniqueExercises = new Map<string, ApiNinjasExercise>()
-
-        responseGroups.flat().forEach((exercise) => {
-          const key = [
-            exercise.name ?? '',
-            exercise.type ?? '',
-            exercise.muscle ?? '',
-            exercise.equipment ?? '',
-          ]
-            .join('|')
-            .toLowerCase()
-
-          if (!uniqueExercises.has(key)) {
-            uniqueExercises.set(key, exercise)
-          }
-        })
-
-        const normalizedWords = expandedQuery
-          .split(/\s+/)
-          .filter((word) => word.length >= 2)
-
-        const results: ExerciseOption[] = Array.from(
-          uniqueExercises.values()
-        )
-          .filter((exercise) => {
-            const exerciseName = (exercise.name ?? '').toLowerCase()
-            const compactName = exerciseName.replace(/[\s-]/g, '')
-
-            return (
-              exerciseName.includes(expandedQuery) ||
-              compactName.includes(compactQuery) ||
-              normalizedWords.every((word) => exerciseName.includes(word))
-            )
-          })
-          .map((exercise, index) => ({
-            id: [
-              exercise.name ?? 'exercise',
-              exercise.type ?? '',
-              exercise.muscle ?? '',
-              exercise.equipment ?? '',
-              index,
-            ].join('-'),
-            name: exercise.name || 'Unnamed exercise',
-            type: exercise.type || '',
-            muscle: exercise.muscle || '',
-            equipment: exercise.equipment || '',
-            difficulty: exercise.difficulty || '',
-            instructions: exercise.instructions || '',
-          }))
-
-        setExerciseResults(results)
-      } catch (error: any) {
-        console.error('Exercise search error:', error)
-
-        setSearchError(
-          error?.message || 'Unable to search exercises. Please try again.'
-        )
-        setExerciseResults([])
-      } finally {
-        setSearchingExercises(false)
-      }
-    },
-    [category]
-  )
-
-  useEffect(() => {
-  if (category === 'Cardio') {
-    searchCardioActivities(searchText)
-    return
-  }
 
   const timer = setTimeout(() => {
     void searchExercises(searchText)
