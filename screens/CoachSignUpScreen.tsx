@@ -84,15 +84,12 @@ async function prepare(asset: DocumentPicker.DocumentPickerAsset): Promise<Prepa
   } else {
     throw new Error('Select a PDF, JPG, or PNG certificate.')
   }
-  const body = new ArrayBuffer(bytes.byteLength)
+   const body = new ArrayBuffer(bytes.byteLength)
   new Uint8Array(body).set(bytes)
+
   return { body, extension, mime, name: asset.name }
 }
-async function prepare(asset: DocumentPicker.DocumentPickerAsset): Promise<PreparedFile> {
-  console.log('Certificate URI scheme:', asset.uri.split(':')[0])
-  console.log('Certificate size:', asset.size)
 
-  const file = new File(asset.uri)
 export default function CoachSignUpScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -149,9 +146,19 @@ export default function CoachSignUpScreen({ navigation }: Props) {
         multiple: false,
         copyToCacheDirectory: true,
       })
-      if (result.canceled) return
-      await prepare(result.assets[0])
-      setCertificate(result.assets[0])
+          
+    if (result.canceled) return
+    
+    const asset = result.assets[0]
+    
+    console.log('Certificate URI scheme:', asset.uri.split(':')[0])
+    console.log('Certificate name:', asset.name)
+    
+    
+    const validatedFile = await prepare(asset)
+    prepared.current = validatedFile
+    setCertificate(asset)
+
     } catch (error) {
       Alert.alert('Certificate unavailable', errorText(error))
     }
@@ -178,8 +185,13 @@ export default function CoachSignUpScreen({ navigation }: Props) {
           height_cm: optionalNumber(height, 'Height'),
           weight_kg: optionalNumber(weight, 'Weight'),
         }
-        setPhase('Checking certificate…')
-        prepared.current = await prepare(certificate)
+        
+          setPhase('Checking certificate…')
+          
+          if (!prepared.current) {
+            prepared.current = await prepare(certificate)
+          }
+
         setPhase('Creating account…')
         const { data, error } = await api.auth.signUp({
           email: email.trim().toLowerCase(),
