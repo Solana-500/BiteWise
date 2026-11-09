@@ -414,11 +414,10 @@ const searchExercises = useCallback(
       setSearchingExercises(true)
       setSearchError('')
 
-      // Preserve existing search-term normalization.
       const { expandedQuery } = getSearchTerms(cleanedQuery)
 
-      // Search through Supabase instead of calling API Ninjas.
-      const results = await searchExercisesFromServer(expandedQuery)
+      const results =
+        await searchExercisesFromServer(expandedQuery)
 
       setExerciseResults(results)
     } catch (error: any) {
@@ -426,7 +425,7 @@ const searchExercises = useCallback(
 
       setSearchError(
         error?.message ||
-          'Unable to search exercises. Please try again.'
+        'Unable to search exercises. Please try again.'
       )
 
       setExerciseResults([])
@@ -437,6 +436,12 @@ const searchExercises = useCallback(
   []
 )
 
+// Automatically search when the category or search text changes.
+useEffect(() => {
+  if (category === 'Cardio') {
+    searchCardioActivities(searchText)
+    return
+  }
 
   const timer = setTimeout(() => {
     void searchExercises(searchText)
