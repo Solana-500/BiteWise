@@ -1,3 +1,7 @@
+import {
+  supabaseUrl,
+  supabasePublishableKey,
+} from '../services/supabase'
 import { useRef, useState } from 'react'
 import {
   ActivityIndicator,
@@ -109,9 +113,8 @@ export default function CoachSignUpScreen({ navigation }: Props) {
 
   function registrationClient() {
     if (!client.current) {
-      const url = process.env.EXPO_PUBLIC_SUPABASE_URL
-      const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
-      if (!url || !key) throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to the same public Supabase configuration used by your app.')
+      const url = supabaseUrl
+      const key = supabasePublishableKey
       client.current = createClient(url, key, {
         auth: {
           persistSession: false,
