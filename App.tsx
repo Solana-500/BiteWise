@@ -830,6 +830,15 @@ useEffect(() => {
               }}
             />
 
+            <Stack.Screen
+              name="WorkoutRoutineBuilder"
+              component={WorkoutRoutineBuilderScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+
             </>
           ) : (
             <>
