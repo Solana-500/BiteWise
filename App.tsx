@@ -477,7 +477,7 @@ const checkProfile = useCallback(async (userId: string) => {
 
     setIsPremium(hasPremiumAccess)
 
-  } } else {
+  } else {
   setHasProfile(false)
   setUserRole(null)
   setIsPremium(false)
