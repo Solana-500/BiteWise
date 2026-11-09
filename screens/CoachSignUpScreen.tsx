@@ -159,9 +159,12 @@ export default function CoachSignUpScreen({ navigation }: Props) {
     prepared.current = validatedFile
     setCertificate(asset)
 
-    } catch (error) {
-      Alert.alert('Certificate unavailable', errorText(error))
-    }
+   
+  } catch (error) {
+    console.error('Certificate selection failed:', error)
+    Alert.alert('Certificate unavailable', errorText(error))
+  }
+
   }
 
   async function register() {
