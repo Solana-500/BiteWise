@@ -84,6 +84,15 @@ const confirmUserReactivateButton =
     );
 
 
+function escapeHTML(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 // ==============================================
 // FUNCTIONS
 // ==============================================
@@ -141,7 +150,7 @@ function renderUsers(users) {
         row.innerHTML = `
             <td>
                 <strong>
-                    ${user.full_name || "Unnamed User"}
+                    ${escapeHTML(user.full_name || "Unnamed User")}
                 </strong>
             </td>
 
@@ -166,7 +175,7 @@ function renderUsers(users) {
                 <button
                     type="button"
                     class="coach-action-button view-user-button"
-                    data-user-id="${user.id}"
+                    data-user-id="${escapeHTML(user.id)}"
                 >
                     View
                 </button>
