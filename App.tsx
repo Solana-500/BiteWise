@@ -331,6 +331,76 @@ function CoachTabs() {
   )
 }
 
+
+function CoachRestrictedScreen({
+  approvalStatus,
+  isSuspended,
+}: {
+  approvalStatus: string | null
+  isSuspended: boolean
+}) {
+  const title = isSuspended
+    ? 'Account Suspended'
+    : approvalStatus === 'rejected'
+      ? 'Application Rejected'
+      : 'Awaiting Administrator Approval'
+
+  const message = isSuspended
+    ? 'Your Health Coach account is currently suspended.'
+    : approvalStatus === 'rejected'
+      ? 'Your Health Coach application was not approved.'
+      : 'Your application is being reviewed by a BiteWise administrator.'
+
+  return (
+    <View style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 30,
+      backgroundColor: '#F5FAF6',
+    }}>
+      <Text style={{
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#1E5C35',
+        textAlign: 'center',
+        marginBottom: 16,
+      }}>
+        {title}
+      </Text>
+
+      <Text style={{
+        fontSize: 16,
+        color: '#52675B',
+        textAlign: 'center',
+        lineHeight: 24,
+      }}>
+        {message}
+      </Text>
+
+      <Pressable
+        onPress={() => {
+          void supabase.auth.signOut()
+        }}
+        style={{
+          marginTop: 30,
+          backgroundColor: '#1E5C35',
+          paddingVertical: 14,
+          paddingHorizontal: 35,
+          borderRadius: 12,
+        }}
+      >
+        <Text style={{
+          color: '#FFFFFF',
+          fontWeight: '700',
+        }}>
+          Log Out
+        </Text>
+      </Pressable>
+    </View>
+  )
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -668,7 +738,22 @@ useEffect(() => {
               component={AdminTabs}
               options={{ headerShown: false }}
             />
-          ) : userRole === 'coach' ? (
+         
+            ) : userRole === 'coach' &&
+                (coachApprovalStatus !== 'approved' || isSuspended) ? (
+              <Stack.Screen
+                name="CoachTabs"
+                options={{ headerShown: false }}
+              >
+                {() => (
+                  <CoachRestrictedScreen
+                    approvalStatus={coachApprovalStatus}
+                    isSuspended={isSuspended}
+                  />
+                )}
+              </Stack.Screen>
+            ) : userRole === 'coach' ? (
+
             <>
               <Stack.Screen
                 name="CoachTabs"
