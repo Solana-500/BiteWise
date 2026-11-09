@@ -158,12 +158,17 @@ export default function CoachSignUpScreen({ navigation }: Props) {
       console.log('Picked file exists:', pickedFile.exists)
       console.log('Picked file size:', pickedFile.size)
   
+           
       const asset: DocumentPicker.DocumentPickerAsset = {
         uri: pickedFile.uri,
         name: pickedFile.name,
         size: pickedFile.size,
         mimeType: pickedFile.type ?? undefined,
+        lastModified: pickedFile.modificationTime
+          ? pickedFile.modificationTime * 1000
+          : Date.now(),
       }
+
   
       const validatedFile = await prepare(asset)
   
