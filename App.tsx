@@ -820,6 +820,16 @@ useEffect(() => {
                   presentation: 'card',
                 }}
               />
+              
+            <Stack.Screen
+              name="ExerciseEntry"
+              component={ExerciseEntryScreen}
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+
             </>
           ) : (
             <>
