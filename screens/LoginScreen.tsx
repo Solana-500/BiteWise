@@ -62,11 +62,6 @@ export default function LoginScreen({ navigation }: Props) {
         password,
       })
 
-    console.log('Login email:', email.trim().toLowerCase())
-    console.log('Auth error code:', error?.code ?? 'none')
-    console.log('Auth error status:', error?.status ?? 'none')
-    console.log('Auth error message:', error?.message ?? 'none')
-    console.log('Login succeeded:', Boolean(data.user))
 
       if (error || !data.user) {
         showMessage(
