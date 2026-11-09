@@ -3169,6 +3169,17 @@ resetPasswordForm?.addEventListener(
 
         try {
 
+            const { data: authData, error: authError } =
+                await supabaseClient.auth.getUser();
+            
+            if (authError || !authData.user) {
+                throw new Error(
+                    'No valid password recovery session. Please request a new reset link.'
+                );
+            }
+            
+            console.log('Password reset account:', authData.user.email);
+
             const { error } =
                 await supabaseClient.auth.updateUser({
                     password: newPassword
