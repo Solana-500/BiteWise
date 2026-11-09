@@ -88,7 +88,11 @@ async function prepare(asset: DocumentPicker.DocumentPickerAsset): Promise<Prepa
   new Uint8Array(body).set(bytes)
   return { body, extension, mime, name: asset.name }
 }
+async function prepare(asset: DocumentPicker.DocumentPickerAsset): Promise<PreparedFile> {
+  console.log('Certificate URI scheme:', asset.uri.split(':')[0])
+  console.log('Certificate size:', asset.size)
 
+  const file = new File(asset.uri)
 export default function CoachSignUpScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
