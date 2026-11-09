@@ -451,10 +451,12 @@ const caloriePercent = hasCalorieTarget
           </Pressable>
         </View>
 
-        <Pressable
-          style={styles.summaryLinkCard}
-          onPress={() => navigation.navigate('PuNutrition')}
-        >
+        
+          <Pressable
+            style={styles.summaryLinkCard}
+            onPress={() => navigation.getParent()?.navigate('Meals')}
+          >
+
           <View style={styles.summaryLinkHeaderRow}>
             <Text style={styles.summaryLinkHeading}>Nutrition Summary</Text>
             <Text style={styles.chevron}>›</Text>
