@@ -155,8 +155,7 @@ export default function CoachSignUpScreen({ navigation }: Props) {
   
       const pickedFile = result.result
   
-      console.log('Picked file exists:', pickedFile.exists)
-      console.log('Picked file size:', pickedFile.size)
+     
   
            
       const asset: DocumentPicker.DocumentPickerAsset = {
@@ -175,7 +174,7 @@ export default function CoachSignUpScreen({ navigation }: Props) {
       prepared.current = validatedFile
       setCertificate(asset)
   
-      console.log('Certificate validated successfully')
+    
     } catch (error) {
       console.error('Certificate selection failed:', error)
       Alert.alert('Certificate unavailable', errorText(error))
