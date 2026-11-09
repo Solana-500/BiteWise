@@ -20,8 +20,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
 
 // Replace with your allowlisted web recovery URL when web recovery is configured.
 // A web URL must open a screen that handles the Supabase recovery session.
-const WEB_PASSWORD_RESET_REDIRECT: string = ''
-const MOBILE_PASSWORD_RESET_REDIRECT = 'bitewise://reset-password'
+
+const WEB_PASSWORD_RESET_REDIRECT =
+  'https://bitewise-nutrition.netlify.app/reset-password.html'
+
+const MOBILE_PASSWORD_RESET_REDIRECT =
+  'https://bitewise-nutrition.netlify.app/reset-password.html'
+
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('')
