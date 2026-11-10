@@ -5,7 +5,7 @@ import {
     setContentSearch,
     setContentTypeFilter,
     moderateCoachContent
-} from "../control/content-controller.js";
+} from "./content-controller.js";
 
 import { supabaseClient } from "../supabase-client.js";
 
