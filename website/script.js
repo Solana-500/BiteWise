@@ -552,10 +552,15 @@ async function registerUser() {
             data: authData,
             error: authError
         } =
-            await supabaseClient.auth.signUp({
-                email: email,
-                password: password
-            });
+           
+        await supabaseClient.auth.signUp({
+            email: email.trim().toLowerCase(),
+            password: password,
+            options: {
+                emailRedirectTo:
+                    "https://bitewise-nutrition.netlify.app/?email_confirmed=1"
+            }
+        });
 
 
         if (authError) {
@@ -1573,21 +1578,23 @@ loginForm?.addEventListener(
                     .single();
 
 
-            if (profileError || !profile) {
-
-                console.error(
-                    "Login profile error:",
-                    profileError
-                );
-
-                await supabaseClient.auth.signOut();
-
+            
+            if (profileError) {
+                console.error("Login profile error:", profileError);
+            
                 showLoginMessage(
                     "We couldn't load your profile. Please try again."
                 );
-
                 return;
             }
+            
+            if (!profile) {
+                closeLoginModal();
+                openRegisterModal();
+                showRegisterStep(onboardingStep);
+                return;
+            }
+
 
 
             // ==================================
