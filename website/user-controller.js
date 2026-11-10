@@ -2,7 +2,7 @@ import {
     getUsers,
     updateUserSuspension,
     getFilteredUsers
-} from "../entity/user-entity.js";
+} from "./user-entity.js";
 
 
 export async function loadUsers() {
