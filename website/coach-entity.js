@@ -1,4 +1,4 @@
-import { supabaseClient } from "../supabase-client.js";
+import { supabaseClient } from "./supabase-client.js";
 
 export async function getCoachApplications() {
     const { data, error } = await supabaseClient
