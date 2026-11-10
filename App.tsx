@@ -415,7 +415,7 @@ export default function App() {
   const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
   
   useEffect(() => {
-    const handleAppState = (state: string) => {
+    const handleAppState = (state: string | null | undefined) => {
       if (state === 'active') {
         supabase.auth.startAutoRefresh()
       } else {
