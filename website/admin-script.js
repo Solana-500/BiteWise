@@ -441,5 +441,6 @@ confirmLogoutButton?.addEventListener(
     logoutAdmin
 );
 
-checkAdminAccess();
-
+checkAdminAccess().catch(error => {
+    console.error("Admin initialization failed:", error);
+});
