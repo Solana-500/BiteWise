@@ -15,6 +15,22 @@ const supabaseClient = supabase.createClient(
    LANDING PAGE CONTENT
 ============================================== */
 
+function showEmailVerificationPopup(accountType = "user") {
+    const profileType =
+        accountType === "coach"
+            ? "Health Coach application"
+            : "BiteWise profile";
+
+    alert(
+        "VERIFY YOUR EMAIL\n\n" +
+        "Your BiteWise account has been created!\n\n" +
+        "We've sent a verification link to your email address.\n\n" +
+        "Please verify your email before continuing.\n\n" +
+        "After verification, return to BiteWise and log in " +
+        "to complete your " + profileType + "."
+    );
+}
+
 async function loadLandingPageContent() {
     const params = new URLSearchParams(
         window.location.search
@@ -598,19 +614,10 @@ async function registerUser() {
         // ======================================
 
         if (!authData.session) {
-
-            console.error(
-                "No authenticated session was returned."
-            );
-
-            showError(
-                "Your account was created, but your email " +
-                "must be verified before you can set up your profile."
-            );
-
+            showEmailVerificationPopup("user");
             return;
-
         }
+
 
 
         console.log(
@@ -1071,14 +1078,12 @@ async function registerCoach() {
             return;
         }
     
+             
         if (!authData.session) {
-            alert(
-                "Your account has been created. " +
-                "Please verify your email, then return to BiteWise " +
-                "and log in to complete your Health Coach application."
-            );
+            showEmailVerificationPopup("coach");
             return;
         }
+
     
         coachId = authData.user.id;
     }
