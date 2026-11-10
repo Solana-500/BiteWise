@@ -7,7 +7,7 @@ import {
     approveCoach as approveCoachEntity,
     rejectCoach as rejectCoachEntity,
     updateCoachSuspension
-} from "../entity/coach-entity.js";
+} from "./coach-entity.js";
 
 export async function loadCoachApplications() {
     return await getCoachApplications();
