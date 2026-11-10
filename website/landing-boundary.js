@@ -1405,9 +1405,7 @@ plansEditor?.addEventListener("click", event => {
     }
 });
 
-// Initialise page
-loadLandingPage();
-
+// Called by admin-script.js on the Landing Page only.
 export {
     loadLandingPage
 };
