@@ -1,7 +1,7 @@
 import {
     getAllModerationContent,
     updateModerationStatus
-} from "../entity/review-entity.js";
+} from "./review-entity.js";
 
 
 let moderationContent = [];
