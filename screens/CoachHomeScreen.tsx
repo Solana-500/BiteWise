@@ -346,6 +346,25 @@ export default function CoachHomeScreen({ navigation }: Props) {
           </View>
 
 
+          <Pressable
+            style={styles.activityCard}
+            onPress={() => navigation.navigate('Feedback')}
+          >
+            <Text style={styles.activityEmoji}>⭐</Text>
+          
+            <View style={styles.activityTextBlock}>
+              <Text style={styles.activityTitle}>
+                Review BiteWise
+              </Text>
+          
+              <Text style={styles.activitySubtitle}>
+                Share your experience with our app
+              </Text>
+            </View>
+          
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+                    
           <Text style={styles.sectionTitle}>Your Coaching Tools</Text>
 
 
