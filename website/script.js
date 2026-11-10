@@ -1071,6 +1071,23 @@ async function registerCoach() {
         // ======================================
         // STEP 2: CREATE COACH PROFILE
         // ======================================
+        const { data: sessionData, error: sessionError } =
+            await supabaseClient.auth.getSession();
+        
+        console.log("Coach has session:", !!sessionData.session);
+        console.log(
+            "Session belongs to coach:",
+            sessionData.session?.user?.id === coachId
+        );
+        
+        if (sessionError || !sessionData.session ||
+            sessionData.session.user.id !== coachId) {
+            alert(
+                "Please confirm your email and log in before " +
+                "completing your Health Coach application."
+            );
+            return;
+        }
 
         const {
             error: profileError
@@ -1564,6 +1581,15 @@ loginForm?.addEventListener(
             // ==================================
             // STEP 2: LOAD PROFILE
             // ==================================
+
+           const {
+                data: profile,
+                error: profileError
+            } = await supabaseClient
+                .from("profiles")
+                .select("app_role, approval_status, is_suspended")
+                .eq("id", authData.user.id)
+                .maybeSingle();
 
             const {
                 data: profile,
