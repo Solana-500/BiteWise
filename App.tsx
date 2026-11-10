@@ -413,6 +413,28 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false)
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true)
+  
+  useEffect(() => {
+    const handleAppState = (state: string) => {
+      if (state === 'active') {
+        supabase.auth.startAutoRefresh()
+      } else {
+        supabase.auth.stopAutoRefresh()
+      }
+    }
+  
+    handleAppState(AppState.currentState)
+  
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppState
+    )
+  
+    return () => {
+      subscription.remove()
+      supabase.auth.stopAutoRefresh()
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -627,21 +649,40 @@ useEffect(() => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, updatedSession) => {
-      setLoading(true)
-      setSession(updatedSession)
-
-      if (updatedSession?.user) {
-        await checkProfile(updatedSession.user.id)
-      } else {
-        setHasProfile(false)
-        setUserRole(null)
-      }
-
-      if (mounted) {
-        setLoading(false)
-      }
-    })
+   
+      } = supabase.auth.onAuthStateChange((event, updatedSession) => {
+        console.log('Auth event:', event, 'Has session:', !!updatedSession)
+      
+        setSession(updatedSession)
+      
+        if (!updatedSession?.user) {
+          setHasProfile(false)
+          setUserRole(null)
+          setIsPremium(false)
+          setCoachApprovalStatus(null)
+          setIsSuspended(false)
+          setLoading(false)
+          return
+        }
+      
+        setLoading(true)
+      
+        const userId = updatedSession.user.id
+      
+        setTimeout(() => {
+          if (!mounted) return
+      
+          void checkProfile(userId)
+            .catch((error) => {
+              console.error('Profile refresh failed:', error)
+            })
+            .finally(() => {
+              if (mounted) {
+                setLoading(false)
+              }
+            })
+        }, 0)
+      })
 
     return () => {
       mounted = false
