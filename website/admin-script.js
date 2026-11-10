@@ -68,7 +68,7 @@ async function checkAdminAccess() {
 
     // No authenticated user
     if (userError || !user) {
-        window.location.href = "../website/index.html";
+        window.location.href = "./index.html";
         return;
     }
 
@@ -85,7 +85,7 @@ async function checkAdminAccess() {
     // Profile could not be loaded
     if (profileError || !profile) {
         await supabaseClient.auth.signOut();
-        window.location.href = "../website/index.html";
+        window.location.href = "./index.html";
         return;
     }
 
