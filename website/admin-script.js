@@ -1,28 +1,22 @@
 import { supabaseClient } from "./supabase-client.js";
 
-import {
-    loadUsersPage
-} from "./boundary/users-boundary.js";
+import { loadUsersPage }
+    from "./users-boundary.js";
 
 import {
     loadCoachApplications,
     loadApprovedCoaches,
     loadSuspendedCoaches
-} from "./boundary/coaches-boundary.js";
+} from "./coaches-boundary.js";
 
-import {
-    loadLandingPage
-} from "./boundary/landing-boundary.js";
+import { loadLandingPage }
+    from "./landing-boundary.js";
 
-import {
-    loadReviewsPage
-} from "./boundary/reviews-boundary.js";
+import { loadReviewsPage }
+    from "./reviews-boundary.js";
 
-import {
-    loadContentPage
-} from "./boundary/content-boundary.js";
-
-
+import { loadContentPage }
+    from "./content-boundary.js";
 /* =========================================
    ADMIN PROFILE
 ========================================= */
