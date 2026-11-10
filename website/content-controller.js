@@ -2,7 +2,7 @@ import {
     getAllCoachContent,
     getWorkoutPlanDetails,
     updateContentStatus
-} from "../entity/content-entity.js";
+} from "./content-entity.js";
 
 let coachContent = [];
 let currentFilter = "pending";
