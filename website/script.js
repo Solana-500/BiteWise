@@ -1715,12 +1715,10 @@ loginForm?.addEventListener(
             // STEP 5: ADMIN
             // ==================================
 
-            if (profile.app_role === "admin") {
-                window.location.href =
-                    "/admin_web/ui/admin-dashboard.html";
-
-                return;
-            }
+           if (profile.app_role === "admin") {
+            window.location.href = "admin-dashboard.html";
+            return;
+        }
 
 
             // ==================================
