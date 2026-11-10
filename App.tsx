@@ -803,6 +803,11 @@ useEffect(() => {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
+                name="Feedback"
+                component={FeedbackScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="CoachChat"
                 component={CoachChatScreen}
                 options={{ headerShown: false }}
