@@ -1,4 +1,4 @@
-import { supabaseClient } from "../supabase-client.js";
+import { supabaseClient } from "./supabase-client.js";
 
 const CONTENT_TABLES = {
     meal: "meal_plans",
