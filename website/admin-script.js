@@ -373,7 +373,7 @@ async function logoutAdmin() {
         return;
     }
 
-    window.location.href = "../website/index.html";
+   window.location.href = "./index.html";
 }
 
 
