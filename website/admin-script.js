@@ -104,20 +104,26 @@ async function checkAdminAccess() {
 
     await loadAdminProfile(user, profile);
     // Initialize restored admin pages
-    const currentPage = window.location.pathname.split("/").pop();
+    const currentPage = window.location.pathname
+        .split("/")
+        .filter(Boolean)
+        .pop()
+        ?.replace(/\.html$/, "") || "index";
 
     if (currentPage === "admin-categories.html") {
         await loadCategoriesPage();
         return;
     }
 
- if (
-        currentPage === "admin-subscriptions.html" ||
-        document.getElementById("subscription-table-body")
-    ) {
-        console.log("Initializing BiteWise Subscriptions page");
-        await loadSubscriptionsPage();
-        return;
+if (
+    currentPage === "admin-subscriptions" ||
+    currentPage === "admin-subscriptions.html" ||
+    document.getElementById("subscription-table-body")
+) {
+    console.log("Initializing BiteWise Subscriptions page");
+    await loadSubscriptionsPage();
+    return;
+}
     }
     if (currentPage === "admin-reports.html") {
         await loadReportsPage();
