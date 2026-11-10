@@ -1534,11 +1534,13 @@ loginForm?.addEventListener(
                 data: authData,
                 error: authError
             } =
-                await supabaseClient.auth.signOut({ scope: 'local' });
-                    .signInWithPassword({
-                        email: email,
-                        password: password
-                    });
+               
+            const { data: authData, error: authError } =
+                await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
 
 
             if (authError || !authData?.user) {
