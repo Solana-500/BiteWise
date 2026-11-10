@@ -1575,8 +1575,7 @@ loginForm?.addEventListener(
                         "app_role, approval_status, is_suspended"
                     )
                     .eq("id", authData.user.id)
-                    .single();
-
+                    .maybeSingle();
 
             
             if (profileError) {
@@ -1588,12 +1587,23 @@ loginForm?.addEventListener(
                 return;
             }
             
+           
             if (!profile) {
+                const registrationType =
+                    authData.user.user_metadata?.registration_type;
+            
                 closeLoginModal();
                 openRegisterModal();
-                showRegisterStep(onboardingStep);
+            
+                if (registrationType === "coach") {
+                    showRegisterStep(coachDetailsStep);
+                } else {
+                    showRegisterStep(onboardingStep);
+                }
+            
                 return;
             }
+
 
 
 
