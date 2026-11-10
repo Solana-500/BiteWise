@@ -83,6 +83,22 @@ function mapBarcodeFoodToFoodResult(food: BarcodeFood): FoodResult {
 
 export default function FoodLoggingScreen() {
   const navigation = useNavigation<NavigationProp>()
+  
+  const goToFoodDiary = useCallback(() => {
+    const isPremiumNavigation =
+      navigation.getState().routeNames.includes('PremiumTabs')
+  
+    if (isPremiumNavigation) {
+      navigation.navigate('PremiumTabs', {
+        screen: 'Meals',
+      })
+    } else {
+      navigation.navigate('MainTabs', {
+        screen: 'Meals',
+      })
+    }
+  }, [navigation])
+
   const [searchText, setSearchText] = useState('')
   const [selectedFood, setSelectedFood] = useState<FoodResult | null>(null)
   const [isAiFood, setIsAiFood] = useState(false)
@@ -382,11 +398,13 @@ const searchFoods = useCallback(async (query: string) => {
           return
         }
 
+       
         Alert.alert(
           'Food logged',
           `${food.name} was added to your ${selectedMeal.toLowerCase()}.`,
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          [{ text: 'OK', onPress: goToFoodDiary }]
         )
+
       } catch (error: any) {
         console.error('Food logging error:', error)
         Alert.alert(
