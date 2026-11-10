@@ -3,7 +3,7 @@ import {
     suspendUser,
     reactivateUser,
     filterUsers
-} from "../control/user-controller.js";
+} from "./user-controller.js";
 
 let loadedUsers = [];
 let selectedUserId = null;
