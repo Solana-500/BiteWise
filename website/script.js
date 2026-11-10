@@ -1530,10 +1530,7 @@ loginForm?.addEventListener(
             // STEP 1: SIGN IN
             // ==================================
 
-            const {
-                data: authData,
-                error: authError
-            } =
+            
                
             const { data: authData, error: authError } =
                 await supabaseClient.auth.signInWithPassword({
