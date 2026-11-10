@@ -1,3 +1,7 @@
+﻿import { loadCategoriesPage } from "./category-boundary.js";
+import { loadSubscriptionsPage } from "./subscriptions-boundary.js";
+import { loadReportsPage } from "./reports-boundary.js";
+import { loadAuditPage } from "./audit-boundary.js";
 import { supabaseClient } from "./supabase-client.js";
 
 import { loadUsersPage }
@@ -99,6 +103,28 @@ async function checkAdminAccess() {
     console.log("Admin access verified.");
 
     await loadAdminProfile(user, profile);
+    // Initialize restored admin pages
+    const currentPage = window.location.pathname.split("/").pop();
+
+    if (currentPage === "admin-categories.html") {
+        await loadCategoriesPage();
+        return;
+    }
+
+    if (currentPage === "admin-subscriptions.html") {
+        await loadSubscriptionsPage();
+        return;
+    }
+
+    if (currentPage === "admin-reports.html") {
+        await loadReportsPage();
+        return;
+    }
+
+    if (currentPage === "admin-audit-logs.html") {
+        await loadAuditPage();
+        return;
+    }
     
     // Load only the module belonging to the current page.
     if (document.getElementById("total-users")) {
@@ -416,3 +442,4 @@ confirmLogoutButton?.addEventListener(
 );
 
 checkAdminAccess();
+
