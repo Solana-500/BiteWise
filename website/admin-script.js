@@ -102,68 +102,68 @@ async function checkAdminAccess() {
 
     console.log("Admin access verified.");
 
+   
     await loadAdminProfile(user, profile);
-    // Initialize restored admin pages
+
+    // Identify the current admin page.
+    // Supports both /admin-subscriptions
+    // and /admin-subscriptions.html
     const currentPage = window.location.pathname
         .split("/")
         .filter(Boolean)
         .pop()
         ?.replace(/\.html$/, "") || "index";
 
-    if (currentPage === "admin-categories.html") {
-        await loadCategoriesPage();
-        return;
-    }
+    console.log("Loading admin page:", currentPage);
 
-if (
-    currentPage === "admin-subscriptions" ||
-    currentPage === "admin-subscriptions.html" ||
-    document.getElementById("subscription-table-body")
-) {
-    console.log("Initializing BiteWise Subscriptions page");
-    await loadSubscriptionsPage();
-    return;
-}
-    }
-    if (currentPage === "admin-reports.html") {
-        await loadReportsPage();
-        return;
-    }
+    switch (currentPage) {
+        case "admin-dashboard":
+            await loadDashboardStatistics();
+            break;
 
-    if (currentPage === "admin-audit-logs.html") {
-        await loadAuditPage();
-        return;
-    }
-    
-    // Load only the module belonging to the current page.
-    if (document.getElementById("total-users")) {
-        await loadDashboardStatistics();
-    }
+        case "admin-users":
+            await loadUsersPage();
+            break;
 
-    if (document.querySelector(".coach-tab")) {
-        await loadCoachApplications();
-        await loadApprovedCoaches();
-        await loadSuspendedCoaches();
-    }
+        case "admin-coaches":
+            await loadCoachApplications();
+            await loadApprovedCoaches();
+            await loadSuspendedCoaches();
+            break;
 
-    if (document.getElementById("users-table-body")) {
-        await loadUsersPage();
-    }
+        case "admin-content":
+            await loadContentPage();
+            break;
 
-    if (document.getElementById("moderation-review-list")) {
-        await loadReviewsPage();
-    }
+        case "admin-landing":
+            await loadLandingPage();
+            break;
 
-   if (currentPage === "admin-landing.html") {
-    await loadLandingPage();
-    }
+        case "admin-categories":
+            await loadCategoriesPage();
+            break;
 
-    if (document.getElementById("content-table-body")) {
-        await loadContentPage();
+        case "admin-reviews":
+            await loadReviewsPage();
+            break;
+
+        case "admin-subscriptions":
+            console.log("Initializing BiteWise Subscriptions page");
+            await loadSubscriptionsPage();
+            break;
+
+        case "admin-reports":
+            await loadReportsPage();
+            break;
+
+        case "admin-audit-logs":
+            await loadAuditPage();
+            break;
+
+        default:
+            console.warn("Unknown admin page:", currentPage);
     }
 }
-
-
 
 /* =========================================
    DASHBOARD STATISTICS
