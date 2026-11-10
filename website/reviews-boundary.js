@@ -4,7 +4,7 @@ import {
     setModerationSearch,
     setReviewTypeFilter,
     moderateContent
-} from "../control/review-controller.js";
+} from "./review-controller.js";
 
 import { supabaseClient } from "../supabase-client.js";
 
