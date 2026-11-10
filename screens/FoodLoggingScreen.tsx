@@ -415,7 +415,7 @@ const searchFoods = useCallback(async (query: string) => {
         setSaving(false)
       }
     },
-    [navigation, selectedMeal, isAiFood, aiFoodReviewed]
+    [goToFoodDiary, selectedMeal, isAiFood, aiFoodReviewed]
   )
 
   function getOptionalMacro(value: string) {
@@ -504,11 +504,13 @@ function openEditFood() {
 
       setShowQuickAdd(false)
 
+      
       Alert.alert(
         'Food logged',
         `${foodName} was added to your ${selectedMeal.toLowerCase()}.`,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK', onPress: goToFoodDiary }]
       )
+
     } catch (error: any) {
       console.error('Quick add error:', error)
       Alert.alert(
