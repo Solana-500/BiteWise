@@ -947,17 +947,21 @@ async function registerCoach() {
             "credential-message"
         );
 
+    const { data: userData, error: userError } =
+        await supabaseClient.auth.getUser();
+    
+    const existingCoach =
+        !userError &&
+        userData?.user?.user_metadata?.registration_type === "coach"
+            ? userData.user
+            : null;
+
 
     // ==========================================
     // FINAL VALIDATION
     // ==========================================
 
-    if (
-        !fullName ||
-        !email ||
-        !password
-    ) {
-
+    if (!fullName || !email || (!existingCoach && !password)) {
         alert(
             "Account information is incomplete."
         );
@@ -1035,37 +1039,49 @@ async function registerCoach() {
         // STEP 1: CREATE AUTH USER
         // ======================================
 
-        const {
-            data: authData,
-            error: authError
-        } =
+        
+    let coachId;
+    
+
+    
+    if (existingCoach) {
+        // Verified coach completing an existing application
+        coachId = existingCoach.id;
+    } else {
+        // New coach creating an account
+        const { data: authData, error: authError } =
             await supabaseClient.auth.signUp({
-
-                email:
-                    email.toLowerCase(),
-
-                password: password
-
+                email: email.trim().toLowerCase(),
+                password: password,
+                options: {
+                    emailRedirectTo:
+                        "https://bitewise-nutrition.netlify.app/?email_confirmed=1",
+                    data: {
+                        registration_type: "coach",
+                        full_name: fullName
+                    }
+                }
             });
-
-
-        if (
-            authError ||
-            !authData.user
-        ) {
-
-            console.error(
-                "Coach auth registration error:",
-                authError
-            );
-
+    
+        if (authError || !authData?.user) {
             alert(
                 authError?.message ||
-                "Unable to create the coach account."
+                "Unable to create your Health Coach account."
             );
-
             return;
         }
+    
+        if (!authData.session) {
+            alert(
+                "Your account has been created. " +
+                "Please verify your email, then return to BiteWise " +
+                "and log in to complete your Health Coach application."
+            );
+            return;
+        }
+    
+        coachId = authData.user.id;
+    }
 
 
         // ======================================
@@ -1096,8 +1112,8 @@ async function registerCoach() {
                 .from("profiles")
                 .insert({
 
-                    id:
-                        authData.user.id,
+                  id:
+                    authData.user.id,
 
                     full_name:
                         fullName,
@@ -1157,7 +1173,6 @@ async function registerCoach() {
         // STEP 3: UPLOAD COACH CREDENTIAL
         // ======================================
 
-        const coachId = authData.user.id;
 
 
         // Create a safe filename
@@ -1607,15 +1622,26 @@ loginForm?.addEventListener(
             
                 closeLoginModal();
                 openRegisterModal();
+                        
+            if (registrationType === "coach") {
+                const nameInput =
+                    document.getElementById("register-full-name");
             
-                if (registrationType === "coach") {
-                    showRegisterStep(coachDetailsStep);
-                } else {
-                    showRegisterStep(onboardingStep);
+                const emailInput =
+                    document.getElementById("register-email");
+            
+                if (nameInput) {
+                    nameInput.value =
+                        authData.user.user_metadata?.full_name || "";
                 }
             
-                return;
+                if (emailInput) {
+                    emailInput.value = authData.user.email || "";
+                }
+            
+                showRegisterStep(coachDetailsStep);
             }
+
 
 
 
