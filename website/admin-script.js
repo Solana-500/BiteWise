@@ -92,7 +92,7 @@ async function checkAdminAccess() {
     // Logged-in user is not an admin
     if (profile.app_role !== "admin") {
         await supabaseClient.auth.signOut();
-        window.location.href = "../website/index.html";
+        window.location.href = "./index.html";
         return;
     }
 
