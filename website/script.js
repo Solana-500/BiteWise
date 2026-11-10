@@ -1534,7 +1534,7 @@ loginForm?.addEventListener(
                 data: authData,
                 error: authError
             } =
-                await supabaseClient.auth
+                await supabaseClient.auth.signOut({ scope: 'local' });
                     .signInWithPassword({
                         email: email,
                         password: password
