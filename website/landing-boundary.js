@@ -8,7 +8,7 @@ import {
     loadLandingFeaturedCoaches,
     saveLandingPlans,
     publishLandingPage
-} from "../control/landing-controller.js";
+} from "./landing-controller.js";
 
 
 const MAX_FEATURES = 6;
