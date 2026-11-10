@@ -1582,24 +1582,11 @@ loginForm?.addEventListener(
             // STEP 2: LOAD PROFILE
             // ==================================
 
-           const {
-                data: profile,
-                error: profileError
-            } = await supabaseClient
-                .from("profiles")
-                .select("app_role, approval_status, is_suspended")
-                .eq("id", authData.user.id)
-                .maybeSingle();
-
-            const {
-                data: profile,
-                error: profileError
-            } =
+                 
+            const { data: profile, error: profileError } =
                 await supabaseClient
                     .from("profiles")
-                    .select(
-                        "app_role, approval_status, is_suspended"
-                    )
+                    .select("app_role, approval_status, is_suspended")
                     .eq("id", authData.user.id)
                     .maybeSingle();
 
