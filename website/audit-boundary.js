@@ -1,9 +1,9 @@
-﻿import {
+import {
     loadAuditLogs,
     loadAuthEvents,
     loadIntegrationFailures,
     loadSystemStatus
-} from "./audit-controller.js";
+} from "../control/audit-controller.js";
 
 import { actionLabel, actionTone } from "./audit-labels.js";
 
@@ -151,7 +151,7 @@ function applyRangeFromControls() {
 
     setText(
         "audit-range-label",
-        `${formatDay(range.start, true)} â€“ ${formatDay(range.end, true)}`
+        `${formatDay(range.start, true)} – ${formatDay(range.end, true)}`
     );
 
     // Everything dated has to be fetched again
@@ -354,7 +354,7 @@ function renderPager(tab, total, shown) {
         `${tab}-pager-info`,
         total === 0
             ? ""
-            : `Showing ${formatNumber(first)}â€“${formatNumber(last)} ` +
+            : `Showing ${formatNumber(first)}–${formatNumber(last)} ` +
               `of ${formatNumber(total)}`
     );
 
@@ -439,18 +439,18 @@ function lineConfig(labels, series) {
    RENDER: AUDIT LOGS
 ============================================== */
 
-// {from: "pending", to: "approved"} -> "pending â†’ approved"
+// {from: "pending", to: "approved"} -> "pending → approved"
 function formatDetails(details) {
 
     const entries = Object.entries(details ?? {})
         .filter(([key]) => key !== "label");
 
-    if (entries.length === 0) return "â€”";
+    if (entries.length === 0) return "—";
 
     const { from, to } = details;
 
     if (from !== undefined && to !== undefined) {
-        return `${from} â†’ ${to}`;
+        return `${from} → ${to}`;
     }
 
     return entries
@@ -486,7 +486,7 @@ function renderLogs(data) {
                 </td>
                 <td>${badge(actionLabel(row.action), actionTone(row.action))}</td>
                 <td>
-                    ${escapeHTML(row.target_label || "â€”")}
+                    ${escapeHTML(row.target_label || "—")}
                     ${row.target_type
                         ? `<span class="audit-cell-sub">${escapeHTML(capitalise(row.target_type))}</span>`
                         : ""}
@@ -540,9 +540,9 @@ function renderAuth(data) {
                         ? `<span class="audit-cell-sub">${escapeHTML(row.email)}</span>`
                         : ""}
                 </td>
-                <td>${escapeHTML(capitalise(row.app_role) || "â€”")}</td>
-                <td>${escapeHTML(capitalise(row.provider) || "â€”")}</td>
-                <td>${escapeHTML(row.ip_address || "â€”")}</td>
+                <td>${escapeHTML(capitalise(row.app_role) || "—")}</td>
+                <td>${escapeHTML(capitalise(row.provider) || "—")}</td>
+                <td>${escapeHTML(row.ip_address || "—")}</td>
             </tr>
         `,
         emptyFor("auth", "authentication events", 6)
@@ -589,10 +589,10 @@ function renderIntegrations(data) {
             <tr>
                 <td>${escapeHTML(formatDateTime(row.created_at))}</td>
                 <td>${escapeHTML(SERVICE_LABELS[row.service] ?? humanise(row.service))}</td>
-                <td>${escapeHTML(row.operation || "â€”")}</td>
-                <td class="audit-error-text">${escapeHTML(row.error_message || "â€”")}</td>
-                <td>${escapeHTML(row.status_code ?? "â€”")}</td>
-                <td>${escapeHTML(row.user_name || "â€”")}</td>
+                <td>${escapeHTML(row.operation || "—")}</td>
+                <td class="audit-error-text">${escapeHTML(row.error_message || "—")}</td>
+                <td>${escapeHTML(row.status_code ?? "—")}</td>
+                <td>${escapeHTML(row.user_name || "—")}</td>
             </tr>
         `,
         {
@@ -769,11 +769,11 @@ function renderStatusUnavailable() {
     );
 
     setKpis("status", {
-        users: "â€”",
-        coaches: "â€”",
-        applications: "â€”",
-        plans: "â€”",
-        subscriptions: "â€”"
+        users: "—",
+        coaches: "—",
+        applications: "—",
+        plans: "—",
+        subscriptions: "—"
     });
 
     setText("status-checked", "");
