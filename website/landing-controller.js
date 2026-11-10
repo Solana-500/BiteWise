@@ -8,7 +8,7 @@ import {
     loadApprovedCoachesForLanding,
     savePlansDraft,
     publishLandingDraft
-} from "../entity/landing-entity.js";
+} from "./landing-entity.js";
 
 export async function loadLandingDraft() {
     return await getLandingDraft();
