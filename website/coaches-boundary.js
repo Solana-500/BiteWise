@@ -8,7 +8,7 @@ import {
     rejectCoach,
     suspendCoach,
     reactivateCoach
-} from "../control/coach-controller.js";
+} from "./coach-controller.js";
 
 let coachApplications = [];
 let approvedCoaches = [];
