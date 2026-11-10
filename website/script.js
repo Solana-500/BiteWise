@@ -1616,30 +1616,36 @@ loginForm?.addEventListener(
             }
             
            
+                     
             if (!profile) {
                 const registrationType =
                     authData.user.user_metadata?.registration_type;
             
                 closeLoginModal();
                 openRegisterModal();
-                        
-            if (registrationType === "coach") {
-                const nameInput =
-                    document.getElementById("register-full-name");
             
-                const emailInput =
-                    document.getElementById("register-email");
+                if (registrationType === "coach") {
+                    const nameInput =
+                        document.getElementById("register-full-name");
             
-                if (nameInput) {
-                    nameInput.value =
-                        authData.user.user_metadata?.full_name || "";
+                    const emailInput =
+                        document.getElementById("register-email");
+            
+                    if (nameInput) {
+                        nameInput.value =
+                            authData.user.user_metadata?.full_name || "";
+                    }
+            
+                    if (emailInput) {
+                        emailInput.value = authData.user.email || "";
+                    }
+            
+                    showRegisterStep(coachDetailsStep);
+                } else {
+                    showRegisterStep(onboardingStep);
                 }
             
-                if (emailInput) {
-                    emailInput.value = authData.user.email || "";
-                }
-            
-                showRegisterStep(coachDetailsStep);
+                return;
             }
 
 
