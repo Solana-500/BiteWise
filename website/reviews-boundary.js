@@ -6,7 +6,7 @@ import {
     moderateContent
 } from "./review-controller.js";
 
-import { supabaseClient } from "../supabase-client.js";
+import { supabaseClient } from "./supabase-client.js";
 
 let moderationItems = [];
 
