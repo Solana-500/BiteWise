@@ -111,11 +111,14 @@ async function checkAdminAccess() {
         return;
     }
 
-    if (currentPage === "admin-subscriptions.html") {
+ if (
+        currentPage === "admin-subscriptions.html" ||
+        document.getElementById("subscription-table-body")
+    ) {
+        console.log("Initializing BiteWise Subscriptions page");
         await loadSubscriptionsPage();
         return;
     }
-
     if (currentPage === "admin-reports.html") {
         await loadReportsPage();
         return;
