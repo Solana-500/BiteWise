@@ -145,8 +145,8 @@ async function checkAdminAccess() {
         await loadReviewsPage();
     }
 
-    if (document.getElementById("landing-page-editor")) {
-        await loadLandingPage();
+   if (currentPage === "admin-landing.html") {
+    await loadLandingPage();
     }
 
     if (document.getElementById("content-table-body")) {
