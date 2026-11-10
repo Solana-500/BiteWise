@@ -7,7 +7,7 @@ import {
     moderateCoachContent
 } from "./content-controller.js";
 
-import { supabaseClient } from "../supabase-client.js";
+import { supabaseClient } from "./supabase-client.js";
 
 let selectedContent = null;
 
