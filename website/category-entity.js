@@ -1,4 +1,4 @@
-﻿import { supabaseClient } from "./supabase-client.js";
+import { supabaseClient } from "../supabase-client.js";
 
 
 const CATEGORY_TABLE = "categories";
@@ -48,6 +48,9 @@ export async function addCategory({ name, categoryType }) {
         .single();
 
     if (error) {
+        if (error.code === "23505") {
+            throw new Error("That category already exists for this type.");
+        }
         throw new Error(`Unable to add category: ${error.message}`);
     }
 
@@ -75,15 +78,21 @@ export async function updateCategory({ categoryId, name }) {
             is_active,
             created_at
         `)
-        .single();
+        .maybeSingle();
 
     if (error) {
+        if (error.code === "23505") {
+            throw new Error("That category already exists for this type.");
+        }
         throw new Error(`Unable to update category: ${error.message}`);
+    }
+
+    if (!data) {
+        throw new Error("Category not found, or you don't have permission to change it.");
     }
 
     return data;
 }
-
 
 export async function updateCategoryStatus({ categoryId, isActive }) {
     const { data, error } = await supabaseClient
@@ -99,12 +108,15 @@ export async function updateCategoryStatus({ categoryId, isActive }) {
             is_active,
             created_at
         `)
-        .single();
+        .maybeSingle();
 
     if (error) {
-        throw new Error(`Unable to update category status: ${error.message}`);
+        throw new Error(`Unable to update category: ${error.message}`);
+    }
+
+    if (!data) {
+        throw new Error("Category not found, or you don't have permission to change it.");
     }
 
     return data;
 }
-
