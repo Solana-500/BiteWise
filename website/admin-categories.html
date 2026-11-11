@@ -18,62 +18,60 @@
                 <span>Admin Portal</span>
             </div>
 
-         
-        <nav class="sidebar-nav">
-            <a href="admin-dashboard.html" class="nav-item">
-                <span class="nav-icon">⌂</span>
-                Dashboard
-            </a>
-        
-            <a href="admin-users.html" class="nav-item">
-                <span class="nav-icon">♙</span>
-                Users
-            </a>
-        
-            <a href="admin-coaches.html" class="nav-item">
-                <span class="nav-icon">♧</span>
-                Health Coaches
-            </a>
-        
-            <a href="admin-content.html" class="nav-item">
-                <span class="nav-icon">▣</span>
-                Content
-            </a>
-        
-            <a href="admin-landing.html" class="nav-item">
-                <span class="nav-icon">▤</span>
-                Landing Page
-            </a>
-        
-            <a href="admin-categories.html" class="nav-item">
-                <span class="nav-icon">▦</span>
-                Categories
-            </a>
-        
-            <a href="admin-reviews.html" class="nav-item">
-                <span class="nav-icon">☆</span>
-                Reviews
-            </a>
-        
-            <a href="admin-subscriptions.html" class="nav-item">
-                <span class="nav-icon">◇</span>
-                Subscriptions
-            </a>
-        
-            <a href="admin-reports.html" class="nav-item">
-                <span class="nav-icon">⌁</span>
-                Analytics
-            </a>
-        
-            <a href="admin-audit-logs.html" class="nav-item">
-                <span class="nav-icon">☷</span>
-                Audit Logs
-            </a>
-        </nav>
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
 
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-content.html" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="admin-categories.html" class="nav-item active">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="admin-subscriptions.html" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="admin-reports.html" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="admin-audit-logs.html" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+            </nav>
 
             <button type="button" class="logout-button" id="logout-button">
-               <span>↪</span> Log Out
+                <span>↪</span> Log Out
             </button>
         </aside>
 
@@ -388,6 +386,10 @@
 
                 <span id="edit-category-error" class="input-error"></span>
 
+                <p id="edit-category-rename-note" class="input-error">
+                    Renaming a category won't update records that already use the old name.
+                </p>
+
             </div>
 
             <div class="modal-actions">
@@ -434,6 +436,8 @@
                 Are you sure you want to deactivate this category?
             </p>
 
+            <p id="deactivate-category-error" class="input-error"></p>
+
             <div class="modal-actions">
 
                 <button
@@ -473,6 +477,8 @@
 
             <p>Are you sure you want to reactivate this category?</p>
 
+            <p id="reactivate-category-error" class="input-error"></p>
+
             <div class="modal-actions">
 
                 <button
@@ -506,7 +512,7 @@
                 &times;
             </button>
 
-            <div class="logout-modal-icon">â†ª</div>
+            <div class="logout-modal-icon">↪</div>
 
             <h2>Log Out?</h2>
 
