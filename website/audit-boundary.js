@@ -3,7 +3,7 @@ import {
     loadAuthEvents,
     loadIntegrationFailures,
     loadSystemStatus
-} from "../control/audit-controller.js";
+} from "./audit-controller.js";
 
 import { actionLabel, actionTone } from "./audit-labels.js";
 
