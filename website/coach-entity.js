@@ -1,4 +1,4 @@
-import { supabaseClient } from "../supabase-client.js";
+import { supabaseClient } from "./supabase-client.js";
 
 async function getCoachEmailsById() {
     const { data, error } =
