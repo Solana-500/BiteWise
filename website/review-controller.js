@@ -2,7 +2,7 @@ import {
     getAllModerationContent,
     updateModerationStatus,
     getPublishedReviewsForLanding
-} from "../entity/review-entity.js";
+} from "./review-entity.js";
 
 
 let moderationContent = [];
