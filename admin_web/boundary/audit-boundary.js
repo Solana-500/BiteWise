@@ -542,10 +542,9 @@ function renderAuth(data) {
                 </td>
                 <td>${escapeHTML(capitalise(row.app_role) || "—")}</td>
                 <td>${escapeHTML(capitalise(row.provider) || "—")}</td>
-                <td>${escapeHTML(row.ip_address || "—")}</td>
             </tr>
         `,
-        emptyFor("auth", "authentication events", 6)
+        emptyFor("auth", "authentication events", 5)
     );
 
     renderPager("auth", data?.total ?? 0, rows.length);
