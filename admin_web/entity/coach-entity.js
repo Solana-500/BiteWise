@@ -252,54 +252,24 @@ export async function updateCoachSuspension(coachId, isSuspended) {
 
 
 export async function getApprovedCoachesForLanding() {
-    // Get all approved, non-suspended coaches
-    const coaches = await getApprovedCoaches();
+    const { data, error } = await supabaseClient.rpc(
+        "landing_featured_coaches",
+        { p_limit: 20, p_ids: [] }
+    );
 
-    if (coaches.length === 0) {
-        return [];
-    }
+    if (error) throw error;
 
-    // Get coach ratings
-    const coachIds = coaches.map(coach => coach.id);
+    const coaches = (data || []).map(coach => ({
+        id: coach.id,
+        full_name: coach.full_name,
+        coaching_specialty: coach.coaching_specialty,
+        averageRating: coach.average_rating ?? null,
+        reviewCount: coach.review_count ?? 0
+    }));
 
-    const { data: reviews, error: reviewError } = await supabaseClient
-        .from("coach_reviews")
-        .select("coach_id, rating")
-        .in("coach_id", coachIds);
-
-    if (reviewError) throw reviewError;
-
-    // Calculate each coach's average rating
-    const coachesWithRatings = coaches.map(coach => {
-        const coachReviews = (reviews ?? []).filter(
-            review => review.coach_id === coach.id
-        );
-
-        const averageRating = coachReviews.length
-            ? coachReviews.reduce(
-                (sum, review) => sum + Number(review.rating),
-                0
-            ) / coachReviews.length
-            : null;
-
-        return {
-            ...coach,
-            averageRating,
-            reviewCount: coachReviews.length
-        };
-    });
-
-    // Rated coaches first, highest average rating first
-    coachesWithRatings.sort((a, b) => {
-        if (a.averageRating === null) return 1;
-        if (b.averageRating === null) return -1;
-
-        return b.averageRating - a.averageRating;
-    });
-
-    // Return all coaches; pagination will be handled in the boundary
-    return coachesWithRatings;
+    return { coaches, currentPage: 1, totalPages: 1 };
 }
+
 
 export function searchCoaches(coaches, query) {
     const terms = String(query ?? "")

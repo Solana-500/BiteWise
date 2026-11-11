@@ -246,6 +246,8 @@ function openEditCategoryModal(categoryId, categoryType, currentName) {
         type: categoryType
     };
 
+    document.getElementById("edit-category-error").textContent = "";
+
     document.getElementById("edit-category-name").value = currentName;
 
     modal.classList.add("show");
@@ -289,14 +291,15 @@ async function handleEditCategory() {
 
     } catch (error) {
         console.error(error);
+        errorMessage.textContent = error.message;
     }
 }
 
 function openDeactivateModal(categoryId, categoryType) {
-    selectedCategory = {
-        id: categoryId,
-        type: categoryType
-    };
+    selectedCategory = { id: categoryId, type: categoryType };
+
+    const msg = document.getElementById("deactivate-category-error");
+    if (msg) msg.textContent = "";
 
     document
         .getElementById("deactivate-category-modal")
@@ -328,6 +331,9 @@ async function handleDeactivateCategory() {
 
     } catch (error) {
         console.error(error);
+
+        const msg = document.getElementById("deactivate-category-error");
+        if (msg) msg.textContent = error.message;
     }
 }
 
@@ -336,6 +342,9 @@ function openReactivateModal(categoryId, categoryType) {
         id: categoryId,
         type: categoryType
     };
+
+    const msg = document.getElementById("reactivate-category-error");
+    if (msg) msg.textContent = "";
 
     document
         .getElementById("reactivate-category-modal")
@@ -367,6 +376,8 @@ async function handleReactivateCategory() {
 
     } catch (error) {
         console.error(error);
+        const msg = document.getElementById("reactivate-category-error");
+        if (msg) msg.textContent = error.message;
     }
 }
 
@@ -582,7 +593,7 @@ function setupCategorySearch() {
 
                 const matchesStatus =
                     selectedStatus === "all" ||
-                    categoryStatus.includes(selectedStatus);
+                    categoryStatus === selectedStatus;
 
                 const isMatch = matchesSearch && matchesStatus;
 

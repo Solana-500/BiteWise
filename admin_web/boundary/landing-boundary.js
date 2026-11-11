@@ -755,22 +755,13 @@ async function loadCoachesEditor(content) {
     coachesEditor.textContent = "Loading approved coaches...";
 
     try {
-        currentCoachPage = 1;
-
         const savedIds = content.featuredCoaches?.coachIds;
 
         selectedCoachIds = Array.isArray(savedIds)
             ? savedIds.slice(0, MAX_FEATURED_COACHES)
             : [];
 
-        // Load all coaches once, then paginate locally.
-        const coaches = await loadLandingFeaturedCoaches();
-
-        totalCoachPages = Math.ceil(
-            coaches.length / COACHES_PER_PAGE
-        );
-
-        displayCoachesPage(currentCoachPage, coaches);
+        await displayCoachesPage(1);
     } catch (error) {
         console.error("Failed to load approved coaches:", error);
 
@@ -779,28 +770,26 @@ async function loadCoachesEditor(content) {
     }
 }
 
-function displayCoachesPage(page, coaches) {
-    currentCoachPage = Math.min(
-        Math.max(page, 1),
-        Math.max(totalCoachPages, 1)
-    );
+async function displayCoachesPage(page) {
+    coachesEditor.textContent = "Loading approved coaches...";
 
-    const startIndex = (currentCoachPage - 1) * COACHES_PER_PAGE;
+    try {
+        const result = await loadLandingFeaturedCoaches();
 
-    availableCoaches = coaches.slice(
-        startIndex,
-        startIndex + COACHES_PER_PAGE
-    );
+        availableCoaches = result.coaches;
+        currentCoachPage = result.currentPage;
+        totalCoachPages = result.totalPages;
 
-    renderCoachesEditor();
+        renderCoachesEditor();
+    } catch (error) {
+        console.error("Failed to load coach page:", error);
 
-    // Add pagination controls after rendering the coach cards.
-    if (totalCoachPages > 1) {
-        renderCoachPagination(coaches);
+        coachesEditor.textContent =
+            "Failed to load approved coaches. Please refresh and try again.";
     }
 }
 
-function renderCoachPagination(coaches) {
+function renderCoachPagination() {
     const pagination = document.createElement("div");
     pagination.className = "coach-pagination";
 
@@ -808,10 +797,9 @@ function renderCoachPagination(coaches) {
     previousButton.type = "button";
     previousButton.textContent = "Previous";
     previousButton.disabled = currentCoachPage <= 1;
-
-    previousButton.addEventListener("click", () => {
-        displayCoachesPage(currentCoachPage - 1, coaches);
-    });
+    previousButton.addEventListener("click", () =>
+        displayCoachesPage(currentCoachPage - 1)
+    );
 
     const pageLabel = document.createElement("span");
     pageLabel.textContent =
@@ -821,10 +809,9 @@ function renderCoachPagination(coaches) {
     nextButton.type = "button";
     nextButton.textContent = "Next";
     nextButton.disabled = currentCoachPage >= totalCoachPages;
-
-    nextButton.addEventListener("click", () => {
-        displayCoachesPage(currentCoachPage + 1, coaches);
-    });
+    nextButton.addEventListener("click", () =>
+        displayCoachesPage(currentCoachPage + 1)
+    );
 
     pagination.append(previousButton, pageLabel, nextButton);
     coachesEditor.appendChild(pagination);
@@ -844,11 +831,24 @@ function renderCoachesEditor() {
 
     const selectionCount = document.createElement("span");
     selectionCount.className = "coach-selection-count";
-    selectionCount.textContent =
-        `${selectedCoachIds.length} of ${MAX_FEATURED_COACHES} selected`;
+    selectionCount.textContent = selectedCoachIds.length === 0
+        ? "Automatic"
+        : `${selectedCoachIds.length} of ${MAX_FEATURED_COACHES} selected`;
 
     selectionHeader.append(selectionTitle, selectionCount);
     coachesEditor.appendChild(selectionHeader);
+
+    coachesEditor.appendChild(
+        createSelectionModeBar(
+            selectedCoachIds.length,
+            MAX_FEATURED_COACHES,
+            "coaches",
+            () => {
+                selectedCoachIds = [];
+                renderCoachesEditor();
+            }
+        )
+    );
 
     if (availableCoaches.length === 0) {
         const emptyMessage = document.createElement("p");
@@ -959,9 +959,12 @@ function renderCoachesEditor() {
     selectionNote.textContent =
         selectedCoachIds.length >= MAX_FEATURED_COACHES
             ? "Selection limit reached. Unselect a coach to choose another."
-            : "Choose up to 3 coaches to display on your landing page.";
+            : "Leave empty to show coaches automatically, or choose up to 3.";
 
     coachesEditor.appendChild(selectionNote);
+    if (totalCoachPages > 1) {
+        renderCoachPagination();
+    }
 }
 
 function loadPlansEditor(content) {
@@ -1183,10 +1186,7 @@ async function loadReviewsPage(page) {
     reviewsEditor.textContent = "Loading published reviews...";
 
     try {
-        const result = await loadLandingFeaturedReviews(
-            page,
-            REVIEWS_PER_PAGE
-        );
+        const result = await loadLandingFeaturedReviews();
 
         availableReviews = result.reviews;
         currentReviewPage = result.currentPage;
@@ -1216,11 +1216,24 @@ function renderReviewsEditor() {
 
     const count = document.createElement("span");
     count.className = "review-selection-count";
-    count.textContent =
-        `${selectedReviewIds.length} of ${MAX_FEATURED_REVIEWS} selected`;
+    count.textContent = selectedReviewIds.length === 0
+        ? "Automatic"
+        : `${selectedReviewIds.length} of ${MAX_FEATURED_REVIEWS} selected`;
 
     header.append(heading, count);
     reviewsEditor.appendChild(header);
+
+    reviewsEditor.appendChild(
+        createSelectionModeBar(
+            selectedReviewIds.length,
+            MAX_FEATURED_REVIEWS,
+            "reviews",
+            () => {
+                selectedReviewIds = [];
+                renderReviewsEditor();
+            }
+        )
+    );
 
     if (availableReviews.length === 0) {
         const emptyMessage = document.createElement("p");
@@ -1341,7 +1354,7 @@ function renderReviewsEditor() {
     const note = document.createElement("p");
     note.className = "review-selection-note";
     note.textContent =
-        `Choose up to ${MAX_FEATURED_REVIEWS} reviews to display on your landing page.`;
+        `Leave empty to show reviews automatically, or choose up to ${MAX_FEATURED_REVIEWS}.`;
 
     reviewsEditor.appendChild(note);
 
@@ -1379,6 +1392,36 @@ function renderReviewsEditor() {
         reviewsEditor.appendChild(pagination);
     }
 
+}
+
+
+// Shows whether a section is in automatic or manual mode
+function createSelectionModeBar(selectedCount, max, noun, onReset) {
+    const bar = document.createElement("div");
+    bar.className = "selection-mode-bar";
+
+    const text = document.createElement("p");
+    text.className = "selection-mode-text";
+
+    if (selectedCount === 0) {
+        text.textContent =
+            `Automatic: the landing page is showing the most suitable ${noun}. ` +
+            `Select up to ${max} below to choose them yourself.`;
+        bar.appendChild(text);
+    } else {
+        text.textContent =
+            `Manual: the landing page is showing your selected ${noun}.`;
+
+        const resetButton = document.createElement("button");
+        resetButton.type = "button";
+        resetButton.className = "button button-secondary";
+        resetButton.textContent = "Reset to automatic";
+        resetButton.addEventListener("click", onReset);
+
+        bar.append(text, resetButton);
+    }
+
+    return bar;
 }
 
 

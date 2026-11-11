@@ -162,6 +162,6 @@ export function setReviewTypeFilter(type) {
 }
 
 
-export async function loadPublishedReviewsForLanding(page = 1, pageSize = 10) {
-    return await getPublishedReviewsForLanding(page, pageSize);
+export async function loadPublishedReviewsForLanding() {
+    return await getPublishedReviewsForLanding();
 }

@@ -54,8 +54,8 @@ export async function publishLandingPage() {
     return await publishLandingDraft();
 }
 
-export async function loadLandingFeaturedReviews(page = 1, pageSize = 10) {
-    return await loadPublishedReviewsForLanding(page, pageSize);
+export async function loadLandingFeaturedReviews() {
+    return await loadPublishedReviewsForLanding();
 }
 
 export async function saveLandingFeaturedReviews(featuredReviews) {

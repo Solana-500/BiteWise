@@ -360,60 +360,6 @@ export async function saveFeaturedCoachesDraft(featuredCoaches) {
     }
 }
 
-
-
-export async function loadApprovedCoachesForLanding() {
-    // Load approved health coaches
-    const { data: coaches, error: coachError } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, coaching_specialty")
-        .eq("app_role", "coach")
-        .eq("approval_status", "approved")
-        .eq("is_suspended", false);
-
-    if (coachError) throw coachError;
-
-    // Load ratings visible to the current user
-    const { data: reviews, error: reviewError } = await supabaseClient
-        .from("coach_reviews")
-        .select("coach_id, rating");
-
-    if (reviewError) throw reviewError;
-
-    // Calculate each coach's average rating
-    const coachesWithRatings = coaches.map(coach => {
-        const coachReviews = reviews.filter(
-            review => review.coach_id === coach.id
-        );
-
-        const averageRating = coachReviews.length
-            ? coachReviews.reduce(
-                (sum, review) => sum + Number(review.rating),
-                0
-            ) / coachReviews.length
-            : null;
-
-        return {
-            ...coach,
-            averageRating,
-            reviewCount: coachReviews.length
-        };
-    });
-
-    // Put rated coaches first, highest average rating first
-    coachesWithRatings.sort((a, b) => {
-        if (a.averageRating === null) return 1;
-        if (b.averageRating === null) return -1;
-
-        return b.averageRating - a.averageRating;
-    });
-
-    // Return the top 10 for the admin to choose from
-    return coachesWithRatings.slice(0, 10);
-}
-
-
-
 export async function savePlansDraft(plans) {
     const { data: draft, error: draftError } = await supabaseClient
         .from("landing_page_content")

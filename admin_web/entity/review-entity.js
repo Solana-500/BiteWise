@@ -189,49 +189,38 @@ export async function markContentReported({
 
 
 
-export async function getPublishedReviewsForLanding(page = 1, pageSize = 10) {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    const { data, error, count } = await supabaseClient
+export async function getPublishedReviewsForLanding() {
+    const { data, error } = await supabaseClient
         .from("app_feedback")
-        .select(`
-            id,
-            user_id,
-            rating,
-            feedback_text,
-            created_at,
-            moderation_status
-        `, { count: "exact" })
+        .select("id, user_id, rating, feedback_text, created_at")
         .eq("moderation_status", "published")
         .not("feedback_text", "is", null)
-        .neq("feedback_text", "")
-        .order("rating", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
-        .range(from, to);
+        .limit(20);
 
-    if (error) {
-        throw new Error(`Unable to load featured reviews: ${error.message}`);
+    if (error) throw error;
+
+    const rows = data || [];
+    const userIds = [...new Set(rows.map(r => r.user_id))];
+
+    let nameById = new Map();
+    if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", userIds);
+
+        if (profileError) throw profileError;
+        nameById = new Map((profiles || []).map(p => [p.id, p.full_name]));
     }
 
-    const reviews = data ?? [];
-
-    const profileNames = await getProfileNames(
-        reviews.map(review => review.user_id)
-    );
-
-    const formattedReviews = reviews.map(review => ({
-        ...review,
-        reviewer_name: profileNames[review.user_id] || "Unknown User",
-        content_type: "app",
-        content_text: review.feedback_text ?? ""
+    const reviews = rows.map(r => ({
+        id: r.id,
+        reviewer_name: nameById.get(r.user_id) || "BiteWise user",
+        rating: r.rating,
+        created_at: r.created_at,
+        content_text: r.feedback_text
     }));
 
-    return {
-        reviews: formattedReviews,
-        totalCount: count ?? 0,
-        currentPage: page,
-        pageSize,
-        totalPages: Math.ceil((count ?? 0) / pageSize)
-    };
+    return { reviews, currentPage: 1, totalPages: 1 };
 }
