@@ -1,7 +1,8 @@
 import {
     getAllModerationContent,
-    updateModerationStatus
-} from "./review-entity.js";
+    updateModerationStatus,
+    getPublishedReviewsForLanding
+} from "../entity/review-entity.js";
 
 
 let moderationContent = [];
@@ -158,4 +159,9 @@ export function setReviewTypeFilter(type) {
 
     currentReviewType = type;
     return getModerationViewData();
+}
+
+
+export async function loadPublishedReviewsForLanding() {
+    return await getPublishedReviewsForLanding();
 }
