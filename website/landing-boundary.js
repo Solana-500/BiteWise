@@ -4,11 +4,13 @@ import {
     saveLandingHero,
     saveLandingFeatures,
     saveLandingHowItWorks,
+    loadLandingFeaturedReviews,
+    saveLandingFeaturedReviews,
     saveLandingFeaturedCoaches,
     loadLandingFeaturedCoaches,
     saveLandingPlans,
     publishLandingPage
-} from "./landing-controller.js";
+} from "../control/landing-controller.js";
 
 
 const MAX_FEATURES = 6;
@@ -58,10 +60,27 @@ const defaultHowItWorksItems = [
 ];
 
 
+const MAX_FEATURED_REVIEWS = 3;
+
+let availableReviews = [];
+let selectedReviewIds = [];
+
+const reviewsEditor =
+    document.getElementById("reviews-editor");
+
+let currentReviewPage = 1;
+const REVIEWS_PER_PAGE = 10;
+let totalReviewPages = 0;
+
+
 const MAX_FEATURED_COACHES = 3;
 
 let availableCoaches = [];
 let selectedCoachIds = [];
+
+let currentCoachPage = 1;
+const COACHES_PER_PAGE = 10;
+let totalCoachPages = 0;
 
 let planItems = [];
 const defaultPlans = [
@@ -124,10 +143,10 @@ const heroImageGallery = document.getElementById("hero-image-gallery");
 
 
 const defaultHeroImages = [
-    "./images/fuhomepage.jpg",
-    "./images/fufooddiarypage.jpg",
-    "./images/fulogfoodpage.jpg",
-    "./images/puhomepage.jpg"
+    "../../website/images/FuHomePage.jpg",
+    "../../website/images/FuFoodDiaryPage.jpg",
+    "../../website/images/FuLogFoodPage.jpg",
+    "../../website/images/PuHomePage.jpg"
 ];
 
 let uploadedHeroImages = [...defaultHeroImages];
@@ -263,6 +282,10 @@ const previewFrame =
 
 // Load landing page content
 async function loadLandingPage() {
+    if (!document.getElementById("landing-status")) {
+        return;
+    }
+
     try {
         statusElement.textContent = "Loading...";
 
@@ -273,6 +296,7 @@ async function loadLandingPage() {
         console.log("Default hero images:", defaultHeroImages);
         loadFeaturesEditor(content);
         loadHowItWorksEditor(content);
+        await loadReviewsEditor(content);
         await loadCoachesEditor(content);
         loadPlansEditor(content);
 
@@ -282,13 +306,13 @@ async function loadLandingPage() {
 
         
         if (Array.isArray(hero.images)) {
-            // Respect the saved gallery, including an intentionally empty one.
+            // Respect the saved gallery, including an intentionally empty one
             uploadedHeroImages = [...hero.images];
         } else if (hero.image) {
-            // Support older content with a single image.
+            // Support older content with a single image
             uploadedHeroImages = [hero.image];
         } else {
-            // Initialize defaults only when no gallery has been configured.
+            // Initialize defaults only when no gallery has been configured
             uploadedHeroImages = [...defaultHeroImages];
         }
 
@@ -347,6 +371,10 @@ async function handleSaveDraft() {
         howItWorksItems = getHowItWorksItemsFromEditor();
         await saveLandingHowItWorks({
             items: howItWorksItems
+        });
+
+        await saveLandingFeaturedReviews({
+            reviewIds: selectedReviewIds
         });
 
         await saveLandingFeaturedCoaches({
@@ -720,29 +748,75 @@ function renderHowItWorksEditor(items) {
     }
 }
 
+
 async function loadCoachesEditor(content) {
     if (!coachesEditor) return;
 
     coachesEditor.textContent = "Loading approved coaches...";
 
     try {
-        availableCoaches = await loadLandingFeaturedCoaches();
-
         const savedIds = content.featuredCoaches?.coachIds;
 
         selectedCoachIds = Array.isArray(savedIds)
-            ? savedIds.filter(id =>
-                availableCoaches.some(coach => coach.id === id)
-            )
+            ? savedIds.slice(0, MAX_FEATURED_COACHES)
             : [];
 
-        renderCoachesEditor();
+        await displayCoachesPage(1);
     } catch (error) {
         console.error("Failed to load approved coaches:", error);
+
         coachesEditor.textContent =
             "Failed to load approved coaches. Please refresh and try again.";
     }
 }
+
+async function displayCoachesPage(page) {
+    coachesEditor.textContent = "Loading approved coaches...";
+
+    try {
+        const result = await loadLandingFeaturedCoaches();
+
+        availableCoaches = result.coaches;
+        currentCoachPage = result.currentPage;
+        totalCoachPages = result.totalPages;
+
+        renderCoachesEditor();
+    } catch (error) {
+        console.error("Failed to load coach page:", error);
+
+        coachesEditor.textContent =
+            "Failed to load approved coaches. Please refresh and try again.";
+    }
+}
+
+function renderCoachPagination() {
+    const pagination = document.createElement("div");
+    pagination.className = "coach-pagination";
+
+    const previousButton = document.createElement("button");
+    previousButton.type = "button";
+    previousButton.textContent = "Previous";
+    previousButton.disabled = currentCoachPage <= 1;
+    previousButton.addEventListener("click", () =>
+        displayCoachesPage(currentCoachPage - 1)
+    );
+
+    const pageLabel = document.createElement("span");
+    pageLabel.textContent =
+        `Page ${currentCoachPage} of ${totalCoachPages}`;
+
+    const nextButton = document.createElement("button");
+    nextButton.type = "button";
+    nextButton.textContent = "Next";
+    nextButton.disabled = currentCoachPage >= totalCoachPages;
+    nextButton.addEventListener("click", () =>
+        displayCoachesPage(currentCoachPage + 1)
+    );
+
+    pagination.append(previousButton, pageLabel, nextButton);
+    coachesEditor.appendChild(pagination);
+}
+
 
 function renderCoachesEditor() {
     if (!coachesEditor) return;
@@ -753,15 +827,28 @@ function renderCoachesEditor() {
     selectionHeader.className = "coach-selection-header";
 
     const selectionTitle = document.createElement("h3");
-    selectionTitle.textContent = "Available coaches";
+    selectionTitle.textContent = "Available Coaches";
 
     const selectionCount = document.createElement("span");
     selectionCount.className = "coach-selection-count";
-    selectionCount.textContent =
-        `${selectedCoachIds.length} of ${MAX_FEATURED_COACHES} selected`;
+    selectionCount.textContent = selectedCoachIds.length === 0
+        ? "Automatic"
+        : `${selectedCoachIds.length} of ${MAX_FEATURED_COACHES} selected`;
 
     selectionHeader.append(selectionTitle, selectionCount);
     coachesEditor.appendChild(selectionHeader);
+
+    coachesEditor.appendChild(
+        createSelectionModeBar(
+            selectedCoachIds.length,
+            MAX_FEATURED_COACHES,
+            "coaches",
+            () => {
+                selectedCoachIds = [];
+                renderCoachesEditor();
+            }
+        )
+    );
 
     if (availableCoaches.length === 0) {
         const emptyMessage = document.createElement("p");
@@ -774,10 +861,9 @@ function renderCoachesEditor() {
     const coachList = document.createElement("div");
     coachList.className = "coach-card-list";
 
-    availableCoaches.forEach((coach, index) => {
+    
+    availableCoaches.forEach((coach) => {
         const isSelected = selectedCoachIds.includes(coach.id);
-        const limitReached =
-            selectedCoachIds.length >= MAX_FEATURED_COACHES;
 
         const card = document.createElement("label");
         card.className = "coach-editor-card";
@@ -790,13 +876,14 @@ function renderCoachesEditor() {
         checkbox.type = "checkbox";
         checkbox.value = coach.id;
         checkbox.checked = isSelected;
-        checkbox.disabled = !isSelected && limitReached;
+        checkbox.disabled =
+            !isSelected &&
+            selectedCoachIds.length >= MAX_FEATURED_COACHES;
 
         checkbox.addEventListener("change", () => {
             if (checkbox.checked) {
-                if (
-                    selectedCoachIds.length >= MAX_FEATURED_COACHES
-                ) {
+                if (selectedCoachIds.length >= MAX_FEATURED_COACHES) {
+                    checkbox.checked = false;
                     return;
                 }
 
@@ -810,14 +897,15 @@ function renderCoachesEditor() {
             renderCoachesEditor();
         });
 
-        const initials = document.createElement("div");
-        initials.className = "coach-avatar";
-        initials.textContent = (coach.full_name || "Coach")
+        const avatar = document.createElement("div");
+        avatar.className = "coach-avatar";
+
+        avatar.textContent = (coach.full_name || "Coach")
             .trim()
             .split(/\s+/)
+            .slice(0, 2)
             .map(part => part[0])
             .join("")
-            .slice(0, 2)
             .toUpperCase();
 
         const details = document.createElement("div");
@@ -835,24 +923,33 @@ function renderCoachesEditor() {
         rating.className = "coach-card-rating";
 
         rating.textContent = coach.averageRating !== null
-            ? `★ ${coach.averageRating.toFixed(1)} · ${coach.reviewCount} ${
+            ? `★ ${Number(coach.averageRating).toFixed(1)} · ${coach.reviewCount} ${
                 coach.reviewCount === 1 ? "review" : "reviews"
-              }`
+            }`
             : "☆ No ratings yet";
 
         details.append(name, specialty, rating);
 
+        const main = document.createElement("div");
+        main.className = "coach-card-main";
+        main.append(avatar, details);
+
         const rank = document.createElement("span");
         rank.className = "coach-rank";
-        rank.textContent = `#${index + 1}`;
 
-        const cardMain = document.createElement("div");
-        cardMain.className = "coach-card-main";
-        cardMain.append(initials, details);
+        const selectedIndex = selectedCoachIds.indexOf(coach.id);
 
-        card.append(checkbox, cardMain, rank);
+        if (selectedIndex !== -1) {
+            const ordinal = ["1st", "2nd", "3rd"];
+            rank.textContent = `Shown ${ordinal[selectedIndex]}`;
+        } else {
+            rank.hidden = true;
+        }
+
+        card.append(checkbox, main, rank);
         coachList.appendChild(card);
     });
+
 
     coachesEditor.appendChild(coachList);
 
@@ -862,9 +959,12 @@ function renderCoachesEditor() {
     selectionNote.textContent =
         selectedCoachIds.length >= MAX_FEATURED_COACHES
             ? "Selection limit reached. Unselect a coach to choose another."
-            : "Choose up to 3 coaches to display on your landing page.";
+            : "Leave empty to show coaches automatically, or choose up to 3.";
 
     coachesEditor.appendChild(selectionNote);
+    if (totalCoachPages > 1) {
+        renderCoachPagination();
+    }
 }
 
 function loadPlansEditor(content) {
@@ -1055,6 +1155,274 @@ function renderPlansEditor(items) {
     });
 }
 
+
+
+
+async function loadReviewsEditor(content) {
+    if (!reviewsEditor) return;
+
+    reviewsEditor.textContent = "Loading published reviews...";
+
+    try {
+        currentReviewPage = 1;
+
+        const savedIds = content.featuredReviews?.reviewIds;
+        selectedReviewIds = Array.isArray(savedIds)
+            ? [...savedIds].slice(0, MAX_FEATURED_REVIEWS)
+            : [];
+
+        await loadReviewsPage(currentReviewPage);
+    } catch (error) {
+        console.error("Failed to load published reviews:", error);
+
+        reviewsEditor.textContent =
+            "Failed to load published reviews. Please refresh and try again.";
+    }
+}
+
+async function loadReviewsPage(page) {
+    if (!reviewsEditor) return;
+
+    reviewsEditor.textContent = "Loading published reviews...";
+
+    try {
+        const result = await loadLandingFeaturedReviews();
+
+        availableReviews = result.reviews;
+        currentReviewPage = result.currentPage;
+        totalReviewPages = result.totalPages;
+
+        renderReviewsEditor();
+    } catch (error) {
+        console.error("Failed to load review page:", error);
+
+        reviewsEditor.textContent =
+            "Failed to load published reviews. Please refresh and try again.";
+    }
+}
+
+
+
+function renderReviewsEditor() {
+    if (!reviewsEditor) return;
+
+    reviewsEditor.replaceChildren();
+
+    const header = document.createElement("div");
+    header.className = "review-selection-header";
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Available Reviews";
+
+    const count = document.createElement("span");
+    count.className = "review-selection-count";
+    count.textContent = selectedReviewIds.length === 0
+        ? "Automatic"
+        : `${selectedReviewIds.length} of ${MAX_FEATURED_REVIEWS} selected`;
+
+    header.append(heading, count);
+    reviewsEditor.appendChild(header);
+
+    reviewsEditor.appendChild(
+        createSelectionModeBar(
+            selectedReviewIds.length,
+            MAX_FEATURED_REVIEWS,
+            "reviews",
+            () => {
+                selectedReviewIds = [];
+                renderReviewsEditor();
+            }
+        )
+    );
+
+    if (availableReviews.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "review-empty-message";
+        emptyMessage.textContent = "No published app feedback found.";
+        reviewsEditor.appendChild(emptyMessage);
+        return;
+    }
+
+    const cardList = document.createElement("div");
+    cardList.className = "review-card-list";
+
+    availableReviews.forEach(review => {
+        const card = document.createElement("label");
+        card.className = "review-editor-card";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = review.id;
+        checkbox.checked = selectedReviewIds.includes(review.id);
+        checkbox.disabled =
+            !checkbox.checked &&
+            selectedReviewIds.length >= MAX_FEATURED_REVIEWS;
+
+        if (checkbox.checked) {
+            card.classList.add("selected");
+        }
+
+        const avatar = document.createElement("div");
+        avatar.className = "review-avatar";
+
+        const reviewerName = review.reviewer_name || "Unknown User";
+        const initials = reviewerName
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map(part => part[0])
+            .join("")
+            .toUpperCase();
+
+        avatar.textContent = initials;
+
+        const details = document.createElement("div");
+        details.className = "review-card-details";
+
+        const name = document.createElement("h4");
+        name.textContent = reviewerName;
+
+        const meta = document.createElement("p");
+        meta.className = "review-card-meta";
+
+        const rating = document.createElement("span");
+        rating.className = "review-card-rating";
+        rating.textContent = review.rating != null
+            ? `${"★".repeat(Math.max(0, Math.min(5, review.rating)))}${"☆".repeat(5 - Math.max(0, Math.min(5, review.rating)))} ${Number(review.rating).toFixed(1)}`
+            : "No rating";
+
+        const date = document.createElement("span");
+        date.className = "review-card-date";
+        date.textContent = review.created_at
+            ? ` · ${new Date(review.created_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+            })}`
+            : "";
+
+        meta.append(rating, date);
+
+        const feedback = document.createElement("p");
+        feedback.className = "review-card-text";
+        feedback.textContent =
+            review.content_text || "No written feedback provided.";
+
+        details.append(name, meta, feedback);
+
+        // Group the profile icon and user information together
+        const main = document.createElement("div");
+        main.className = "review-card-main";
+        main.append(avatar, details);
+
+        // Display the selected order on the right
+        const rank = document.createElement("span");
+        rank.className = "review-rank";
+
+        const selectedIndex = selectedReviewIds.indexOf(review.id);
+
+        if (selectedIndex !== -1) {
+            const ordinal = ["1st", "2nd", "3rd"];
+            rank.textContent = `Shown ${ordinal[selectedIndex]}`;
+        } else {
+            rank.hidden = true;
+        }
+
+        card.append(checkbox, main, rank);
+        cardList.appendChild(card);
+
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                if (selectedReviewIds.length >= MAX_FEATURED_REVIEWS) {
+                    checkbox.checked = false;
+                    return;
+                }
+
+                selectedReviewIds.push(review.id);
+            } else {
+                selectedReviewIds = selectedReviewIds.filter(
+                    id => id !== review.id
+                );
+            }
+
+            renderReviewsEditor();
+        });
+    });
+
+    reviewsEditor.appendChild(cardList);
+
+    const note = document.createElement("p");
+    note.className = "review-selection-note";
+    note.textContent =
+        `Leave empty to show reviews automatically, or choose up to ${MAX_FEATURED_REVIEWS}.`;
+
+    reviewsEditor.appendChild(note);
+
+    if (totalReviewPages > 1) {
+        const pagination = document.createElement("div");
+        pagination.className = "review-pagination";
+
+        const previousButton = document.createElement("button");
+        previousButton.type = "button";
+        previousButton.textContent = "Previous";
+        previousButton.disabled = currentReviewPage <= 1;
+
+        previousButton.addEventListener("click", () => {
+            if (currentReviewPage > 1) {
+                loadReviewsPage(currentReviewPage - 1);
+            }
+        });
+
+        const pageLabel = document.createElement("span");
+        pageLabel.textContent =
+            `Page ${currentReviewPage} of ${totalReviewPages}`;
+
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.textContent = "Next";
+        nextButton.disabled = currentReviewPage >= totalReviewPages;
+
+        nextButton.addEventListener("click", () => {
+            if (currentReviewPage < totalReviewPages) {
+                loadReviewsPage(currentReviewPage + 1);
+            }
+        });
+
+        pagination.append(previousButton, pageLabel, nextButton);
+        reviewsEditor.appendChild(pagination);
+    }
+
+}
+
+
+// Shows whether a section is in automatic or manual mode
+function createSelectionModeBar(selectedCount, max, noun, onReset) {
+    const bar = document.createElement("div");
+    bar.className = "selection-mode-bar";
+
+    const text = document.createElement("p");
+    text.className = "selection-mode-text";
+
+    if (selectedCount === 0) {
+        text.textContent =
+            `Automatic: the landing page is showing the most suitable ${noun}. ` +
+            `Select up to ${max} below to choose them yourself.`;
+        bar.appendChild(text);
+    } else {
+        text.textContent =
+            `Manual: the landing page is showing your selected ${noun}.`;
+
+        const resetButton = document.createElement("button");
+        resetButton.type = "button";
+        resetButton.className = "button button-secondary";
+        resetButton.textContent = "Reset to automatic";
+        resetButton.addEventListener("click", onReset);
+
+        bar.append(text, resetButton);
+    }
+
+    return bar;
+}
 
 
 // ==============================================
@@ -1404,6 +1772,10 @@ plansEditor?.addEventListener("click", event => {
         return;
     }
 });
+
+// Initialise page
+loadLandingPage();
+
 export {
     loadLandingPage
 };
