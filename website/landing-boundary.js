@@ -1773,8 +1773,7 @@ plansEditor?.addEventListener("click", event => {
     }
 });
 
-// Initialise page
-loadLandingPage();
+
 
 export {
     loadLandingPage
