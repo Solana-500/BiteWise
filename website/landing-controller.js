@@ -8,7 +8,7 @@ import {
     saveFeaturedCoachesDraft,
     savePlansDraft,
     publishLandingDraft
-} from "../entity/landing-entity.js";
+} from "./landing-entity.js";
  
 import {
     loadApprovedCoachesForLanding
