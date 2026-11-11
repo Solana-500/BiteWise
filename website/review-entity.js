@@ -1,8 +1,8 @@
-import { supabaseClient } from "./supabase-client.js";
+import { supabaseClient } from "../supabase-client.js";
 
 const REVIEW_TABLES = {
     coach: "coach_reviews",
-    feedback: "app_feedback"
+    app: "app_feedback"
 };
 
 
@@ -73,7 +73,7 @@ export async function getCoachReviews() {
 
 export async function getAppFeedback() {
     const { data, error } = await supabaseClient
-        .from(REVIEW_TABLES.feedback)
+        .from(REVIEW_TABLES.app)
         .select(`
             id,
             user_id,
@@ -185,4 +185,42 @@ export async function markContentReported({
     }
 
     return data;
+}
+
+
+
+export async function getPublishedReviewsForLanding() {
+    const { data, error } = await supabaseClient
+        .from("app_feedback")
+        .select("id, user_id, rating, feedback_text, created_at")
+        .eq("moderation_status", "published")
+        .not("feedback_text", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const userIds = [...new Set(rows.map(r => r.user_id))];
+
+    let nameById = new Map();
+    if (userIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", userIds);
+
+        if (profileError) throw profileError;
+        nameById = new Map((profiles || []).map(p => [p.id, p.full_name]));
+    }
+
+    const reviews = rows.map(r => ({
+        id: r.id,
+        reviewer_name: nameById.get(r.user_id) || "BiteWise user",
+        rating: r.rating,
+        created_at: r.created_at,
+        content_text: r.feedback_text
+    }));
+
+    return { reviews, currentPage: 1, totalPages: 1 };
 }
