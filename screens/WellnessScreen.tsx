@@ -761,9 +761,7 @@ function getTodayRange() {
         )}
 
      
-            <Text style={styles.syncButtonText}>Connect a Device</Text>
-          </TouchableOpacity>
-        </View>
+  
         {!isPremium ? (
           <PremiumUpsellCard
             onPress={() => navigation.navigate('SubPremium')}
