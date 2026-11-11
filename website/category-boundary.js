@@ -4,7 +4,7 @@ import {
     editCategory,
     deactivateCategory,
     reactivateCategory
-} from "../control/category-controller.js";
+} from "./category-controller.js";
 
 import {
     escapeHTML
