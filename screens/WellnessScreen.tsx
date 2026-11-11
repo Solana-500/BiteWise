@@ -760,27 +760,7 @@ function getTodayRange() {
           )
         )}
 
-        {/* Sync Device Card */}
-        <Text style={styles.wellnessSectionTitle}>Sync From Device</Text>
-        <View style={styles.syncCard}>
-          <View style={styles.syncTopRow}>
-            <View style={styles.deviceIconCircle}>
-              <Text style={styles.deviceIcon}>⌚</Text>
-            </View>
-            <View style={styles.syncTextArea}>
-              <Text style={styles.syncCardTitle}>Connected Device</Text>
-              <Text style={styles.syncCardSubtitle}>No activity device synced yet.</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.syncButton}
-            onPress={() =>
-              Alert.alert(
-                'Sync from device',
-                'Device sync is not connected yet. You can add Apple Health, Google Fit, Fitbit, or Garmin integration later.'
-              )
-            }
-          >
+     
             <Text style={styles.syncButtonText}>Connect a Device</Text>
           </TouchableOpacity>
         </View>
