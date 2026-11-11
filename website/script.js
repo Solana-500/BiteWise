@@ -10,7 +10,6 @@ const supabaseClient = supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
-import { loadActiveCategories } from "../admin_web/control/category-controller.js";
 
 /* ==============================================
    LANDING PAGE CONTENT
@@ -240,55 +239,33 @@ async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
 
     container.replaceChildren();
 
-    if (!Array.isArray(selectedCoachIds) || selectedCoachIds.length === 0) {
-        return;
-    }
+    // The admin's picks win. With no picks, the database chooses the
+    // top-rated coaches automatically.
+    const picks = Array.isArray(selectedCoachIds)
+        ? selectedCoachIds.map(String)
+        : [];
 
-    const { data: coaches, error } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, coaching_specialty")
-        .eq("app_role", "coach")
-        .eq("approval_status", "approved");
+    const { data, error } = await supabaseClient.rpc(
+        "landing_featured_coaches",
+        {
+            p_ids: picks.length ? picks : null,
+            p_limit: 3
+        }
+    );
 
     if (error) {
         console.error("Failed to load featured coaches:", error);
         return;
     }
 
-    const { data: reviews, error: reviewError } = await supabaseClient
-        .from("coach_reviews")
-        .select("coach_id, rating");
-
-    if (reviewError) {
-        console.error("Failed to load coach ratings:", reviewError);
-        return;
-    }
-
-    const coachesWithRatings = (coaches || []).map((coach) => {
-        const coachReviews = (reviews || []).filter(
-            (review) => review.coach_id === coach.id
-        );
-
-        const averageRating = coachReviews.length
-            ? coachReviews.reduce(
-                (sum, review) => sum + Number(review.rating),
-                0
-            ) / coachReviews.length
-            : null;
-
-        return {
-            ...coach,
-            averageRating,
-            reviewCount: coachReviews.length
-        };
-    });
-
-    const featuredCoaches = selectedCoachIds
-        .map((id) =>
-            coachesWithRatings.find((coach) => coach.id === id)
-        )
-        .filter(Boolean)
-        .slice(0, 3);
+    const featuredCoaches = (data || []).map((coach) => ({
+        ...coach,
+        averageRating:
+            coach.average_rating == null
+                ? null
+                : Number(coach.average_rating),
+        reviewCount: Number(coach.review_count) || 0
+    }));
 
     if (featuredCoaches.length === 0) {
         return;
@@ -349,64 +326,30 @@ async function renderLandingFeaturedReviews(selectedReviewIds = []) {
 
     container.replaceChildren();
 
-    if (
-        !Array.isArray(selectedReviewIds) ||
-        selectedReviewIds.length === 0
-    ) {
-        return;
-    }
+    // The admin's picks win. With no picks, the database chooses
+    // good recent reviews automatically.
+    const picks = Array.isArray(selectedReviewIds)
+        ? selectedReviewIds.map(String)
+        : [];
 
-    const { data: reviews, error } = await supabaseClient
-        .from("app_feedback")
-        .select(`
-            id,
-            user_id,
-            rating,
-            feedback_text,
-            created_at
-        `)
-        .in("id", selectedReviewIds)
-        .eq("moderation_status", "published")
-        .not("feedback_text", "is", null)
-        .neq("feedback_text", "");
+    const { data, error } = await supabaseClient.rpc(
+        "landing_featured_reviews",
+        {
+            p_ids: picks.length ? picks : null,
+            p_limit: 3
+        }
+    );
 
     if (error) {
         console.error("Failed to load featured reviews:", error);
         return;
     }
 
-    // Preserve the order selected by the admin
-    const featuredReviews = selectedReviewIds
-        .map((id) =>
-            (reviews || []).find((review) => review.id === id)
-        )
-        .filter(Boolean);
+    const featuredReviews = data || [];
 
     if (featuredReviews.length === 0) {
         return;
     }
-
-    // Retrieve reviewer names
-    const profileIds = [
-        ...new Set(featuredReviews.map((review) => review.user_id))
-    ];
-
-    const { data: profiles, error: profileError } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", profileIds);
-
-    if (profileError) {
-        console.error("Failed to load review authors:", profileError);
-        return;
-    }
-
-    const profileNames = Object.fromEntries(
-        (profiles || []).map((profile) => [
-            profile.id,
-            profile.full_name
-        ])
-    );
 
     featuredReviews.forEach((review) => {
         const card = document.createElement("div");
@@ -432,8 +375,7 @@ async function renderLandingFeaturedReviews(selectedReviewIds = []) {
         const reviewerContainer = document.createElement("div");
         reviewerContainer.className = "review-user";
 
-        const reviewerName =
-            profileNames[review.user_id] || "Unknown User";
+        const reviewerName = review.reviewer_name || "BiteWise user";
 
         // Reviewer avatar
         const avatar = document.createElement("div");
@@ -1898,10 +1840,10 @@ const coachDetailsBack =
         "coach-details-back"
     );
 
-const specialtyOptionsContainer = 
+const specialtyGrid =
     document.getElementById(
-    "coach-specialty-options"
-);
+        "coach-specialty-options"
+    );
 
 const specialtyMessage =
     document.getElementById(
@@ -1931,7 +1873,6 @@ function resetRegistration() {
     showRegisterStep(accountStep);
 
     // Reset account form fields
-
     const registerAccountForm =
         document.getElementById(
             "register-account-form"
@@ -1941,7 +1882,6 @@ function resetRegistration() {
 
 
     // Reset account type to User
-
     registerAccountTabs.forEach(
         (tab) => {
 
@@ -1974,8 +1914,6 @@ function resetRegistration() {
     }
 
 
-    // Full name is only asked here for health coaches
-
     registerFullNameGroup?.classList.add(
         "hidden"
     );
@@ -1994,7 +1932,6 @@ function resetRegistration() {
 
 
     // Reset user profile setup step
-
     document.getElementById(
         "onboarding-form"
     )?.reset();
@@ -2028,7 +1965,6 @@ function resetRegistration() {
 
 
     // Reset main button text
-
     if (registerMainButton) {
 
         registerMainButton.textContent =
@@ -2036,36 +1972,22 @@ function resetRegistration() {
 
     }
 
-
     // Reset coach specialties
-
     selectedSpecialties = [];
 
-    specialtyOptions.forEach(
-        (option) => {
-
-            option.classList.remove(
-                "active"
-            );
-
-        }
-    );
+    document.querySelectorAll(".specialty-option").forEach(option => {
+        option.classList.remove("active");
+    });
 
     if (specialtyCount) {
-
-        specialtyCount.textContent =
-            "0/3 selected";
-
+        specialtyCount.textContent = "0/3 selected";
     }
 
     if (specialtyMessage) {
-
         specialtyMessage.textContent = "";
-
     }
 
     // Reset coach personal information
-
     const coachAge =
         document.getElementById(
             "coach-age"
@@ -2886,114 +2808,45 @@ onboardingForm?.addEventListener(
     }
 );
 
-// ==============================================
-// LOAD COACH SPECIALTIES
-// ==============================================
 
-async function loadCoachSpecialties() {
-
-    if (!specialtyOptionsContainer) return;
-
-    try {
-
-        const categories = await loadActiveCategories(
-            "coach_specialty"
-        );
-
-        specialtyOptionsContainer.innerHTML =
-            categories.map(category => `
-                <button
-                    type="button"
-                    class="specialty-option"
-                    data-specialty="${category.name}"
-                    aria-pressed="false"
-                >
-                    ${category.name}
-                </button>
-            `).join("");
-
-    } catch (error) {
-
-        console.error(
-            "Unable to load coach specialties:",
-            error
-        );
-
-        specialtyOptionsContainer.textContent =
-            "Unable to load specialties. Please try again.";
-
-    }
-
-}
 
 // ==============================================
 // COACH SPECIALTY SELECTION
 // ==============================================
 
-specialtyOptionsContainer?.addEventListener(
-    "click",
-    function(event) {
+specialtyGrid?.addEventListener("click", function (event) {
+    const option = event.target.closest(".specialty-option");
+    if (!option) return;
 
-        const option = event.target.closest(
-            ".specialty-option"
+    const specialty = option.dataset.specialty;
+
+    if (selectedSpecialties.includes(specialty)) {
+        selectedSpecialties = selectedSpecialties.filter(
+            item => item !== specialty
         );
-
-        if (!option) return;
-
-        const specialty = option.dataset.specialty;
-
-        const alreadySelected =
-            selectedSpecialties.includes(specialty);
-
-        // Remove selected specialty
-        if (alreadySelected) {
-
-            selectedSpecialties =
-                selectedSpecialties.filter(
-                    item => item !== specialty
-                );
-
-            option.classList.remove("active");
-
-            option.setAttribute("aria-pressed", "false");
-
-        }
-
-        // Add specialty if below limit
-        else {
-
-            if (selectedSpecialties.length >= 3) {
-
-                if (specialtyMessage) {
-                    specialtyMessage.textContent =
-                        "You can select up to 3 specialties.";
-                }
-
-                return;
+        option.classList.remove("active");
+    } else {
+        if (selectedSpecialties.length >= 3) {
+            if (specialtyMessage) {
+                specialtyMessage.textContent =
+                    "You can select up to 3 specialties.";
             }
-
-            selectedSpecialties.push(specialty);
-
-            option.classList.add("active");
-
-            option.setAttribute("aria-pressed", "true");
-
+            return;
         }
 
-        // Update counter
-        if (specialtyCount) {
-
-            specialtyCount.textContent =
-                `${selectedSpecialties.length}/3 selected`;
-
-        }
-
-        if (specialtyMessage) {
-            specialtyMessage.textContent = "";
-        }
-
+        selectedSpecialties.push(specialty);
+        option.classList.add("active");
     }
-);
+
+    if (specialtyCount) {
+        specialtyCount.textContent =
+            `${selectedSpecialties.length}/3 selected`;
+    }
+
+    if (specialtyMessage) {
+        specialtyMessage.textContent = "";
+    }
+});
 
 
 // ==============================================
@@ -3121,6 +2974,43 @@ submitCoachRegistration?.addEventListener(
 
     }
 );
+
+
+async function loadSpecialties() {
+    if (!specialtyGrid) return;
+
+    specialtyGrid.textContent = "Loading specialties...";
+
+    const { data, error } = await supabaseClient
+        .from("categories")
+        .select("name")
+        .eq("category_type", "coach_specialty")
+        .eq("is_active", true)
+        .order("name");
+
+    if (error) {
+        console.error("Failed to load specialties:", error);
+        specialtyGrid.textContent =
+            "Couldn't load specialties. Please refresh the page.";
+        return;
+    }
+
+    specialtyGrid.replaceChildren();
+
+    if (!data || data.length === 0) {
+        specialtyGrid.textContent = "No specialties available right now.";
+        return;
+    }
+
+    data.forEach(({ name }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "specialty-option";
+        button.dataset.specialty = name;
+        button.textContent = name;
+        specialtyGrid.appendChild(button);
+    });
+}
 
 
 // ==============================================
@@ -3388,5 +3278,5 @@ if (pageParams.get("login") === "1") {
     );
 }
 
-loadCoachSpecialties();
+loadSpecialties();
 loadLandingPageContent();
