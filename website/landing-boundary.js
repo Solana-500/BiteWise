@@ -143,10 +143,10 @@ const heroImageGallery = document.getElementById("hero-image-gallery");
 
 
 const defaultHeroImages = [
-    "../../website/images/FuHomePage.jpg",
-    "../../website/images/FuFoodDiaryPage.jpg",
-    "../../website/images/FuLogFoodPage.jpg",
-    "../../website/images/PuHomePage.jpg"
+    "./images/FuHomePage.jpg",
+    "./images/FuFoodDiaryPage.jpg",
+    "./images/FuLogFoodPage.jpg",
+    "./images/PuHomePage.jpg"
 ];
 
 let uploadedHeroImages = [...defaultHeroImages];
