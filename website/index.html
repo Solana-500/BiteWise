@@ -58,10 +58,7 @@
 
         <div class="nav-actions">
 
-            <a
-                href="download.html"
-                class="btn btn-download"
-            >
+            <a href="download.html" class="btn btn-download">
                 Download App
             </a>
 
@@ -86,13 +83,7 @@
 </nav>
 
 
-
-<!-- ========================================
-     MAIN CONTENT
-========================================= -->
-
 <main>
-
 
 <!-- ========================================
      HERO
@@ -103,7 +94,6 @@
     <div class="hero-container">
 
         <!-- HERO TEXT -->
-
         <div class="hero-content">
 
             <h1 id="landing-hero-title"></h1>
@@ -127,30 +117,17 @@
 
 
         <!-- HERO APP PREVIEW -->
-
         <div class="hero-visual">
 
-
-            <!-- DECORATIVE CIRCLES -->
-
             <div class="decor-circle circle-large"></div>
-
             <div class="decor-circle circle-medium"></div>
-
             <div class="decor-circle circle-small"></div>
-
-
-            <!-- DECORATIVE LINES -->
 
             <div class="decor-lines">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
-
-
-            <!-- PHONE -->
-
             <div class="phone-preview">
 
                 <img
@@ -158,7 +135,6 @@
                     class="fu-homepage-image"
                     alt="BiteWise mobile application"
                 >
-
             </div>
 
         </div>
@@ -168,15 +144,11 @@
 </section>
 
 
-
 <!-- ========================================
      FEATURES
 ========================================= -->
 
-<section
-    class="section features-section"
-    id="features"
->
+<section class="section features-section" id="features">
 
     <div class="section-heading">
         <h2> Why use BiteWise?</h2>
@@ -195,10 +167,7 @@
      HOW IT WORKS
 ========================================= -->
 
-<section
-    class="section how-section"
-    id="how-it-works"
->
+<section class="section how-section" id="how-it-works">
 
     <div class="section-heading">
         <h2>How it works</h2>
@@ -218,58 +187,38 @@
      REVIEWS
 ========================================= -->
 
-<section
-    class="section reviews-section"
-    id="reviews"
->
+<section class="section reviews-section" id="reviews">
 
     <div class="section-heading">
-
         <h2>
             What our users say
         </h2>
-        <p class="demo-disclaimer">
-          Demo showcase: Some displayed reviews and ratings
-          use simulated test data for the BiteWise FYP prototype.
-        </p>
         <p>
             See how BiteWise supports users on their journey.
         </p>
-
     </div>
 
-    <!-- Application reviews loaded automatically from Supabase -->
     <div
-        id="landing-app-reviews"
+        id="landing-reviews"
         class="three-column-grid"
-        aria-live="polite"
     >
-        <p class="review-loading">
-            Loading user reviews...
+        <p class="review-loading-message">
+            Loading reviews...
         </p>
     </div>
-  
+
 </section>
 
-
- 
 
 
 <!-- ========================================
      COACHES
 ========================================= -->
 
-<section
-    class="section coaches-section"
-    id="coaches"
->
+<section class="section coaches-section" id="coaches">
 
     <div class="section-heading">
         <h2>Top-rated health coaches</h2>
-         <p class="demo-disclaimer">
-          Demo showcase: Some displayed reviews and ratings
-          use simulated test data for the BiteWise FYP prototype.
-        </p>
         <p>
             Connect with coaches who can support your health goals.
         </p>
@@ -285,10 +234,7 @@
      PRICING
 ========================================= -->
 
-<section
-    class="section pricing-section"
-    id="pricing"
->
+<section class="section pricing-section" id="pricing">
 
     <div class="section-heading">
         <h2>Choose your plan</h2>
@@ -317,10 +263,7 @@
         Create your BiteWise account today.
     </p>
 
-    <a
-        href="#"
-        class="cta-button open-register"
-    >
+    <a href="#" class="cta-button open-register">
         Get Started
     </a>
 
@@ -735,75 +678,11 @@
                         Select up to 3 specialties
                     </p>
 
-
-                    <div class="specialty-options">
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Bodybuilding"
-                        >
-                            Bodybuilding
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Weight Loss Management"
-                        >
-                            Weight Loss Management
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Nutritionist"
-                        >
-                            Nutritionist
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Powerlifting"
-                        >
-                            Powerlifting
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Hyrox"
-                        >
-                            Hyrox
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="CrossFit"
-                        >
-                            CrossFit
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Marathon"
-                        >
-                            Marathon
-                        </button>
-
-                        <button
-                            type="button"
-                            class="specialty-option"
-                            data-specialty="Running"
-                        >
-                            Running
-                        </button>
-
+                    <div
+                        class="specialty-options"
+                        id="coach-specialty-options"
+                    >
                     </div>
-
 
                     <span
                         class="specialty-count"
@@ -1506,7 +1385,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 
 </body>
 

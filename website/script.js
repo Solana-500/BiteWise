@@ -15,22 +15,6 @@ const supabaseClient = supabase.createClient(
    LANDING PAGE CONTENT
 ============================================== */
 
-function showEmailVerificationPopup(accountType = "user") {
-    const profileType =
-        accountType === "coach"
-            ? "Health Coach application"
-            : "BiteWise profile";
-
-    alert(
-        "VERIFY YOUR EMAIL\n\n" +
-        "Your BiteWise account has been created!\n\n" +
-        "We've sent a verification link to your email address.\n\n" +
-        "Please verify your email before continuing.\n\n" +
-        "After verification, return to BiteWise and log in " +
-        "to complete your " + profileType + "."
-    );
-}
-
 async function loadLandingPageContent() {
     const params = new URLSearchParams(
         window.location.search
@@ -40,7 +24,7 @@ async function loadLandingPageContent() {
 
     let statusToLoad = "published";
 
-    // Only allow an authenticated admin to request a draft.
+    // Only allow an authenticated admin to request a draft
     if (previewMode) {
         try {
             const { data: userData, error: userError } =
@@ -63,7 +47,7 @@ async function loadLandingPageContent() {
         }
     }
 
-    // Request the selected version.
+    // Request the selected version
     let { data: landing, error } = await supabaseClient
         .from("landing_page_content")
         .select("id, status, content")
@@ -75,7 +59,7 @@ async function loadLandingPageContent() {
         return;
     }
 
-    // If an admin has no draft yet, preview the published version.
+    // If an admin has no draft yet, preview the published version
     if (!landing && statusToLoad === "draft") {
         const result = await supabaseClient
             .from("landing_page_content")
@@ -142,11 +126,15 @@ async function loadLandingPageContent() {
         secondaryButton.textContent = hero.secondaryButton || "";
     }
 
-   renderLandingFeatures(landing.content.features);
-   renderLandingHowItWorks(landing.content.howItWorks);
-   await loadLandingAppReviews();
-   await renderLandingFeaturedCoaches();
-   renderLandingPlans(landing.content.plans);
+    renderLandingFeatures(landing.content.features);
+    renderLandingHowItWorks(landing.content.howItWorks);
+    renderLandingFeaturedCoaches(
+        landing.content.featuredCoaches?.coachIds || []
+    );
+    renderLandingFeaturedReviews(
+        landing.content.featuredReviews?.reviewIds || []
+    );
+    renderLandingPlans(landing.content.plans);
 }
 
 // Build a feature card when the page has no card to copy
@@ -245,154 +233,196 @@ function renderLandingHowItWorks(howItWorks) {
 }
 
 
-async function loadLandingAppReviews() {
-    const container = document.getElementById(
-        "landing-app-reviews"
-    );
 
-    if (!container) return;
-
-    const { data: reviews, error } = await supabaseClient
-        .from("landing_app_reviews")
-        .select("id,rating,feedback_text,created_at")
-        .order("created_at", { ascending: false })
-        .limit(6);
-
-    container.replaceChildren();
-
-    if (error) {
-        console.error("Failed to load reviews:", error);
-        container.textContent =
-            "Unable to load reviews right now.";
-        return;
-    }
-
-    if (!reviews || reviews.length === 0) {
-        container.textContent =
-            "No published reviews available yet.";
-        return;
-    }
-
-    reviews.forEach((review) => {
-        const card = document.createElement("div");
-        card.className = "review-card";
-
-        const stars = document.createElement("div");
-        stars.className = "review-stars";
-        stars.textContent =
-            "★".repeat(review.rating) +
-            "☆".repeat(5 - review.rating);
-
-        const feedback = document.createElement("p");
-        feedback.className = "review-text";
-        feedback.textContent = review.feedback_text;
-
-        const reviewer = document.createElement("p");
-        reviewer.className = "review-author";
-        reviewer.textContent = "BiteWise User";
-
-        card.append(stars, feedback, reviewer);
-        container.appendChild(card);
-    });
-}
-
-
-async function renderLandingFeaturedCoaches() {
+async function renderLandingFeaturedCoaches(selectedCoachIds = []) {
     const container = document.getElementById(
         "landing-featured-coaches"
     );
 
     if (!container) return;
 
-    const { data: coaches, error } = await supabaseClient
-        .from("landing_featured_coaches")
-        .select(
-            "coach_id, coach_name, average_rating, review_count, latest_review_at"
-        )
-        .order("average_rating", { ascending: false })
-        .order("review_count", { ascending: false })
-        .order("latest_review_at", {
-            ascending: false,
-            nullsFirst: false
-        })
-        .limit(3);
+    container.replaceChildren();
+
+    // The admin's picks win. With no picks, the database chooses the
+    // top-rated coaches automatically.
+    const picks = Array.isArray(selectedCoachIds)
+        ? selectedCoachIds.map(String)
+        : [];
+
+    const { data, error } = await supabaseClient.rpc(
+        "landing_featured_coaches",
+        {
+            p_ids: picks.length ? picks : null,
+            p_limit: 3
+        }
+    );
 
     if (error) {
         console.error("Failed to load featured coaches:", error);
-        container.textContent = "Unable to load coaches right now.";
         return;
     }
 
-    container.replaceChildren();
+    const featuredCoaches = (data || []).map((coach) => ({
+        ...coach,
+        averageRating:
+            coach.average_rating == null
+                ? null
+                : Number(coach.average_rating),
+        reviewCount: Number(coach.review_count) || 0
+    }));
 
-    if (!coaches || coaches.length === 0) {
-        const empty = document.createElement("p");
-        empty.textContent =
-            "Featured coaches will appear once they have received enough approved reviews.";
-        container.appendChild(empty);
+    if (featuredCoaches.length === 0) {
         return;
     }
 
-    coaches.forEach((coach) => {
+    featuredCoaches.forEach((coach) => {
         const card = document.createElement("div");
         card.className = "coach-card";
 
-        // Coach initials
         const avatar = document.createElement("div");
         avatar.className = "coach-avatar";
-
-        const coachName = coach.coach_name || "Health Coach";
-
-        avatar.textContent = coachName
-            .trim()
+        avatar.textContent = (coach.full_name || "HC")
             .split(/\s+/)
-            .map((part) => part.charAt(0))
+            .map((part) => part[0])
             .join("")
             .slice(0, 2)
             .toUpperCase();
 
-        // Coach name
         const name = document.createElement("h3");
-        name.textContent = coachName;
+        name.textContent = coach.full_name || "Health Coach";
 
-        // Description
         const specialty = document.createElement("p");
         specialty.className = "coach-specialty";
-        specialty.textContent = "Verified Health Coach";
+        specialty.textContent =
+            coach.coaching_specialty || "Health Coach";
 
-        // Rating
         const ratingContainer = document.createElement("div");
         ratingContainer.className = "coach-rating";
 
         const stars = document.createElement("span");
         stars.className = "coach-stars";
 
-        const average = Number(coach.average_rating);
-        const count = Number(coach.review_count);
-
-        const filledStars = Math.round(average);
-
-        stars.textContent =
-            "★".repeat(filledStars) +
-            "☆".repeat(5 - filledStars);
-
         const ratingValue = document.createElement("span");
-        ratingValue.textContent =
-            `${average.toFixed(1)} / 5 (${count} reviews)`;
+
+        if (coach.averageRating !== null) {
+            stars.textContent = "★★★★★";
+            ratingValue.textContent =
+                `${coach.averageRating.toFixed(1)} (${coach.reviewCount})`;
+        } else {
+            stars.textContent = "No ratings";
+            ratingValue.textContent = "";
+        }
 
         ratingContainer.append(stars, ratingValue);
+        card.append(avatar, name, specialty, ratingContainer);
+        container.appendChild(card);
+    });
+}
 
-        // Build card
+
+
+async function renderLandingFeaturedReviews(selectedReviewIds = []) {
+    const container = document.getElementById(
+        "landing-reviews"
+    );
+
+    if (!container) return;
+
+    container.replaceChildren();
+
+    // The admin's picks win. With no picks, the database chooses
+    // good recent reviews automatically.
+    const picks = Array.isArray(selectedReviewIds)
+        ? selectedReviewIds.map(String)
+        : [];
+
+    const { data, error } = await supabaseClient.rpc(
+        "landing_featured_reviews",
+        {
+            p_ids: picks.length ? picks : null,
+            p_limit: 3
+        }
+    );
+
+    if (error) {
+        console.error("Failed to load featured reviews:", error);
+        return;
+    }
+
+    const featuredReviews = data || [];
+
+    if (featuredReviews.length === 0) {
+        return;
+    }
+
+    featuredReviews.forEach((review) => {
+        const card = document.createElement("div");
+        card.className = "review-card";
+
+        // Rating stars
+        const rating = document.createElement("div");
+        rating.className = "stars";
+
+        const ratingValue = Math.max(
+            0,
+            Math.min(5, Number(review.rating) || 0)
+        );
+
+        rating.textContent = "★".repeat(ratingValue);
+
+        // Review text
+        const reviewText = document.createElement("p");
+        reviewText.className = "review-text";
+        reviewText.textContent = review.feedback_text || "";
+
+        // Reviewer information
+        const reviewerContainer = document.createElement("div");
+        reviewerContainer.className = "review-user";
+
+        const reviewerName = review.reviewer_name || "BiteWise user";
+
+        // Reviewer avatar
+        const avatar = document.createElement("div");
+        avatar.className = "review-avatar";
+
+        avatar.textContent = reviewerName
+            .split(/\s+/)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+
+        // Reviewer name
+        const reviewerDetails = document.createElement("div");
+
+        const name = document.createElement("h3");
+        name.textContent = reviewerName;
+
+        // Review date
+        const date = document.createElement("p");
+        date.textContent = review.created_at
+            ? new Date(review.created_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+            })
+            : "";
+
+        reviewerDetails.append(name, date);
+
+        reviewerContainer.append(avatar, reviewerDetails);
+
+        // Add elements to card
         card.append(
-            avatar,
-            name,
-            specialty,
-            ratingContainer
+            rating,
+            reviewText,
+            reviewerContainer
         );
 
         container.appendChild(card);
     });
 }
+
 
 
 
@@ -568,15 +598,10 @@ async function registerUser() {
             data: authData,
             error: authError
         } =
-           
-        await supabaseClient.auth.signUp({
-            email: email.trim().toLowerCase(),
-            password: password,
-            options: {
-                emailRedirectTo:
-                    "https://bitewise-nutrition.netlify.app/?email_confirmed=1"
-            }
-        });
+            await supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            });
 
 
         if (authError) {
@@ -614,10 +639,19 @@ async function registerUser() {
         // ======================================
 
         if (!authData.session) {
-            showEmailVerificationPopup("user");
-            return;
-        }
 
+            console.error(
+                "No authenticated session was returned."
+            );
+
+            showError(
+                "Your account was created, but your email " +
+                "must be verified before you can set up your profile."
+            );
+
+            return;
+
+        }
 
 
         console.log(
@@ -954,21 +988,17 @@ async function registerCoach() {
             "credential-message"
         );
 
-    const { data: userData, error: userError } =
-        await supabaseClient.auth.getUser();
-    
-    const existingCoach =
-        !userError &&
-        userData?.user?.user_metadata?.registration_type === "coach"
-            ? userData.user
-            : null;
-
 
     // ==========================================
     // FINAL VALIDATION
     // ==========================================
 
-    if (!fullName || !email || (!existingCoach && !password)) {
+    if (
+        !fullName ||
+        !email ||
+        !password
+    ) {
+
         alert(
             "Account information is incomplete."
         );
@@ -1046,69 +1076,42 @@ async function registerCoach() {
         // STEP 1: CREATE AUTH USER
         // ======================================
 
-        
-    let coachId;
-    
-
-    
-    if (existingCoach) {
-        // Verified coach completing an existing application
-        coachId = existingCoach.id;
-    } else {
-        // New coach creating an account
-        const { data: authData, error: authError } =
+        const {
+            data: authData,
+            error: authError
+        } =
             await supabaseClient.auth.signUp({
-                email: email.trim().toLowerCase(),
-                password: password,
-                options: {
-                    emailRedirectTo:
-                        "https://bitewise-nutrition.netlify.app/?email_confirmed=1",
-                    data: {
-                        registration_type: "coach",
-                        full_name: fullName
-                    }
-                }
+
+                email:
+                    email.toLowerCase(),
+
+                password: password
+
             });
-    
-        if (authError || !authData?.user) {
+
+
+        if (
+            authError ||
+            !authData.user
+        ) {
+
+            console.error(
+                "Coach auth registration error:",
+                authError
+            );
+
             alert(
                 authError?.message ||
-                "Unable to create your Health Coach account."
+                "Unable to create the coach account."
             );
-            return;
-        }
-    
-             
-        if (!authData.session) {
-            showEmailVerificationPopup("coach");
-            return;
-        }
 
-    
-        coachId = authData.user.id;
-    }
+            return;
+        }
 
 
         // ======================================
         // STEP 2: CREATE COACH PROFILE
         // ======================================
-        const { data: sessionData, error: sessionError } =
-            await supabaseClient.auth.getSession();
-        
-        console.log("Coach has session:", !!sessionData.session);
-        console.log(
-            "Session belongs to coach:",
-            sessionData.session?.user?.id === coachId
-        );
-        
-        if (sessionError || !sessionData.session ||
-            sessionData.session.user.id !== coachId) {
-            alert(
-                "Please confirm your email and log in before " +
-                "completing your Health Coach application."
-            );
-            return;
-        }
 
         const {
             error: profileError
@@ -1117,8 +1120,8 @@ async function registerCoach() {
                 .from("profiles")
                 .insert({
 
-                  id:
-                    authData.user.id,
+                    id:
+                        authData.user.id,
 
                     full_name:
                         fullName,
@@ -1178,6 +1181,7 @@ async function registerCoach() {
         // STEP 3: UPLOAD COACH CREDENTIAL
         // ======================================
 
+        const coachId = authData.user.id;
 
 
         // Create a safe filename
@@ -1572,14 +1576,15 @@ loginForm?.addEventListener(
             // STEP 1: SIGN IN
             // ==================================
 
-            
-               
-            const { data: authData, error: authError } =
-                await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
+            const {
+                data: authData,
+                error: authError
+            } =
+                await supabaseClient.auth
+                    .signInWithPassword({
+                        email: email,
+                        password: password
+                    });
 
 
             if (authError || !authData?.user) {
@@ -1602,59 +1607,34 @@ loginForm?.addEventListener(
             // STEP 2: LOAD PROFILE
             // ==================================
 
-                 
-            const { data: profile, error: profileError } =
+            const {
+                data: profile,
+                error: profileError
+            } =
                 await supabaseClient
                     .from("profiles")
-                    .select("app_role, approval_status, is_suspended")
+                    .select(
+                        "app_role, approval_status, is_suspended"
+                    )
                     .eq("id", authData.user.id)
-                    .maybeSingle();
+                    .single();
 
-            
-            if (profileError) {
-                console.error("Login profile error:", profileError);
-            
+
+            if (profileError || !profile) {
+
+                console.error(
+                    "Login profile error:",
+                    profileError
+                );
+
+                await supabaseClient.auth.signOut();
+
                 showLoginMessage(
                     "We couldn't load your profile. Please try again."
                 );
+
                 return;
             }
-            
-           
-                     
-            if (!profile) {
-                const registrationType =
-                    authData.user.user_metadata?.registration_type;
-            
-                closeLoginModal();
-                openRegisterModal();
-            
-                if (registrationType === "coach") {
-                    const nameInput =
-                        document.getElementById("register-full-name");
-            
-                    const emailInput =
-                        document.getElementById("register-email");
-            
-                    if (nameInput) {
-                        nameInput.value =
-                            authData.user.user_metadata?.full_name || "";
-                    }
-            
-                    if (emailInput) {
-                        emailInput.value = authData.user.email || "";
-                    }
-            
-                    showRegisterStep(coachDetailsStep);
-                } else {
-                    showRegisterStep(onboardingStep);
-                }
-            
-                return;
-            }
-
-
-
 
 
             // ==================================
@@ -1715,10 +1695,10 @@ loginForm?.addEventListener(
             // STEP 5: ADMIN
             // ==================================
 
-           if (profile.app_role === "admin") {
-            window.location.href = "./admin_web/ui/admin-dashboard.html";
-            return;
-        }
+            if (profile.app_role === "admin") {
+                window.location.href = "./admin_web/ui/admin-dashboard.html";
+                return;
+            }
 
 
             // ==================================
@@ -1864,9 +1844,9 @@ const coachDetailsBack =
         "coach-details-back"
     );
 
-const specialtyOptions =
-    document.querySelectorAll(
-        ".specialty-option"
+const specialtyGrid =
+    document.getElementById(
+        "coach-specialty-options"
     );
 
 const specialtyMessage =
@@ -1897,7 +1877,6 @@ function resetRegistration() {
     showRegisterStep(accountStep);
 
     // Reset account form fields
-
     const registerAccountForm =
         document.getElementById(
             "register-account-form"
@@ -1907,7 +1886,6 @@ function resetRegistration() {
 
 
     // Reset account type to User
-
     registerAccountTabs.forEach(
         (tab) => {
 
@@ -1940,8 +1918,6 @@ function resetRegistration() {
     }
 
 
-    // Full name is only asked here for health coaches
-
     registerFullNameGroup?.classList.add(
         "hidden"
     );
@@ -1960,7 +1936,6 @@ function resetRegistration() {
 
 
     // Reset user profile setup step
-
     document.getElementById(
         "onboarding-form"
     )?.reset();
@@ -1994,7 +1969,6 @@ function resetRegistration() {
 
 
     // Reset main button text
-
     if (registerMainButton) {
 
         registerMainButton.textContent =
@@ -2002,36 +1976,22 @@ function resetRegistration() {
 
     }
 
-
     // Reset coach specialties
-
     selectedSpecialties = [];
 
-    specialtyOptions.forEach(
-        (option) => {
-
-            option.classList.remove(
-                "active"
-            );
-
-        }
-    );
+    document.querySelectorAll(".specialty-option").forEach(option => {
+        option.classList.remove("active");
+    });
 
     if (specialtyCount) {
-
-        specialtyCount.textContent =
-            "0/3 selected";
-
+        specialtyCount.textContent = "0/3 selected";
     }
 
     if (specialtyMessage) {
-
         specialtyMessage.textContent = "";
-
     }
 
     // Reset coach personal information
-
     const coachAge =
         document.getElementById(
             "coach-age"
@@ -2858,90 +2818,39 @@ onboardingForm?.addEventListener(
 // COACH SPECIALTY SELECTION
 // ==============================================
 
-specialtyOptions.forEach(
-    (option) => {
+specialtyGrid?.addEventListener("click", function (event) {
+    const option = event.target.closest(".specialty-option");
+    if (!option) return;
 
-        option.addEventListener(
-            "click",
-            function() {
+    const specialty = option.dataset.specialty;
 
-                const specialty =
-                    option.dataset.specialty;
-
-                const alreadySelected =
-                    selectedSpecialties.includes(
-                        specialty
-                    );
-
-
-                // Remove selected specialty
-
-                if (alreadySelected) {
-
-                    selectedSpecialties =
-                        selectedSpecialties.filter(
-                            (item) =>
-                                item !== specialty
-                        );
-
-                    option.classList.remove(
-                        "active"
-                    );
-
-                }
-
-                // Add specialty if below limit
-
-                else {
-
-                    if (
-                        selectedSpecialties.length >= 3
-                    ) {
-
-                        if (specialtyMessage) {
-
-                            specialtyMessage.textContent =
-                                "You can select up to 3 specialties.";
-
-                        }
-
-                        return;
-
-                    }
-
-
-                    selectedSpecialties.push(
-                        specialty
-                    );
-
-                    option.classList.add(
-                        "active"
-                    );
-
-                }
-
-
-                // Update counter
-
-                if (specialtyCount) {
-
-                    specialtyCount.textContent =
-                        `${selectedSpecialties.length}/3 selected`;
-
-                }
-
-
-                if (specialtyMessage) {
-
-                    specialtyMessage.textContent = "";
-
-                }
-
-            }
+    if (selectedSpecialties.includes(specialty)) {
+        selectedSpecialties = selectedSpecialties.filter(
+            item => item !== specialty
         );
+        option.classList.remove("active");
+    } else {
+        if (selectedSpecialties.length >= 3) {
+            if (specialtyMessage) {
+                specialtyMessage.textContent =
+                    "You can select up to 3 specialties.";
+            }
+            return;
+        }
 
+        selectedSpecialties.push(specialty);
+        option.classList.add("active");
     }
-);
+
+    if (specialtyCount) {
+        specialtyCount.textContent =
+            `${selectedSpecialties.length}/3 selected`;
+    }
+
+    if (specialtyMessage) {
+        specialtyMessage.textContent = "";
+    }
+});
 
 
 // ==============================================
@@ -3069,6 +2978,43 @@ submitCoachRegistration?.addEventListener(
 
     }
 );
+
+
+async function loadSpecialties() {
+    if (!specialtyGrid) return;
+
+    specialtyGrid.textContent = "Loading specialties...";
+
+    const { data, error } = await supabaseClient
+        .from("categories")
+        .select("name")
+        .eq("category_type", "coach_specialty")
+        .eq("is_active", true)
+        .order("name");
+
+    if (error) {
+        console.error("Failed to load specialties:", error);
+        specialtyGrid.textContent =
+            "Couldn't load specialties. Please refresh the page.";
+        return;
+    }
+
+    specialtyGrid.replaceChildren();
+
+    if (!data || data.length === 0) {
+        specialtyGrid.textContent = "No specialties available right now.";
+        return;
+    }
+
+    data.forEach(({ name }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "specialty-option";
+        button.dataset.specialty = name;
+        button.textContent = name;
+        specialtyGrid.appendChild(button);
+    });
+}
 
 
 // ==============================================
@@ -3233,17 +3179,6 @@ resetPasswordForm?.addEventListener(
 
         try {
 
-            const { data: authData, error: authError } =
-                await supabaseClient.auth.getUser();
-            
-            if (authError || !authData.user) {
-                throw new Error(
-                    'No valid password recovery session. Please request a new reset link.'
-                );
-            }
-            
-            console.log('Password reset account:', authData.user.email);
-
             const { error } =
                 await supabaseClient.auth.updateUser({
                     password: newPassword
@@ -3347,5 +3282,7 @@ if (pageParams.get("login") === "1") {
     );
 }
 
+loadSpecialties();
 loadLandingPageContent();
 
+startAppPreview("download-preview-image");
