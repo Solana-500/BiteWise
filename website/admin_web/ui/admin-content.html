@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Content Management | BiteWise</title>
+
+    <link rel="stylesheet" href="./admin-style.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-content.html" class="nav-item active">
+                    <span class="nav-icon">▣</span>
+                    Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="admin-categories.html" class="nav-item">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="admin-subscriptions.html" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="admin-reports.html" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="admin-audit-logs.html" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+            </nav>
+
+            <button type="button" class="logout-button" id="logout-button">
+                <span>↪</span>
+                Log Out
+            </button>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <div class="admin-main">
+
+            <header class="admin-header">
+                <div class="header-title">
+                    <h2>Content</h2>
+                </div>
+
+                <div class="admin-profile">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+
+                    <div class="admin-profile-text">
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-management-page">
+
+                <div class="management-heading">
+                    <div>
+                        <h1>Content Management</h1>
+                        <p>
+                            Review and manage meal plans and workout plans
+                            submitted by health coaches.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CONTENT TABS -->
+                <div class="content-tabs">
+
+                    <button
+                        type="button"
+                        class="content-tab active"
+                        data-content-tab="pending"
+                    >
+                        Pending Review
+                        <span class="tab-count" id="pending-content-count">—</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="content-tab"
+                        data-content-tab="approved"
+                    >
+                        Approved
+                        <span class="tab-count" id="approved-content-count">—</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="content-tab"
+                        data-content-tab="changesRequested"
+                    >
+                        Changes Requested
+                        <span class="tab-count" id="changes-requested-content-count">—</span>
+                    </button>
+
+                </div>
+
+                <!-- CONTENT LIST -->
+                <section class="content-tab-panel active" id="content-list-panel">
+                    <div class="management-card">
+
+                        <div class="management-card-header">
+                            <div>
+                                <h2 id="content-panel-title">Pending Review</h2>
+                                <p id="content-panel-description">
+                                    Review coach submissions awaiting approval.
+                                </p>
+                            </div>
+
+                            <div class="content-filters">
+                                <input
+                                    type="search"
+                                    id="content-search"
+                                    placeholder="Search content or coaches..."
+                                    aria-label="Search content"
+                                >
+
+                                <select id="content-type-filter">
+                                    <option value="all">All Types</option>
+                                    <option value="meal">Meal Plans</option>
+                                    <option value="workout">Workout Plans</option>
+                                    <option value="recipe">Recipes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="content-table-wrapper">
+                            <table class="content-table">
+                                <thead>
+                                    <tr>
+                                        <th>Content</th>
+                                        <th>Coach</th>
+                                        <th>Type</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="content-table-body">
+                                    <tr class="table-empty-row">
+                                        <td colspan="6">
+                                            <div class="table-empty-state">
+                                                <strong>Loading content...</strong>
+                                                <span>
+                                                    Coach meal plans and workout
+                                                    plans will appear here.
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- CONTENT DETAILS MODAL -->
+    <div id="content-details-modal" class="modal-overlay" hidden>
+        <div
+            class="modal-box content-details-modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="content-details-title"
+        >
+
+            <!-- MODAL HEADER -->
+            <div class="modal-header content-details-header">
+                <div class="content-details-heading">
+                    <h2 id="content-details-title">Content Details</h2>
+
+                    <div class="content-details-meta" id="content-details-meta">
+                        <span
+                            class="content-type-tag"
+                            id="content-details-type-tag"
+                        >
+                            Workout Plan
+                        </span>
+
+                        <span class="content-meta-by">by</span>
+
+                        <strong id="content-details-coach">
+                            Coach
+                        </strong>
+
+                        <span class="content-meta-separator">·</span>
+
+                        <span id="content-details-submitted">
+                            Submitted date
+                        </span>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    id="content-details-close"
+                    class="modal-close-button"
+                    aria-label="Close"
+                >&times;</button>
+            </div>
+
+            <!-- MODAL BODY -->
+            <div class="modal-body content-details-modal-body">
+                <div id="content-details-body">
+                </div>
+            </div>
+
+            <!-- MODAL FOOTER -->
+            <div class="modal-footer content-details-footer" id="content-details-actions">
+                <button type="button" id="content-details-reject"
+                    class="secondary-button" hidden>
+                    Request Changes
+                </button>
+
+                <button
+                    type="button"
+                    id="content-details-approve"
+                    class="primary-button"
+                    hidden
+                >
+                    Approve
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    
+    <!-- REQUEST CHANGES FEEDBACK MODAL -->
+    <div id="content-feedback-modal" class="modal-overlay" hidden>
+        <div
+            class="modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="content-feedback-title"
+        >
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2 id="content-feedback-title">Request Changes</h2>
+
+                <button
+                    type="button"
+                    id="content-feedback-close"
+                    class="modal-close-button"
+                    aria-label="Close"
+                >&times;</button>
+            </div>
+
+            <!-- Feedback Form -->
+            <div class="modal-body content-feedback-body">
+                <p class="content-feedback-description">
+                    Let the coach know what needs to be improved before this
+                    plan can be approved.
+                </p>
+
+                <label for="content-admin-feedback">
+                    Feedback for the coach
+                    <span class="required-indicator">*</span>
+                </label>
+
+                <textarea
+                    id="content-admin-feedback"
+                    rows="5"
+                    placeholder="Explain what needs to be revised..."
+                    required
+                ></textarea>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    id="content-feedback-cancel"
+                    class="secondary-button"
+                >
+                    Cancel
+                </button>
+
+                <button type="button" id="content-feedback-confirm"
+                    class="warning-button">
+                    Send Feedback
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    
+    <!-- =====================================
+        LOGOUT CONFIRMATION MODAL
+    ====================================== -->
+
+    <div class="modal-overlay" id="logout-modal">
+
+        <div class="confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="logout-modal-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <div class="logout-modal-icon">
+                ↪
+            </div>
+
+            <h2>Log Out?</h2>
+
+            <p>
+                Are you sure you want to log out of the
+                BiteWise Admin Portal?
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-logout"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-logout"
+                >
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../admin-script.js"></script>
+</body>
+
+</html>

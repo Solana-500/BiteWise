@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management | BiteWise</title>
+    <link rel="stylesheet" href="./admin-style.css">
+</head>
+
+<body>
+    <div class="admin-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <h1>BiteWise</h1>
+                <span>Admin Portal</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
+                </a>
+
+                <a href="admin-users.html" class="nav-item">
+                    <span class="nav-icon">♙</span>
+                    Users
+                </a>
+
+                <a href="admin-coaches.html" class="nav-item">
+                    <span class="nav-icon">♧</span>
+                    Health Coaches
+                </a>
+
+                <a href="admin-content.html" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    Content
+                </a>
+
+                <a href="admin-landing.html" class="nav-item">
+                    <span class="nav-icon">▤</span>
+                    Landing Page
+                </a>
+
+                <a href="admin-categories.html" class="nav-item active">
+                    <span class="nav-icon">▦</span>
+                    Categories
+                </a>
+
+                <a href="admin-reviews.html" class="nav-item">
+                    <span class="nav-icon">☆</span>
+                    Reviews
+                </a>
+
+                <a href="admin-subscriptions.html" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    Subscriptions
+                </a>
+
+                <a href="admin-reports.html" class="nav-item">
+                    <span class="nav-icon">⌁</span>
+                    Analytics
+                </a>
+
+                <a href="admin-audit-logs.html" class="nav-item">
+                    <span class="nav-icon">☷</span>
+                    Audit Logs
+                </a>
+            </nav>
+
+            <button type="button" class="logout-button" id="logout-button">
+                <span>↪</span> Log Out
+            </button>
+        </aside>
+
+        <div class="admin-main">
+
+            <header class="admin-header">
+                <div class="header-title">
+                    <h2>Categories</h2>
+                </div>
+
+                <div class="admin-profile">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-profile-text">
+                        <strong id="admin-profile-name">Loading...</strong>
+                        <span id="admin-profile-role">Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="category-management-content">
+
+                <section class="category-page-heading">
+                    <div>
+                        <h1>Category Management</h1>
+                        <p>Manage categories used throughout the BiteWise application.</p>
+                    </div>
+                </section>
+
+                <div class="category-main-tabs">
+                    <button type="button"
+                        class="category-main-tab active"
+                        data-category-tab="workout">
+                        Workout
+                    </button>
+
+                    <button type="button"
+                        class="category-main-tab"
+                        data-category-tab="coach">
+                        Coach Specialities
+                    </button>
+
+                </div>
+
+                <!-- WORKOUT -->
+                <section class="category-tab-content active"
+                    data-category-content="workout">
+
+                    <div class="category-content-panel">
+
+                        <div class="category-section-heading">
+                            <div>
+                                <h3>Workout Categories</h3>
+                                <p>Manage exercise categories used by users and coaches.</p>
+                            </div>
+                        </div>
+
+                        <!-- WORKOUT SUBTABS -->
+                        <div class="workout-category-tabs">
+
+                            <button type="button"
+                                class="workout-category-tab active"
+                                data-workout-tab="user">
+                                Exercise Log
+                            </button>
+
+                            <button type="button"
+                                class="workout-category-tab"
+                                data-workout-tab="coach">
+                                Workout Plan
+                            </button>
+
+                        </div>
+
+                        <!-- EXERCISE LOG -->
+                        <section class="workout-subtab-content active"
+                            data-workout-content="user">
+
+                            <div class="category-section-heading">
+                                <div>
+                                    <h4>Exercise Log</h4>
+                                    <p>Categories used when users log their own exercises.</p>
+                                </div>
+
+                                <div class="category-section-controls">
+
+                                    <div class="category-filter-group">
+                                        <input
+                                            type="text"
+                                            class="category-search-input"
+                                            placeholder="Search categories..."
+                                        >
+
+                                        <select class="category-status-filter">
+                                            <option value="all">All Statuses</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+
+                                    <button class="category-add-button">
+                                        + Add Category
+                                    </button>
+
+                                </div>
+                            </div>
+
+                            <div class="category-table-container">
+                                <table class="category-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category Name</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="exercise-category-table-body">
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </section>
+
+                        <!-- WORKOUT PLAN -->
+                        <section class="workout-subtab-content"
+                            data-workout-content="coach">
+
+                            <div class="category-section-heading">
+                                <div>
+                                    <h4>Workout Plan</h4>
+                                    <p>Categories used when coaches create workout plans.</p>
+                                </div>
+
+                                <div class="category-section-controls">
+                                    <input type="search"
+                                        class="category-search-input"
+                                        placeholder="Search categories..."
+                                        aria-label="Search coach exercise categories">
+
+                                    <select class="category-status-filter">
+                                        <option value="all">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+
+                                    <button type="button" class="category-add-button">
+                                        + Add Category
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="category-table-container">
+                                <table class="category-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category Name</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="workout-plan-category-table-body">
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </section>
+
+                    </div>
+                </section>
+
+                <!-- COACH SPECIALITIES -->
+                <section class="category-tab-content"
+                    data-category-content="coach">
+
+                    <div class="category-content-panel">
+
+                        <div class="category-section-heading">
+                            <div>
+                                <h3>Coach Specialities</h3>
+                                <p>Manage specialities available to health coaches.</p>
+                            </div>
+
+                            <div class="category-section-controls">
+                                <input type="search"
+                                    class="category-search-input"
+                                    placeholder="Search categories..."
+                                    aria-label="Search coach specialities">
+                                
+                                <select class="category-status-filter">
+                                    <option value="all">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+
+                                <button type="button" class="category-add-button">
+                                    + Add Category
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="category-table-container">
+                            <table class="category-table">
+                                <thead>
+                                    <tr>
+                                        <th>Category Name</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="coach-speciality-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ADD CATEGORY MODAL -->
+    <div class="modal-overlay" id="add-category-modal">
+
+        <div class="confirmation-modal category-edit-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="add-category-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <h2>Add Category</h2>
+
+            <p>Create a new category below.</p>
+
+            <div class="category-edit-form">
+
+                <label for="add-category-name">
+                    Category Name
+                </label>
+
+                <input
+                    type="text"
+                    id="add-category-name"
+                    placeholder="Enter category name">
+
+                <span
+                    id="add-category-error"
+                    class="input-error">
+                </span>
+
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-add-category">
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-add-category">
+                    Add Category
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    
+    <!-- EDIT CATEGORY MODAL -->
+    <div class="modal-overlay" id="edit-category-modal">
+
+        <div class="confirmation-modal category-edit-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="edit-category-modal-close"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+            <h2>Edit Category</h2>
+
+            <p>Update the category name below.</p>
+
+            <div class="category-edit-form">
+
+                <label for="edit-category-name">
+                    Category Name
+                </label>
+
+                <input
+                    type="text"
+                    id="edit-category-name"
+                    placeholder="Enter category name"
+                    required
+                >
+
+                <span id="edit-category-error" class="input-error"></span>
+
+                <p id="edit-category-rename-note" class="input-error">
+                    Renaming a category won't update records that already use the old name.
+                </p>
+
+            </div>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-edit-category"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-edit-category"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- DEACTIVATE CATEGORY MODAL -->
+    <div class="modal-overlay" id="deactivate-category-modal">
+
+        <div class="confirmation-modal category-deactivate-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="deactivate-category-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <h2>Deactivate Category?</h2>
+
+            <p>
+                Are you sure you want to deactivate this category?
+            </p>
+
+            <p id="deactivate-category-error" class="input-error"></p>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-deactivate-category">
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="category-deactivate-button"
+                    id="confirm-deactivate-category">
+                    Deactivate
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- REACTIVATE CATEGORY MODAL -->
+    <div class="modal-overlay" id="reactivate-category-modal">
+
+        <div class="confirmation-modal">
+
+            <button
+                type="button"
+                class="modal-close"
+                id="reactivate-category-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <h2>Reactivate Category?</h2>
+
+            <p>Are you sure you want to reactivate this category?</p>
+
+            <p id="reactivate-category-error" class="input-error"></p>
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel-button"
+                    id="cancel-reactivate-category">
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="modal-logout-button"
+                    id="confirm-reactivate-category">
+                    Reactivate
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- LOGOUT MODAL -->
+    <div class="modal-overlay" id="logout-modal">
+        <div class="confirmation-modal">
+
+            <button type="button"
+                class="modal-close"
+                id="logout-modal-close"
+                aria-label="Close">
+                &times;
+            </button>
+
+            <div class="logout-modal-icon">↪</div>
+
+            <h2>Log Out?</h2>
+
+            <p>Are you sure you want to log out of the BiteWise Admin Portal?</p>
+
+            <div class="modal-actions">
+                <button type="button"
+                    class="modal-cancel-button"
+                    id="cancel-logout">
+                    Cancel
+                </button>
+
+                <button type="button"
+                    class="modal-logout-button"
+                    id="confirm-logout">
+                    Log Out
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../admin-script.js"></script>
+
+</body>
+</html>

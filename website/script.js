@@ -1716,7 +1716,7 @@ loginForm?.addEventListener(
             // ==================================
 
            if (profile.app_role === "admin") {
-            window.location.href = "./admin-dashboard.html";
+            window.location.href = "./admin_web/ui/admin-dashboard.html";
             return;
         }
 
