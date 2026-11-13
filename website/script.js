@@ -1587,9 +1587,6 @@ function showRegisterStep(step) {
 // ==============================================
 // LOGIN
 // ==============================================
-//
-// Users and health coaches are checked and then sent to the download page. 
-// Admins are checked and then sent to the system admin web portal.
 
 const loginForm =
     document.getElementById(
@@ -1600,6 +1597,130 @@ const loginMessage =
     document.getElementById(
         "login-message"
     );
+
+
+const applicationStatusView =
+    document.getElementById("application-status-view");
+
+const applicationStatusTitle =
+    document.getElementById("application-status-title");
+
+const applicationStatusMessage =
+    document.getElementById("application-status-message");
+
+const checkApplicationStatusButton =
+    document.getElementById("check-application-status");
+
+const applicationStatusLogout =
+    document.getElementById("application-status-logout");
+
+
+function showApplicationStatus(status) {
+    if (!loginForm || !applicationStatusView) return;
+
+    loginForm.style.display = "none";
+    applicationStatusView.style.display = "block";
+
+    if (status === "pending") {
+
+        applicationStatusTitle.textContent =
+            "Application Pending";
+
+        applicationStatusMessage.textContent =
+            "Your application is currently being reviewed by our administration team. You'll be able to access your coach account once it has been approved.";
+
+    } else if (status === "rejected") {
+
+        applicationStatusTitle.textContent =
+            "Application Rejected";
+
+        applicationStatusMessage.textContent =
+            "Unfortunately, your application to become a BiteWise Health Coach was not approved.";
+
+    }
+}
+
+
+function showLoginForm() {
+    if (!loginForm || !applicationStatusView) return;
+
+    applicationStatusView.style.display = "none";
+    loginForm.style.display = "";
+
+    showLoginMessage("");
+}
+
+
+async function checkCoachApplicationStatus() {
+
+    const {
+        data: { user },
+        error: authError
+    } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+        showLoginForm();
+        showLoginMessage("Please log in again.", "info");
+        return;
+    }
+
+    const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("app_role, approval_status, is_suspended")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profile) {
+        console.error("Application status error:", error);
+
+        applicationStatusMessage.textContent =
+            "Unable to retrieve your application status. Please try again.";
+
+        return;
+    }
+
+    // Suspension always takes priority
+    if (profile.is_suspended === true) {
+
+        await supabaseClient.auth.signOut();
+
+        showLoginForm();
+
+        showLoginMessage(
+            "Your account has been suspended and access is currently unavailable."
+        );
+
+        return;
+    }
+
+    if (profile.app_role !== "coach") {
+        await supabaseClient.auth.signOut();
+        showLoginForm();
+        showLoginMessage("Unable to verify your coach application.");
+        return;
+    }
+
+    if (profile.approval_status === "pending") {
+        showApplicationStatus("pending");
+        return;
+    }
+
+    if (profile.approval_status === "rejected") {
+        showApplicationStatus("rejected");
+        return;
+    }
+
+    if (profile.approval_status === "approved") {
+
+        await supabaseClient.auth.signOut();
+
+        window.location.href = "download.html";
+        return;
+    }
+
+    applicationStatusMessage.textContent =
+    "Your application status could not be determined. Please try again.";
+}
 
 
 function showLoginMessage(text, type) {
@@ -1768,30 +1889,12 @@ loginForm?.addEventListener(
             if (profile.app_role === "coach") {
 
                 if (
-                    profile.approval_status ===
-                    "pending"
+                    profile.approval_status === "pending" ||
+                    profile.approval_status === "rejected"
                 ) {
 
-                    await supabaseClient.auth.signOut();
-
-                    showLoginMessage(
-                        "Your application is still being reviewed. " +
-                        "You'll be able to log in once it's approved."
-                    );
-
-                    return;
-                }
-
-
-                if (
-                    profile.approval_status ===
-                    "rejected"
-                ) {
-
-                    await supabaseClient.auth.signOut();
-
-                    showLoginMessage(
-                        "Your coach application was not approved."
+                    showApplicationStatus(
+                        profile.approval_status
                     );
 
                     return;
@@ -1901,6 +2004,49 @@ loginCoachRegisterLink?.addEventListener(
     }
 );
 
+// ==============================================
+// APPLICATION STATUS BUTTONS
+// ==============================================
+
+checkApplicationStatusButton?.addEventListener(
+    "click",
+    async function() {
+
+        checkApplicationStatusButton.disabled = true;
+        checkApplicationStatusButton.textContent = "Checking...";
+
+        try {
+            await checkCoachApplicationStatus();
+
+        } catch (error) {
+            console.error("Status check failed:", error);
+            applicationStatusMessage.textContent =
+                "Unable to check your application status. Please try again.";
+
+        } finally {
+            checkApplicationStatusButton.disabled = false;
+            checkApplicationStatusButton.textContent = "Check Again";
+        }
+    }
+);
+
+
+applicationStatusLogout?.addEventListener(
+    "click",
+    async function() {
+
+        const { error } = await supabaseClient.auth.signOut();
+
+        if (error) {
+            console.error("Logout error:", error);
+            return;
+        }
+
+        showLoginForm();
+
+        loginForm.reset();
+    }
+);
 
 // ==============================================
 // REGISTER ACCOUNT TYPE
