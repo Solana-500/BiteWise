@@ -1,5 +1,37 @@
 import { supabaseClient } from "../supabase-client.js";
 
+async function notifyCoachDecision(coachId, decision) {
+    try {
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "notify-coach-decision",
+                {
+                    body: {
+                        coachId,
+                        decision
+                    }
+                }
+            );
+
+        if (error || data?.error) {
+            console.error(
+                "Coach decision saved, but email notification failed:",
+                error || data.error
+            );
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            "Coach decision saved, but email notification failed:",
+            error
+        );
+        return false;
+    }
+}
+
 async function getCoachEmailsById() {
     const { data, error } =
         await supabaseClient.functions.invoke(
@@ -167,63 +199,69 @@ export async function getCoachCredentialUrl(filePath) {
 }
 
 
+
 export async function approveCoach(coachId) {
     const { data, error } = await supabaseClient
         .from("profiles")
-        .update({
-            approval_status: "approved"
-        })
+        .update({ approval_status: "approved" })
         .eq("id", coachId)
         .eq("app_role", "coach")
         .eq("approval_status", "pending")
         .select("id, approval_status");
 
     if (error) throw error;
-
-    if (!data || data.length === 0) {
-        throw new Error("No coach application was updated.");
+    if (!data?.length) {
+        throw new Error("Coach application not found or already processed.");
     }
 
     const { error: documentError } = await supabaseClient
         .from("coach_documents")
-        .update({
-            verification_status: "approved"
-        })
+        .update({ verification_status: "approved" })
         .eq("coach_id", coachId);
 
     if (documentError) throw documentError;
 
-    return data[0];
-}
+    const emailSent = await notifyCoachDecision(
+        coachId,
+        "approved"
+    );
 
+    return {
+        ...data[0],
+        emailSent
+    };
+}
 
 export async function rejectCoach(coachId) {
     const { data, error } = await supabaseClient
         .from("profiles")
-        .update({
-            approval_status: "rejected"
-        })
+        .update({ approval_status: "rejected" })
         .eq("id", coachId)
         .eq("app_role", "coach")
         .eq("approval_status", "pending")
         .select("id, approval_status");
 
     if (error) throw error;
-
-    if (!data || data.length === 0) {
-        throw new Error("No coach application was updated.");
+    if (!data?.length) {
+        throw new Error("Coach application not found or already processed.");
     }
 
     const { error: documentError } = await supabaseClient
         .from("coach_documents")
-        .update({
-            verification_status: "rejected"
-        })
+        .update({ verification_status: "rejected" })
         .eq("coach_id", coachId);
 
     if (documentError) throw documentError;
 
-    return data[0];
+    const emailSent = await notifyCoachDecision(
+        coachId,
+        "rejected"
+    );
+
+    return {
+        ...data[0],
+        emailSent
+    };
 }
 
 

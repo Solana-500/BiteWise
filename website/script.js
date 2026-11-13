@@ -933,22 +933,132 @@ async function saveUserProfile() {
 // COACH REGISTRATION
 // ==============================================
 
+// ==============================================
+// COACH ACCOUNT CREATION (PART 1)
+// Creates Auth account and sends verification email.
+// Coach application will be submitted after login.
+// ==============================================
+
+async function registerCoachAccount() {
+
+    const email = document
+        .getElementById("register-email")
+        ?.value.trim();
+
+    const password = document
+        .getElementById("register-password")
+        ?.value;
+
+    const confirmPassword = document
+        .getElementById("register-confirm-password")
+        ?.value;
+
+    function showError(message) {
+        if (registerMessage) {
+            registerMessage.textContent = message;
+        }
+    }
+
+    showError("");
+
+    // VALIDATION
+    if (!email || !password || !confirmPassword) {
+        showError("Please enter your email and password.");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showError("Passwords do not match.");
+        return;
+    }
+
+    if (password.length < 6) {
+        showError("Password must contain at least 6 characters.");
+        return;
+    }
+
+    if (registerMainButton) {
+        registerMainButton.disabled = true;
+        registerMainButton.textContent = "Creating account...";
+    }
+
+    try {
+
+        // CREATE COACH AUTH ACCOUNT
+        const { data: authData, error: authError } =
+            await supabaseClient.auth.signUp({
+
+                email: email.toLowerCase(),
+
+                password: password,
+
+                options: {
+                    emailRedirectTo:
+                        new URL(
+                            "index.html",
+                            window.location.href
+                        ).href,
+
+                    data: {
+                        app_role: "coach"
+                    }
+                }
+            });
+
+        if (authError) {
+            console.error("Coach signup error:", authError);
+            showError(authError.message);
+            return;
+        }
+
+        if (!authData.user) {
+            showError("Unable to create your account.");
+            return;
+        }
+
+        // EMAIL VERIFICATION REQUIRED
+        if (!authData.session) {
+
+            showError(
+                "Your account has been created! " +
+                "Please check your email and click the " +
+                "verification link before logging in."
+            );
+
+            return;
+        }
+
+        await supabaseClient.auth.signOut();
+
+        showError(
+            "Your account has been created. Please log in to continue."
+        );
+
+    } catch (error) {
+
+        console.error("Unexpected coach signup error:", error);
+
+        showError(
+            "Something went wrong while creating your account."
+        );
+
+    } finally {
+
+        if (registerMainButton) {
+            registerMainButton.disabled = false;
+            registerMainButton.textContent = "Create Account";
+        }
+
+    }
+}
+
+
 async function registerCoach() {
 
     const fullName =
-        document.getElementById(
-            "register-full-name"
-        )?.value.trim();
-
-    const email =
-        document.getElementById(
-            "register-email"
-        )?.value.trim();
-
-    const password =
-        document.getElementById(
-            "register-password"
-        )?.value;
+    document.getElementById(
+        "coach-full-name"
+    )?.value.trim();
 
     const age =
         document.getElementById(
@@ -993,16 +1103,11 @@ async function registerCoach() {
     // FINAL VALIDATION
     // ==========================================
 
-    if (
-        !fullName ||
-        !email ||
-        !password
-    ) {
-
-        alert(
-            "Account information is incomplete."
-        );
-
+    if (!fullName) {
+        if (specialtyMessage) {
+            specialtyMessage.textContent =
+                "Please enter your full name.";
+        }
         return;
     }
 
@@ -1073,41 +1178,31 @@ async function registerCoach() {
     try {
 
         // ======================================
-        // STEP 1: CREATE AUTH USER
+        // STEP 1: GET EXISTING AUTH USER
+        // The coach has already registered and
+        // logged in after email verification.
         // ======================================
 
         const {
-            data: authData,
-            error: authError
-        } =
-            await supabaseClient.auth.signUp({
+            data: userData,
+            error: userError
+        } = await supabaseClient.auth.getUser();
 
-                email:
-                    email.toLowerCase(),
-
-                password: password
-
-            });
-
-
-        if (
-            authError ||
-            !authData.user
-        ) {
+        if (userError || !userData?.user) {
 
             console.error(
-                "Coach auth registration error:",
-                authError
+                "Unable to retrieve authenticated coach:",
+                userError
             );
 
             alert(
-                authError?.message ||
-                "Unable to create the coach account."
+                "Your session has expired. Please log in again."
             );
 
             return;
         }
 
+        const coachId = userData.user.id;
 
         // ======================================
         // STEP 2: CREATE COACH PROFILE
@@ -1120,8 +1215,7 @@ async function registerCoach() {
                 .from("profiles")
                 .insert({
 
-                    id:
-                        authData.user.id,
+                    id: coachId,
 
                     full_name:
                         fullName,
@@ -1181,15 +1275,11 @@ async function registerCoach() {
         // STEP 3: UPLOAD COACH CREDENTIAL
         // ======================================
 
-        const coachId = authData.user.id;
-
-
         // Create a safe filename
         const safeFileName =
             credentialFile.name
                 .replace(/\s+/g, "_")
                 .replace(/[^a-zA-Z0-9._-]/g, "");
-
 
         // Storage policy requires:
         // <coach UUID>/<filename>
@@ -1634,11 +1724,24 @@ loginForm?.addEventListener(
         }
         
         if (!profile) {
-            // Account is verified, but onboarding is not completed.
-            // Keep the user signed in so profile setup can proceed.
+            // Keep the authenticated session.
+            // Determine which registration flow to continue.
+
+            const accountRole =
+                authData.user.user_metadata?.app_role;
+
             closeLoginModal();
             openRegisterModal();
-            showRegisterStep(onboardingStep);
+
+            if (accountRole === "coach") {
+                // Continue coach application
+                showRegisterStep(coachDetailsStep);
+
+            } else {
+                // Continue normal user onboarding
+                showRegisterStep(onboardingStep);
+            }
+
             return;
         }
 
@@ -1815,18 +1918,6 @@ const registerAccountTypeInput =
     );
 
 
-const registerFullNameGroup =
-    document.getElementById(
-        "register-full-name-group"
-    );
-
-
-const registerFullNameInput =
-    document.getElementById(
-        "register-full-name"
-    );
-
-
 const registerMainButton =
     document.getElementById(
         "register-main-button"
@@ -1916,27 +2007,12 @@ function resetRegistration() {
 
 
     if (registerAccountTypeInput) {
-
         registerAccountTypeInput.value =
             "User";
-
-    }
-
-
-    registerFullNameGroup?.classList.add(
-        "hidden"
-    );
-
-    if (registerFullNameInput) {
-
-        registerFullNameInput.required = false;
-
     }
 
     if (registerMessage) {
-
         registerMessage.textContent = "";
-
     }
 
 
@@ -1997,6 +2073,13 @@ function resetRegistration() {
     }
 
     // Reset coach personal information
+    const coachFullName =
+        document.getElementById("coach-full-name");
+
+    if (coachFullName) {
+        coachFullName.value = "";
+    }
+    
     const coachAge =
         document.getElementById(
             "coach-age"
@@ -2487,7 +2570,6 @@ registerAccountTabs.forEach(
                         item.classList.remove(
                             "active"
                         );
-
                     }
                 );
 
@@ -2496,110 +2578,24 @@ registerAccountTabs.forEach(
                     "active"
                 );
 
-
                 const selectedAccount =
                     tab.dataset
                         .registerAccount;
 
-
                 if (
                     registerAccountTypeInput
                 ) {
-
                     registerAccountTypeInput
                         .value =
                         selectedAccount;
-
                 }
 
-
-                // ==================================
-                // USER
-                // (email + password only; personal
-                //  details come in the profile step)
-                // ==================================
-
-                if (
-                    selectedAccount ===
-                    "User"
-                ) {
-
-                    registerFullNameGroup
-                        ?.classList
-                        .add(
-                            "hidden"
-                        );
-
-
-                    if (
-                        registerFullNameInput
-                    ) {
-
-                        registerFullNameInput
-                            .required =
-                            false;
-
-                        registerFullNameInput
-                            .value = "";
-
-                    }
-
-
-                    if (
-                        registerMainButton
-                    ) {
-
-                        registerMainButton
-                            .textContent =
-                            "Create Account";
-
-                    }
-
-                }
-
-
-                // ==================================
-                // HEALTH COACH
-                // ==================================
-
-                if (
-                    selectedAccount ===
-                    "Coach"
-                ) {
-
-                    registerFullNameGroup
-                        ?.classList
-                        .remove(
-                            "hidden"
-                        );
-
-
-                    if (
-                        registerFullNameInput
-                    ) {
-
-                        registerFullNameInput
-                            .required =
-                            true;
-
-                    }
-
-
-                    if (
-                        registerMainButton
-                    ) {
-
-                        registerMainButton
-                            .textContent =
-                            "Continue →";
-
-                    }
-
+                if (registerMainButton) {
+                    registerMainButton.textContent = "Create Account";
                 }
 
             }
         );
-
     }
 );
 
@@ -2649,85 +2645,16 @@ registerAccountForm?.addEventListener(
 
 
         // ======================================
-        // HEALTH COACH REGISTRATION
+        // HEALTH COACH ACCOUNT CREATION
         // ======================================
 
-        if (
-            selectedAccount === "Coach"
-        ) {
-
-            const fullName =
-                document.getElementById(
-                    "register-full-name"
-                )?.value.trim();
-
-            const email =
-                document.getElementById(
-                    "register-email"
-                )?.value.trim();
-
-            const password =
-                document.getElementById(
-                    "register-password"
-                )?.value;
-
-            const confirmPassword =
-                document.getElementById(
-                    "register-confirm-password"
-                )?.value;
-
-
-            if (
-                !fullName ||
-                !email ||
-                !password ||
-                !confirmPassword
-            ) {
-
-                alert(
-                    "Please complete all fields."
-                );
-
-                return;
-
-            }
-
-
-            if (password !== confirmPassword) {
-
-                if (registerMessage) {
-
-                    registerMessage.textContent =
-                        "Passwords do not match.";
-
-                }
-
-                return;
-
-            }
-
-
-            if (password.length < 6) {
-
-                alert(
-                    "Password must contain at least 6 characters."
-                );
-
-                return;
-
-            }
-
-
-            showRegisterStep(
-                coachDetailsStep
-            );
-
+        if (selectedAccount === "Coach") {
+            await registerCoachAccount();
+            return;
         }
 
     }
 );
-
-
 
 // ==============================================
 // USER PROFILE SETUP (ONBOARDING STEP)

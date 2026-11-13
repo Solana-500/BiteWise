@@ -399,27 +399,6 @@
                     value="User"
                 >
 
-
-
-                <!-- FULL NAME (health coach only; users give it in the profile step) -->
-
-                <div class="form-group hidden" id="register-full-name-group">
-
-                    <label for="register-full-name">
-                        Full Name
-                    </label>
-
-                    <input
-                        type="text"
-                        id="register-full-name"
-                        name="full-name"
-                        placeholder="Jamie Lee"
-                    >
-
-                </div>
-
-
-
                 <!-- EMAIL -->
 
                 <div class="form-group">
@@ -550,9 +529,8 @@
                 </h1>
 
                 <p>
-                    Complete your profile to submit your coach application.
-                    Your application will be reviewed by a system administrator
-                    before your coach account is approved.
+                    Complete your professional profile and submit your credentials
+                    for administrator review.
                 </p>
 
             </div>
@@ -567,9 +545,24 @@
                     Personal Information
                 </h2>
 
+                <!-- FULL NAME -->
+                <div class="form-group">
+
+                    <label for="coach-full-name">
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="coach-full-name"
+                        name="coach-full-name"
+                        placeholder="e.g. Jamie Lee"
+                        required
+                    >
+                </div>
+
 
                 <!-- AGE + GENDER -->
-
                 <div class="coach-measurement-grid coach-age-gender-grid">
 
                     <div class="form-group">
