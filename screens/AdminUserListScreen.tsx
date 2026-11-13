@@ -311,11 +311,6 @@ export default function AdminUserListScreen({ navigation }: Props) {
         />
         <AdminTab label="Users" icon="👥" active onPress={() => {}} />
         <AdminTab
-          label="Coach"
-          icon="💪"
-          onPress={() => navigation.navigate('AdminCoaches')}
-        />
-        <AdminTab
           label="Reports"
           icon="📊"
           onPress={() => navigation.navigate('AdminReports')}
