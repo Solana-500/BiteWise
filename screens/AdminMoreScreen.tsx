@@ -215,11 +215,6 @@ export default function AdminMoreScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('AdminUsers')}
         />
         <AdminTab
-          label="Coach"
-          icon="💪"
-          onPress={() => navigation.navigate('AdminCoaches')}
-        />
-        <AdminTab
           label="Reports"
           icon="📊"
           onPress={() => navigation.navigate('AdminReports')}
