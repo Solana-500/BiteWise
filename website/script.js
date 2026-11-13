@@ -1607,8 +1607,8 @@ loginForm?.addEventListener(
             // STEP 2: LOAD PROFILE
             // ==================================
 
-            const {
-                data: profile,
+           const {
+                data: profiles,
                 error: profileError
             } =
                 await supabaseClient
@@ -1617,25 +1617,30 @@ loginForm?.addEventListener(
                         "app_role, approval_status, is_suspended"
                     )
                     .eq("id", authData.user.id)
-                    .single();
+                    .limit(1);
+            
+            const profile = profiles?.[0] ?? null;
 
-
-            if (profileError || !profile) {
-
-                console.error(
-                    "Login profile error:",
-                    profileError
-                );
-
-                await supabaseClient.auth.signOut();
-
-                showLoginMessage(
-                    "We couldn't load your profile. Please try again."
-                );
-
-                return;
-            }
-
+           if (profileError) {
+            console.error("Login profile error:", profileError);
+        
+            await supabaseClient.auth.signOut();
+        
+            showLoginMessage(
+                "We couldn't load your profile. Please try again."
+            );
+        
+            return;
+        }
+        
+        if (!profile) {
+            // Account is verified, but onboarding is not completed.
+            // Keep the user signed in so profile setup can proceed.
+            closeLoginModal();
+            openRegisterModal();
+            showRegisterStep(onboardingStep);
+            return;
+        }
 
             // ==================================
             // STEP 3: CHECK ACCOUNT SUSPENSION
