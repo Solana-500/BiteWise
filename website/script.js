@@ -465,9 +465,9 @@ function renderLandingPlans(plans) {
         amount.className = "price-amount";
 
         const price = Number(plan.price);
-        amount.textContent = Number.isFinite(price)
-            ? `$${price}`
-            : "$0";
+        amount.textContent = !Number.isFinite(price) || price === 0
+            ? "$0"
+            : `$${price.toFixed(2)}`;
 
         const period = document.createElement("span");
         period.className = "price-period";

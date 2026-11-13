@@ -99,7 +99,7 @@ const defaultPlans = [
     {
         name: "PREMIUM",
         badge: "MOST POPULAR",
-        price: 9.99,
+        price: 9.90,
         button: "Get Premium",
         period: "month",
         features: [
@@ -257,24 +257,6 @@ const refreshPreviewButton =
 const previewFrame =
     document.getElementById("landing-preview-frame");
 
-
-// // Notification
-// const notificationElement = document.getElementById("admin-notification");
-// const notificationMessage = document.getElementById("admin-notification-message");
-// const notificationCloseButton = document.getElementById("admin-notification-close");
-
-// function showNotification(message) {
-//     if (!notificationElement || !notificationMessage) return;
-
-//     notificationMessage.textContent = message;
-//     notificationElement.hidden = false;
-// }
-
-// if (notificationCloseButton) {
-//     notificationCloseButton.addEventListener("click", () => {
-//         notificationElement.hidden = true;
-//     });
-// }
 
 // ==============================================
 // FUNCTIONS
@@ -1068,7 +1050,7 @@ function renderPlansEditor(items) {
             createFeatureField(
                 "Price",
                 "plan-price-input",
-                String(plan.price ?? 0)
+                Number(plan.price ?? 0).toFixed(2)
             ),
             createFeatureField(
                 "Button text",

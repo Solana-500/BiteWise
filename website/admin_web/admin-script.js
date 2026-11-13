@@ -1,5 +1,4 @@
 // Entry point for every admin page
- 
 import { startAdminPage } from "./boundary/admin-shell-boundary.js";
  
 import { loadDashboardPage } from "./boundary/dashboard-boundary.js";
