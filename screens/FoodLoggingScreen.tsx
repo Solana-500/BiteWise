@@ -83,6 +83,62 @@ function mapBarcodeFoodToFoodResult(food: BarcodeFood): FoodResult {
 
 export default function FoodLoggingScreen() {
   const navigation = useNavigation<NavigationProp>()
+  const [isPremiumUser, setIsPremiumUser] = useState(false)
+
+  useEffect(() => {
+    let active = true
+  
+    async function checkPremiumAccess() {
+      setIsPremiumUser(false)
+  
+      const { data: { user }, error: authError } =
+        await supabase.auth.getUser()
+  
+      if (authError || !user || !active) return
+  
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
+          app_role,
+          subscription_tier,
+          subscription_status,
+          subscription_end_date,
+          is_suspended
+        `)
+        .eq('id', user.id)
+        .maybeSingle()
+  
+      if (error) {
+        console.error('Premium access check failed:', error.message)
+        return
+      }
+  
+      if (!active || !profile) return
+  
+      const expiry = profile.subscription_end_date
+        ? new Date(profile.subscription_end_date).getTime()
+        : NaN
+  
+      const validStatus =
+        profile.subscription_status === 'active' ||
+        profile.subscription_status === 'cancelled'
+  
+      setIsPremiumUser(
+        profile.app_role === 'user' &&
+        profile.is_suspended !== true &&
+        profile.subscription_tier === 'premium' &&
+        validStatus &&
+        Number.isFinite(expiry) &&
+        expiry > Date.now()
+      )
+    }
+  
+    void checkPremiumAccess()
+  
+    return () => {
+      active = false
+    }
+  }, [])
   
   const goToFoodDiary = useCallback(() => {
     const isPremiumNavigation =
@@ -731,6 +787,8 @@ function openEditFood() {
             </TouchableOpacity>
             
             
+           
+          {isPremiumUser && (
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => void pickFoodImage()}
@@ -739,17 +797,25 @@ function openEditFood() {
               {analyzingImage ? (
                 <ActivityIndicator color="#1E5C35" />
               ) : (
-              <View style={{ marginBottom: 7 }}>
-                <Ionicons name="camera-outline" size={29} color="#1E5C35" />
-              </View>
-                )}
-            
+                <View style={{ marginBottom: 7 }}>
+                  <Ionicons
+                    name="camera-outline"
+                    size={29}
+                    color="#1E5C35"
+                  />
+                </View>
+              )}
+          
               <Text style={styles.actionText}>
                 {analyzingImage ? 'Scanning...' : 'AI Food Scanner'}
               </Text>
             </TouchableOpacity>
+          )}
+  
+            
 
      
+                {isPremiumUser && (
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => {
@@ -765,17 +831,23 @@ function openEditFood() {
             >
               <View style={{ marginBottom: 7 }}>
                 <Ionicons
-                  name={recorderState.isRecording ? 'stop-circle-outline' : 'mic-outline'}
+                  name={
+                    recorderState.isRecording
+                      ? 'stop-circle-outline'
+                      : 'mic-outline'
+                  }
                   size={29}
                   color="#1E5C35"
                 />
               </View>
-              
+          
               <Text style={styles.actionText}>
-                {recorderState.isRecording ? 'Stop Recording' : 'AI Voice'}
+                {recorderState.isRecording
+                  ? 'Stop Recording'
+                  : 'AI Voice'}
               </Text>
             </TouchableOpacity>
-
+          )}
 
 
           </View>
