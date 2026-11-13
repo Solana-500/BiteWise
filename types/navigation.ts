@@ -26,7 +26,6 @@ export type PremiumTabParamList = {
 export type AdminTabParamList = {
   AdminHome: undefined
   AdminUsers: undefined
-  AdminCoaches: undefined
   AdminReports: undefined
   AdminMore: undefined
 }
@@ -257,6 +256,5 @@ CoachCredentials: undefined
   AdminMore: undefined
   AdminTabs: NavigatorScreenParams<AdminTabParamList> | undefined
   AdminUsers: undefined
-  AdminCoaches: undefined
   AdminReports: undefined
 }
